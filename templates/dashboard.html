@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MesaZap - Painel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-mark">MZ</span>
+        <div>
+          <p class="eyebrow">garcom invisivel</p>
+          <h1>{{ restaurant.nome }}</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button
+          type="button"
+          id="billing-pill"
+          class="billing-pill"
+          aria-haspopup="dialog"
+          aria-controls="billing-drawer"
+          aria-expanded="false"
+        >
+          <span class="billing-pill-dot" data-billing-status="loading" aria-hidden="true"></span>
+          <span class="billing-pill-value" id="billing-pill-value">R$ --</span>
+          <span class="billing-pill-meta" id="billing-pill-meta">este mes</span>
+        </button>
+        <div class="shift-strip" aria-label="Resumo operacional">
+          <span data-count="bar">Bar 0</span>
+          <span data-count="cozinha">Cozinha 0</span>
+          <span data-count="salao">Salao 0</span>
+          <span data-count="caixa">Caixa 0</span>
+        </div>
+      </div>
+    </header>
+
+    <div id="billing-backdrop" class="billing-backdrop" hidden></div>
+    <aside
+      id="billing-drawer"
+      class="billing-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="billing-drawer-title"
+      hidden
+    >
+      <header class="billing-drawer-head">
+        <div>
+          <p class="eyebrow">conta mesazap</p>
+          <h2 id="billing-drawer-title">Consumo do mes</h2>
+        </div>
+        <button type="button" class="billing-close" id="billing-close" aria-label="Fechar">×</button>
+      </header>
+
+      <div class="billing-status" id="billing-status">
+        <span class="billing-badge" data-billing-status="loading">carregando</span>
+        <span class="billing-status-line" id="billing-status-line">Buscando dados da conta.</span>
+      </div>
+
+      <section class="billing-card">
+        <p class="eyebrow">faturamento parcial</p>
+        <div class="billing-amount">
+          <span class="billing-currency">R$</span>
+          <span class="billing-amount-value" id="billing-amount-value">--</span>
+        </div>
+        <p class="billing-period" id="billing-period">--</p>
+        <div class="billing-breakdown">
+          <div>
+            <span class="eyebrow">pedidos</span>
+            <strong id="billing-orders-count">--</strong>
+          </div>
+          <div>
+            <span class="eyebrow">preco</span>
+            <strong id="billing-unit-price">R$ --</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="billing-setup" id="billing-setup" hidden>
+        <p class="eyebrow">taxa de ativacao</p>
+        <div class="billing-setup-row">
+          <strong id="billing-setup-value">R$ 99,00</strong>
+          <span class="billing-setup-status" id="billing-setup-status">pendente</span>
+        </div>
+        <p class="billing-setup-note" id="billing-setup-note">
+          Assim que o setup for pago, o bot libera pedidos no WhatsApp.
+        </p>
+      </section>
+
+      <section class="billing-invoices">
+        <header class="billing-invoices-head">
+          <p class="eyebrow">faturas</p>
+          <h3>Historico</h3>
+        </header>
+        <div class="billing-invoices-list" id="billing-invoices-list">
+          <div class="empty">Ainda nao ha faturas fechadas.</div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="shell">
+      <aside class="side-panel">
+        <div class="photo-slab" role="img" aria-label="Restaurante em operacao"></div>
+
+        <section class="demo-console" aria-labelledby="demo-title">
+          <p class="eyebrow">simulador whatsapp</p>
+          <h2 id="demo-title">Teste o fluxo</h2>
+          <form id="demo-form">
+            <label>
+              Numero
+              <input name="remote_jid" value="5511999999999" autocomplete="off" />
+            </label>
+            <label>
+              Mensagem
+              <textarea name="text" rows="3">Mesa 12</textarea>
+            </label>
+            <button type="submit">Enviar mensagem</button>
+          </form>
+          <pre id="demo-reply" aria-live="polite">A resposta do bot aparece aqui.</pre>
+        </section>
+
+        <section class="tables" aria-labelledby="tables-title">
+          <p class="eyebrow">mesas</p>
+          <h2 id="tables-title">QRs do piloto</h2>
+          <div class="table-grid">
+            {% for table in tables %}
+              <a href="/qr/{{ table.qr_token_atual }}" target="_blank" class="table-pill">
+                <strong>{{ table.numero }}</strong>
+                <span>{{ table.status.replace("_", " ") }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      </aside>
+
+      <section class="ops-board" aria-label="Pedidos por setor">
+        <div class="pending-band">
+          <div>
+            <p class="eyebrow">confirmacao</p>
+            <h2>Rascunhos aguardando cliente</h2>
+          </div>
+          <div id="pending-orders" class="pending-list"></div>
+        </div>
+
+        <div class="columns">
+          <section class="sector" data-sector="bar">
+            <div class="sector-head">
+              <p class="eyebrow">balcao</p>
+              <h2>Bar</h2>
+            </div>
+            <div class="tickets" id="bar-list"></div>
+          </section>
+
+          <section class="sector" data-sector="cozinha">
+            <div class="sector-head">
+              <p class="eyebrow">producao</p>
+              <h2>Cozinha</h2>
+            </div>
+            <div class="tickets" id="cozinha-list"></div>
+          </section>
+
+          <section class="sector" data-sector="salao">
+            <div class="sector-head">
+              <p class="eyebrow">atendimento</p>
+              <h2>Salao</h2>
+            </div>
+            <div class="tickets" id="salao-list"></div>
+          </section>
+
+          <section class="sector" data-sector="caixa">
+            <div class="sector-head">
+              <p class="eyebrow">conta</p>
+              <h2>Caixa</h2>
+            </div>
+            <div class="tickets" id="caixa-list"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      window.__INITIAL_DASHBOARD__ = {{ dashboard | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
+

@@ -1,0 +1,24 @@
+.env
+.env.*
+!.env.example
+.venv/
+.tmp/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.err
+.pytest_cache/
+.mypy_cache/
+node_modules/
+playwright-report/
+test-results/
+
+# Vídeos promocionais (assets pesados, fora do escopo do app)
+video-mesazap-promo/
+video-mesazap-promo-en/
+video-mesazap-story-pt/
+.hf-example/
+output/

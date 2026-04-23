@@ -1,0 +1,12 @@
+{
+  "name": "mesazap",
+  "private": true,
+  "scripts": {
+    "test:ui": "playwright test tests/ui.spec.js --browser=chromium --reporter=line",
+    "screenshot": "playwright screenshot --full-page http://127.0.0.1:5000 output/playwright/dashboard.png"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}
+

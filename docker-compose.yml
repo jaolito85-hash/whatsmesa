@@ -1,0 +1,28 @@
+services:
+  mesazap:
+    build: .
+    image: mesazap:local
+    container_name: mesazap
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      MESAZAP_DATABASE: /data/mesazap.db
+      MESAZAP_PUBLIC_BASE_URL: http://localhost:5000
+      WHATSAPP_PHONE: ""
+      EVOLUTION_API_URL: ""
+      EVOLUTION_API_KEY: ""
+      EVOLUTION_INSTANCE: ""
+      OPENAI_API_KEY: ""
+      OPENAI_MODEL: gpt-4o-mini
+      OPENAI_TRANSCRIPTION_MODEL: gpt-4o-mini-transcribe
+      SUPABASE_URL: ""
+      SUPABASE_SERVICE_ROLE_KEY: ""
+      MESAZAP_ADMIN_TOKEN: ""
+      MESAZAP_DASHBOARD_USER: admin
+      MESAZAP_DASHBOARD_PASSWORD: ""
+    volumes:
+      - mesazap_data:/data
+
+volumes:
+  mesazap_data:
