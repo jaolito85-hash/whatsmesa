@@ -6,32 +6,24 @@ volume persistente.
 ## Pre-requisitos
 
 - VPS com Coolify v4 instalado e funcionando (Docker rodando, Traefik ativo).
-- Um dominio/subdominio apontado para o IP da VPS (ex.: `mesazap.seudominio.com`).
-- Conta no GitHub/GitLab/Gitea com o repositorio deste projeto.
-- Chave da OpenAI (se for usar transcricao/interpretacao).
-- Instancia da Evolution API ja rodando (pode ser na mesma VPS).
-- Numero WhatsApp conectado na Evolution API.
+- Repo publico ja no ar: <https://github.com/jaolito85-hash/whatsmesa>
+- Evolution API ja rodando: <http://evo-h8cos48wogk0w804ss08soko.72.60.13.166.sslip.io>
+- Numero WhatsApp + API key + nome da instancia (preencher no .env).
+- Chave da OpenAI (opcional; sem ela o parser heuristico assume).
 
-## 1. Subir o projeto no Git
+Dominio: piloto usa o sslip.io que o Coolify gera automaticamente
+(ex.: `mesazap-xxx.72.60.13.166.sslip.io`). Nao precisa configurar DNS.
 
-```bash
-cd "C:/projetos/garçom whats"
-git init
-git add .
-git commit -m "mvp mesazap inicial"
-git branch -M main
-git remote add origin git@github.com:SEU-USUARIO/mesazap.git
-git push -u origin main
-```
-
-## 2. Criar a aplicacao no Coolify
+## 1. Criar a aplicacao no Coolify
 
 1. **Projects → New Project** → nome: `MesaZap`.
-2. **New Resource → Application → Public Repository** (ou Private se autenticar).
-3. Em **Build Pack**, escolher **Dockerfile**.
-4. Em **Source**, colar a URL do repositorio e branch `main`.
-5. Em **Dockerfile Location**, deixar `Dockerfile` (raiz).
-6. Salvar. Coolify vai detectar automaticamente.
+2. **New Resource → Application → Public Repository**.
+3. **Repository URL**: `https://github.com/jaolito85-hash/whatsmesa`.
+4. **Branch**: `main`.
+5. **Build Pack**: `Dockerfile`.
+6. **Dockerfile Location**: `Dockerfile` (raiz).
+7. Salvar. Coolify ja gera um sslip.io automaticamente (anote a URL — sera
+   usada como `MESAZAP_PUBLIC_BASE_URL` e como webhook na Evolution).
 
 ## 3. Configurar volume persistente para o SQLite
 
@@ -46,22 +38,25 @@ Isso garante que o arquivo `mesazap.db` sobrevive a rebuilds.
 ## 4. Porta e dominio
 
 - **Port Exposes**: `5000`
-- **Domains**: `https://mesazap.seudominio.com`
+- **Domains**: deixar em branco — Coolify gera automaticamente um sslip.io
+  (ex.: `https://mesazap-abc123.72.60.13.166.sslip.io`). Anote essa URL.
 
-Coolify cuida do Traefik + Lets Encrypt automaticamente.
+Quando migrar para dominio proprio, adicione aqui e Coolify cuida do
+Traefik + Lets Encrypt.
 
 ## 5. Variaveis de ambiente
 
-Em **Environment Variables**:
+Em **Environment Variables** (substitua `<URL_GERADA>` pela URL sslip.io
+do passo 4):
 
 ```env
 MESAZAP_DATABASE=/data/mesazap.db
-MESAZAP_PUBLIC_BASE_URL=https://mesazap.seudominio.com
+MESAZAP_PUBLIC_BASE_URL=https://<URL_GERADA>
 
-WHATSAPP_PHONE=5511999999999
-EVOLUTION_API_URL=https://evolution.seudominio.com
-EVOLUTION_API_KEY=coloque-a-key-da-sua-instancia
-EVOLUTION_INSTANCE=nome-da-instancia
+WHATSAPP_PHONE=
+EVOLUTION_API_URL=http://evo-h8cos48wogk0w804ss08soko.72.60.13.166.sslip.io
+EVOLUTION_API_KEY=
+EVOLUTION_INSTANCE=
 
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
@@ -71,6 +66,9 @@ MESAZAP_DASHBOARD_USER=admin
 MESAZAP_DASHBOARD_PASSWORD=GERE-UMA-SENHA-FORTE
 MESAZAP_ADMIN_TOKEN=GERE-UM-TOKEN-ALEATORIO-32-CHARS
 ```
+
+Preencha `WHATSAPP_PHONE`, `EVOLUTION_API_KEY` e `EVOLUTION_INSTANCE` antes
+do go-live com os dados reais do piloto.
 
 Dica: para gerar tokens aleatorios, no terminal `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
 
@@ -96,17 +94,17 @@ Primeiro deploy leva ~3-5 minutos. Logs aparecem em tempo real.
 
 ```bash
 # 1. Healthcheck
-curl https://mesazap.seudominio.com/health
+curl https://<URL_GERADA>/health
 # {"ok": true, "service": "mesazap"}
 
 # 2. Painel (pede login HTTP Basic com user e senha do env)
-curl -u "admin:SUA-SENHA" https://mesazap.seudominio.com/ | head -20
+curl -u "admin:SUA-SENHA" https://<URL_GERADA>/ | head -20
 
 # 3. Billing usage
-curl -u "admin:SUA-SENHA" https://mesazap.seudominio.com/api/billing/usage
+curl -u "admin:SUA-SENHA" https://<URL_GERADA>/api/billing/usage
 
 # 4. Webhook demo (sem auth, publico para a Evolution API)
-curl -X POST https://mesazap.seudominio.com/webhook/evolution \
+curl -X POST https://<URL_GERADA>/webhook/evolution \
   -H "Content-Type: application/json" \
   -d '{"data":{"key":{"id":"teste-1","remoteJid":"5511999999999"},"message":{"conversation":"Mesa 12"}}}'
 ```
@@ -115,7 +113,7 @@ curl -X POST https://mesazap.seudominio.com/webhook/evolution \
 
 Na instancia da Evolution, configure o webhook:
 
-- **URL**: `https://mesazap.seudominio.com/webhook/evolution`
+- **URL**: `https://<URL_GERADA>/webhook/evolution`
 - **Eventos**: `MESSAGES_UPSERT` (ou similar ao seu setup).
 
 Teste enviando `Mesa 12` de um WhatsApp para o numero conectado. O bot deve
@@ -126,7 +124,7 @@ responder `Mesa 12 liberada. Pode pedir por audio ou texto.`
 Apos o cliente pagar via Pix, marque como pago:
 
 ```bash
-curl -X POST https://mesazap.seudominio.com/admin/billing/setup-paid \
+curl -X POST https://<URL_GERADA>/admin/billing/setup-paid \
   -H "X-Admin-Token: SEU-ADMIN-TOKEN"
 ```
 
@@ -137,14 +135,14 @@ A conta sai de `aguardando_setup` para `ativo` e o soft lock libera.
 No primeiro dia do mes seguinte:
 
 ```bash
-curl -X POST https://mesazap.seudominio.com/admin/billing/generate-invoice \
+curl -X POST https://<URL_GERADA>/admin/billing/generate-invoice \
   -H "X-Admin-Token: SEU-ADMIN-TOKEN"
 ```
 
 A fatura fica `aberta`. Gere o Pix externamente, cobre, e quando receber:
 
 ```bash
-curl -X POST https://mesazap.seudominio.com/admin/billing/invoice/<FATURA_ID>/paid \
+curl -X POST https://<URL_GERADA>/admin/billing/invoice/<FATURA_ID>/paid \
   -H "X-Admin-Token: SEU-ADMIN-TOKEN"
 ```
 
