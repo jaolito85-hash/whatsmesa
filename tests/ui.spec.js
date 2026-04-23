@@ -36,7 +36,7 @@ test("dashboard loads with operational columns", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "MesaZap Demo" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Bar" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cozinha" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Salao" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Salão" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Caixa" })).toBeVisible();
   await expect(page.getByText("Corona long neck").first()).toBeVisible();
   await expect(page.getByText("Porcao de batata frita").first()).toBeVisible();

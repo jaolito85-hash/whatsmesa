@@ -6,7 +6,7 @@ const state = {
 const sectorLabels = {
   bar: "Bar",
   cozinha: "Cozinha",
-  salao: "Salao",
+  salao: "Salão",
   caixa: "Caixa",
 };
 
@@ -18,9 +18,9 @@ const billingStatusLabels = {
 };
 
 const billingStatusLines = {
-  ativo: "Conta em dia. Pedidos confirmados sao cobrados por R$ 1,97.",
+  ativo: "Conta em dia. Pedidos confirmados são cobrados por R$ 1,97.",
   aguardando_setup:
-    "Aguardando pagamento da taxa de ativacao. O bot ainda nao aceita pedidos.",
+    "Aguardando pagamento da taxa de ativação. O bot ainda não aceita pedidos.",
   suspenso:
     "Conta suspensa. O bot responde pedindo para chamar um atendente no WhatsApp.",
   cancelado: "Conta cancelada. Entre em contato para reativar.",
@@ -63,7 +63,7 @@ function ticketHtml(item) {
         <span class="status">${statusLabel(item.status)}</span>
       </div>
       <h3>${item.quantidade > 1 ? `${item.quantidade}x ` : ""}${escapeHtml(item.titulo)}</h3>
-      <p>${escapeHtml(item.observacoes || "Sem observacoes")} · ${timeLabel(item.horario)}</p>
+      <p>${escapeHtml(item.observacoes || "Sem observações")} · ${timeLabel(item.horario)}</p>
       <div class="actions">
         ${
           next
@@ -111,7 +111,7 @@ function renderDashboard(data) {
   if (pending) {
     pending.innerHTML = pendingOrders.length
       ? pendingOrders.map(pendingHtml).join("")
-      : `<div class="empty">Nenhum rascunho esperando confirmacao.</div>`;
+      : `<div class="empty">Nenhum rascunho esperando confirmação.</div>`;
   }
 
   state.lastCount = total;
@@ -215,12 +215,12 @@ function renderBilling(usage, invoices) {
     if (setupPaid) {
       setupBlock.hidden = status !== "ativo";
       setupStatus.textContent = "pago";
-      setupNote.textContent = "Taxa de ativacao ja foi paga. Cobranca recorrente por pedido confirmado.";
+      setupNote.textContent = "Taxa de ativação já foi paga. Cobrança recorrente por pedido confirmado.";
     } else {
       setupBlock.hidden = false;
       setupStatus.textContent = "pendente";
       setupNote.textContent =
-        "Assim que a taxa de ativacao for paga, o bot libera pedidos no WhatsApp.";
+        "Assim que a taxa de ativação for paga, o bot libera pedidos no WhatsApp.";
     }
   }
 
@@ -228,7 +228,7 @@ function renderBilling(usage, invoices) {
   if (list) {
     const items = Array.isArray(invoices) ? invoices : [];
     if (items.length === 0) {
-      list.innerHTML = `<div class="empty">Ainda nao ha faturas fechadas.</div>`;
+      list.innerHTML = `<div class="empty">Ainda não há faturas fechadas.</div>`;
     } else {
       list.innerHTML = items
         .map((inv) => {
@@ -307,7 +307,7 @@ document.getElementById("demo-form")?.addEventListener("submit", async (event) =
   const data = await response.json();
   document.getElementById("demo-reply").textContent = data.reply || JSON.stringify(data, null, 2);
   event.currentTarget.elements.text.value = data.action === "session_activated"
-    ? "Me ve 2 Corona e uma porcao de batata"
+    ? "Me vê 2 Corona e uma porção de batata"
     : data.action === "order_draft_created"
       ? "1"
       : "";

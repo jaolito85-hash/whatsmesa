@@ -92,22 +92,22 @@ SERVICE_MARKERS = {
 
 MESSAGES = {
     "session_activated": {
-        "pt": "Mesa {table} liberada. Pode pedir por audio ou texto.",
+        "pt": "Mesa {table} liberada. Pode pedir por áudio ou texto.",
         "en": "Table {table} is ready. You can order by audio or text.",
         "es": "Mesa {table} liberada. Puedes pedir por audio o texto.",
     },
     "need_table": {
-        "pt": "Me diga o numero da mesa para comecar. Exemplo: Mesa 12.",
+        "pt": "Me diga o número da mesa para começar. Exemplo: Mesa 12.",
         "en": "Tell me your table number to start. Example: Table 12.",
         "es": "Dime el numero de la mesa para empezar. Ejemplo: Mesa 12.",
     },
     "nothing_to_confirm": {
-        "pt": "Nao encontrei pedido pendente. Pode me mandar o que deseja pedir.",
+        "pt": "Não encontrei pedido pendente. Pode me mandar o que deseja pedir.",
         "en": "I do not see a pending order. Send me what you would like.",
         "es": "No encontre un pedido pendiente. Dime que quieres pedir.",
     },
     "order_confirmed": {
-        "pt": "Pedido confirmado. Ja mandei para {sectors}.",
+        "pt": "Pedido confirmado. Já mandei para {sectors}.",
         "en": "Order confirmed. I sent it to {sectors}.",
         "es": "Pedido confirmado. Sectores avisados: {sectors}.",
     },
@@ -117,7 +117,7 @@ MESSAGES = {
         "es": "Claro. Dime que quieres cambiar.",
     },
     "account_requested": {
-        "pt": "Ja pedi o fechamento da Mesa {table}. Um atendente vai levar a conta.",
+        "pt": "Já pedi o fechamento da Mesa {table}. Um atendente vai levar a conta.",
         "en": "I asked to close Table {table}. A staff member will bring the bill.",
         "es": "Ya pedi cerrar la cuenta de la Mesa {table}. Un atendente llevara la cuenta.",
     },
@@ -127,7 +127,7 @@ MESSAGES = {
         "es": "Listo. Llame al personal de la Mesa {table}.",
     },
     "repeat_not_found": {
-        "pt": "Ainda nao tenho uma rodada anterior para repetir. Me diga os itens que voce quer.",
+        "pt": "Ainda não tenho uma rodada anterior para repetir. Me diga os itens que você quer.",
         "en": "I do not have a previous round to repeat yet. Tell me what you would like.",
         "es": "Todavia no tengo una ronda anterior para repetir. Dime que quieres.",
     },
@@ -137,12 +137,12 @@ MESSAGES = {
         "es": "Brahma {options}?",
     },
     "unavailable": {
-        "pt": "{names} nao esta disponivel agora. Posso chamar um atendente para ajudar?",
+        "pt": "{names} não está disponível agora. Posso chamar um atendente para ajudar?",
         "en": "{names} is not available right now. Should I call staff to help?",
         "es": "{names} no esta disponible ahora. Puedo llamar a un atendente para ayudar?",
     },
     "human_called": {
-        "pt": "Nao encontrei esse item no cardapio da casa. Chamei um atendente para ajudar.",
+        "pt": "Não encontrei esse item no cardápio da casa. Chamei um atendente para ajudar.",
         "en": "I could not find that item on the menu. I called staff to help.",
         "es": "No encontre ese item en el menu. Llame a un atendente para ayudar.",
     },
@@ -159,7 +159,7 @@ MESSAGES = {
 }
 
 SECTOR_NAMES = {
-    "pt": {"bar": "o balcao", "cozinha": "a cozinha", "salao": "o salao", "caixa": "o caixa"},
+    "pt": {"bar": "o balcão", "cozinha": "a cozinha", "salao": "o salão", "caixa": "o caixa"},
     "en": {"bar": "the bar", "cozinha": "the kitchen", "salao": "the floor team", "caixa": "cashier"},
     "es": {"bar": "el bar", "cozinha": "la cocina", "salao": "el salon", "caixa": "la caja"},
 }
