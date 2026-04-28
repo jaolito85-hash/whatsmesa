@@ -86,3 +86,30 @@ class WhatsAppAdapter:
             response_body = response.read().decode("utf-8")
         return {"sent": True, "response": response_body}
 
+    def fetch_media_base64(self, message_id: str) -> tuple[str, str | None]:
+        if not self.settings.has_evolution:
+            raise RuntimeError("Evolution API nao configurada para baixar midia.")
+
+        url = (
+            f"{self.settings.evolution_api_url}/chat/getBase64FromMediaMessage/"
+            f"{self.settings.evolution_instance}"
+        )
+        body = json.dumps({"message": {"key": {"id": message_id}}, "convertToMp4": False}).encode(
+            "utf-8"
+        )
+        request = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "apikey": self.settings.evolution_api_key,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            data = json.loads(response.read().decode("utf-8") or "{}")
+        b64 = data.get("base64") or data.get("media") or ""
+        if not b64:
+            raise RuntimeError(f"Evolution nao retornou base64 para {message_id}: {data}")
+        return b64, data.get("mimetype")
+

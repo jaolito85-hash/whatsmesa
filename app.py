@@ -192,12 +192,32 @@ def create_app() -> Flask:
 
         text = inbound.text
         if inbound.tipo == "audio":
+            app.logger.info(
+                "audio inbound: id=%s url=%s mimetype=%s base64=%s data_keys=%s msg_keys=%s audio_keys=%s",
+                inbound.message_id,
+                bool(inbound.audio_url),
+                inbound.audio_mimetype,
+                bool(inbound.audio_base64),
+                list((inbound.payload.get("data") or inbound.payload).keys()),
+                list(((inbound.payload.get("data") or {}).get("message") or {}).keys()),
+                list(
+                    (
+                        ((inbound.payload.get("data") or {}).get("message") or {}).get(
+                            "audioMessage"
+                        )
+                        or {}
+                    ).keys()
+                ),
+            )
             try:
-                if inbound.audio_base64:
-                    raw = base64.b64decode(inbound.audio_base64, validate=False)
-                    text = audio.transcribe_bytes(
-                        raw, inbound.audio_mimetype, inbound.duration_seconds
-                    )
+                b64 = inbound.audio_base64
+                mimetype = inbound.audio_mimetype
+                if not b64 and settings.has_evolution and inbound.message_id:
+                    b64, fetched_mimetype = whatsapp.fetch_media_base64(inbound.message_id)
+                    mimetype = mimetype or fetched_mimetype
+                if b64:
+                    raw = base64.b64decode(b64, validate=False)
+                    text = audio.transcribe_bytes(raw, mimetype, inbound.duration_seconds)
                 elif inbound.audio_url:
                     text = audio.transcribe_url(inbound.audio_url, inbound.duration_seconds)
                 else:
