@@ -48,6 +48,32 @@ function timeLabel(value) {
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+function elapsedMinutes(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+}
+
+function relativeLabel(value) {
+  const mins = elapsedMinutes(value);
+  if (mins === null) return "";
+  if (mins < 1) return "agora";
+  if (mins === 1) return "há 1 min";
+  return `há ${mins} min`;
+}
+
+function elapsedBucket(item) {
+  const mins = elapsedMinutes(item.horario);
+  if (mins === null) return "fresh";
+  const urgent = item.status === "pronto" || item.status === "em_atendimento";
+  const warnAt = urgent ? 2 : 3;
+  const lateAt = urgent ? 5 : 7;
+  if (mins >= lateAt) return "late";
+  if (mins >= warnAt) return "warn";
+  return "fresh";
+}
+
 function statusLabel(value) {
   return String(value || "").replaceAll("_", " ");
 }
@@ -56,14 +82,15 @@ function ticketHtml(item) {
   const next = item.next_status;
   const actionTarget = item.kind === "item" ? "items" : "requests";
   const nextLabel = next ? statusLabel(next) : "ok";
+  const bucket = elapsedBucket(item);
   return `
-    <article class="ticket">
+    <article class="ticket" data-status="${item.status}" data-elapsed="${bucket}">
       <div class="ticket-top">
         <span class="mesa">Mesa ${item.mesa}</span>
         <span class="status">${statusLabel(item.status)}</span>
       </div>
       <h3>${item.quantidade > 1 ? `${item.quantidade}x ` : ""}${escapeHtml(item.titulo)}</h3>
-      <p>${escapeHtml(item.observacoes || "Sem observações")} · ${timeLabel(item.horario)}</p>
+      <p>${escapeHtml(item.observacoes || "Sem observações")} · <span class="elapsed">${relativeLabel(item.horario)}</span></p>
       <div class="actions">
         ${
           next
@@ -72,7 +99,7 @@ function ticketHtml(item) {
         }
         <button class="secondary" data-update="${actionTarget}" data-id="${item.id}" data-status="${
           item.kind === "item" ? "cancelado" : "cancelada"
-        }">cancelar</button>
+        }">×</button>
       </div>
     </article>
   `;

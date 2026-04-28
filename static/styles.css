@@ -638,6 +638,7 @@ pre {
   padding: 12px;
   background: #fff;
   box-shadow: 3px 3px 0 rgba(21, 21, 21, 0.12);
+  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .ticket::before {
@@ -647,6 +648,90 @@ pre {
   width: 7px;
   border-radius: 7px 0 0 7px;
   background: var(--tomato);
+}
+
+.ticket[data-status="novo"]::before,
+.ticket[data-status="nova"]::before {
+  background: var(--ink);
+}
+
+.ticket[data-status="em_preparo"]::before,
+.ticket[data-status="em_atendimento"]::before {
+  background: #f0a830;
+}
+
+.ticket[data-status="pronto"]::before {
+  background: #f5c518;
+}
+
+.ticket[data-status="entregue"]::before,
+.ticket[data-status="concluida"]::before {
+  background: var(--leaf);
+}
+
+.ticket[data-status="cancelado"]::before,
+.ticket[data-status="cancelada"]::before {
+  background: var(--muted);
+}
+
+.ticket[data-status="pronto"] {
+  background: #fff7d6;
+  border-color: #c08b00;
+}
+
+.ticket[data-status="pronto"] .status {
+  color: #8a6300;
+}
+
+.ticket[data-status="novo"],
+.ticket[data-status="nova"] {
+  animation: ticket-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ticket-pulse {
+  0%, 100% {
+    box-shadow: 3px 3px 0 rgba(21, 21, 21, 0.12);
+  }
+  50% {
+    box-shadow: 3px 3px 0 rgba(21, 21, 21, 0.12), 0 0 0 3px rgba(225, 61, 47, 0.2);
+  }
+}
+
+.ticket[data-status="entregue"],
+.ticket[data-status="concluida"] {
+  opacity: 0.55;
+}
+
+.ticket[data-status="cancelado"],
+.ticket[data-status="cancelada"] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.ticket .elapsed {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ticket[data-elapsed="warn"] .elapsed {
+  color: #c97800;
+}
+
+.ticket[data-elapsed="late"] .elapsed {
+  color: var(--tomato);
+}
+
+.ticket[data-elapsed="late"] {
+  border-color: var(--tomato);
+  border-width: 2px;
+  padding: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket[data-status="novo"],
+  .ticket[data-status="nova"] {
+    animation: none;
+  }
 }
 
 .ticket-top {
@@ -693,21 +778,30 @@ pre {
 
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto;
   gap: 6px;
   margin-top: 12px;
   padding-left: 8px;
 }
 
 .actions button {
-  min-height: 34px;
-  padding: 6px 8px;
-  font-size: 0.78rem;
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
 }
 
 .actions button.secondary {
-  color: var(--ink);
+  min-width: 38px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  color: var(--muted);
   background: #fff;
+}
+
+.actions button.secondary:hover {
+  color: var(--tomato);
+  border-color: var(--tomato);
 }
 
 .empty {
