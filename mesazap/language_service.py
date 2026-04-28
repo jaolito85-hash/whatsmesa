@@ -52,7 +52,7 @@ PT_MARKERS = {
 }
 
 EN_PHRASES = ("can i", "i want", "same again", "another round", "close the bill")
-ES_PHRASES = ("por favor", "me das", "otra ronda", "la cuenta", "cerrar la cuenta")
+ES_PHRASES = ("me das", "otra ronda", "la cuenta", "cerrar la cuenta")
 PT_PHRASES = ("me ve", "pode mandar", "outra rodada", "fecha a conta")
 
 
