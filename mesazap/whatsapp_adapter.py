@@ -16,6 +16,8 @@ class InboundMessage:
     text: str
     tipo: str
     audio_url: str | None
+    audio_base64: str | None
+    audio_mimetype: str | None
     duration_seconds: int | None
     payload: dict[str, Any]
 
@@ -38,8 +40,17 @@ class WhatsAppAdapter:
         )
         audio = message.get("audioMessage") or {}
         audio_url = audio.get("url") or data.get("audio_url") or payload.get("audio_url")
+        audio_base64 = (
+            audio.get("base64")
+            or message.get("base64")
+            or data.get("base64")
+            or data.get("media")
+            or payload.get("base64")
+        )
+        audio_mimetype = audio.get("mimetype") or audio.get("mimeType")
         duration = audio.get("seconds") or data.get("duration_seconds") or payload.get("duration_seconds")
-        tipo = "audio" if audio_url and not text else "texto"
+        has_audio = bool(audio_url or audio_base64 or audio.get("mediaKey"))
+        tipo = "audio" if has_audio and not text else "texto"
 
         return InboundMessage(
             message_id=key.get("id") or data.get("message_id") or payload.get("message_id") or uuid4().hex,
@@ -47,6 +58,8 @@ class WhatsAppAdapter:
             text=text,
             tipo=tipo,
             audio_url=audio_url,
+            audio_base64=audio_base64,
+            audio_mimetype=audio_mimetype,
             duration_seconds=int(duration) if duration else None,
             payload=payload,
         )

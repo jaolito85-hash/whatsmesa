@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hmac
 
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
@@ -190,9 +191,17 @@ def create_app() -> Flask:
             return {"reply": "", "action": "duplicate_ignored"}
 
         text = inbound.text
-        if inbound.tipo == "audio" and inbound.audio_url:
+        if inbound.tipo == "audio":
             try:
-                text = audio.transcribe_url(inbound.audio_url, inbound.duration_seconds)
+                if inbound.audio_base64:
+                    raw = base64.b64decode(inbound.audio_base64, validate=False)
+                    text = audio.transcribe_bytes(
+                        raw, inbound.audio_mimetype, inbound.duration_seconds
+                    )
+                elif inbound.audio_url:
+                    text = audio.transcribe_url(inbound.audio_url, inbound.duration_seconds)
+                else:
+                    raise ValueError("Audio sem URL nem base64 no payload.")
             except Exception as exc:
                 return {
                     "reply": f"Nao consegui ouvir esse audio. Pode mandar por texto? ({exc})",
