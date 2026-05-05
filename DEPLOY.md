@@ -150,14 +150,84 @@ Usar o id que vier na resposta do `generate-invoice`.
 
 ## 12. Backup do SQLite
 
-Uma vez por dia, copiar `/data/mesazap.db` para um bucket ou pasta segura:
+Uma vez por dia, copiar `/data/mesazap.db` para um bucket ou pasta segura.
+Use `sqlite3 .backup` (online, atomico, sem lock longo) em vez de `cp`:
 
 ```bash
-# Dentro da VPS
-docker cp mesazap-container:/data/mesazap.db ~/backups/mesazap-$(date +%F).db
+# Dentro do container (Coolify -> Terminal)
+sqlite3 /data/mesazap.db ".backup '/data/backup-$(date +%F).db'"
 ```
 
-Ou usar o **Scheduled Tasks** do Coolify para automatizar.
+### Automatizar via Coolify Scheduled Tasks
+
+1. Vai em **Scheduled Tasks** -> **+ Add**.
+2. **Name**: `daily-backup`
+3. **Frequency**: `0 4 * * *` (todo dia 04:00 UTC)
+4. **Command**:
+
+   ```bash
+   sqlite3 /data/mesazap.db ".backup '/data/backup-$(date +%F).db'" \
+     && find /data -name 'backup-*.db' -mtime +14 -delete
+   ```
+
+   Mantem 14 backups mais recentes, apaga os antigos.
+
+5. Para enviar para fora (recomendado), configure **rclone** ou usa um script
+   que faz `curl -T` para R2/S3. Volume `/data` e isolado por container, perde
+   tudo se a VPS morrer.
+
+## 13. Health check estendido
+
+```bash
+curl https://<URL_GERADA>/health
+```
+
+Resposta:
+
+```json
+{
+  "ok": true,
+  "service": "mesazap",
+  "whatsapp": {
+    "configured": true,
+    "sends_today": 47,
+    "daily_limit": 200,
+    "usage_pct": 23.5,
+    "warning": false
+  },
+  "sessions": {
+    "active": 6,
+    "pending_validation": 0
+  },
+  "last_inbound_at": "2026-05-05T18:42:01+00:00",
+  "require_table_validation": false
+}
+```
+
+Quando `usage_pct >= 70`, `warning` vira `true` — sinal para reduzir volume
+ou migrar para WhatsApp Cloud API antes de bater limite informal da
+Evolution.
+
+## 14. Validacao humana de mesa (anti-fraude)
+
+Por padrao, o cliente que escaneia o QR cai direto em `sessao_ativa` e ja
+pode pedir. Em ambiente de fraude alto (chip novo, cidade grande), ative
+validacao visual: o garcom precisa clicar **validar** no painel antes do
+bot aceitar pedidos.
+
+```env
+MESAZAP_REQUIRE_TABLE_VALIDATION=true
+```
+
+Fluxo:
+
+1. Cliente escaneia QR -> manda `Mesa 12` no WhatsApp.
+2. Bot responde *"Aguarde o atendente confirmar visualmente que voce esta
+   na mesa para liberar o pedido."*
+3. Painel mostra faixa **Mesas aguardando garcom confirmar** com botoes
+   **validar** / **recusar**.
+4. Garcom valida -> bot envia *"Mesa 12 liberada. Pode pedir por audio ou
+   texto."* automaticamente.
 
 ## Problemas comuns
 
@@ -170,8 +240,13 @@ Ou usar o **Scheduled Tasks** do Coolify para automatizar.
 - **Conta fica em `aguardando_setup`**: chame `POST /admin/billing/setup-paid`
   com o `X-Admin-Token` correto.
 - **SQLite bloqueia em concorrencia**: o Dockerfile ja roda com 1 worker +
-  4 threads e WAL mode + busy_timeout. Isso aguenta bem o MVP. Se escalar,
+  8 threads e WAL mode + busy_timeout. Isso aguenta bem o MVP. Se escalar,
   migre para Postgres via Supabase antes de aumentar workers.
+- **Sessoes ficam abertas para sempre**: TTL padrao e 6h ocioso. Ajuste
+  com `MESAZAP_SESSION_IDLE_TTL_HOURS=4` (ou outro valor).
+- **Limite Evolution proximo**: monitore `usage_pct` em `/health`. Acima de
+  70%, log de warning aparece e voce deve reduzir volume ou migrar para
+  WhatsApp Cloud API.
 
 ## Quando migrar do SQLite
 

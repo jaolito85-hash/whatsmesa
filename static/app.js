@@ -150,6 +150,59 @@ async function refreshDashboard() {
   renderDashboard(data);
 }
 
+function pendingValidationHtml(session) {
+  const remote = String(session.cliente_whatsapp || "").replace(/\D/g, "");
+  return `
+    <article class="pending-chip pending-validation-chip">
+      <strong>Mesa ${session.mesa_numero}</strong>
+      <p>Cliente: ${escapeHtml(remote || "?")}</p>
+      <div class="actions">
+        <button data-validate="${session.id}">validar</button>
+        <button class="secondary" data-reject="${session.id}">recusar</button>
+      </div>
+    </article>
+  `;
+}
+
+async function refreshPendingValidation() {
+  try {
+    const response = await fetch("/api/sessions/pending");
+    if (!response.ok) return;
+    const data = await response.json();
+    const list = data.sessions || [];
+    const band = document.getElementById("pending-validation-band");
+    const target = document.getElementById("pending-validation");
+    if (!band || !target) return;
+    if (list.length === 0) {
+      band.hidden = true;
+      target.innerHTML = "";
+      return;
+    }
+    band.hidden = false;
+    target.innerHTML = list.map(pendingValidationHtml).join("");
+  } catch (error) {
+    console.error("Falha ao carregar mesas pendentes", error);
+  }
+}
+
+async function validateSession(sessionId) {
+  const response = await fetch(`/api/sessions/${sessionId}/validate`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Falha ao validar mesa");
+  await refreshPendingValidation();
+  await refreshDashboard();
+}
+
+async function rejectSession(sessionId) {
+  const response = await fetch(`/api/sessions/${sessionId}/reject`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Falha ao recusar mesa");
+  await refreshPendingValidation();
+  await refreshDashboard();
+}
+
 async function updateStatus(kind, id, status) {
   const response = await fetch(`/api/${kind}/${id}/status`, {
     method: "POST",
@@ -310,11 +363,23 @@ function closeBillingDrawer() {
 }
 
 document.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-update]");
-  if (!button) return;
-  updateStatus(button.dataset.update, button.dataset.id, button.dataset.status).catch((error) => {
-    alert(error.message);
-  });
+  const update = event.target.closest("[data-update]");
+  if (update) {
+    updateStatus(update.dataset.update, update.dataset.id, update.dataset.status).catch((error) => {
+      alert(error.message);
+    });
+    return;
+  }
+  const validate = event.target.closest("[data-validate]");
+  if (validate) {
+    validateSession(validate.dataset.validate).catch((error) => alert(error.message));
+    return;
+  }
+  const reject = event.target.closest("[data-reject]");
+  if (reject) {
+    rejectSession(reject.dataset.reject).catch((error) => alert(error.message));
+    return;
+  }
 });
 
 document.getElementById("demo-form")?.addEventListener("submit", async (event) => {
@@ -350,6 +415,8 @@ document.addEventListener("keydown", (event) => {
 
 renderDashboard(window.__INITIAL_DASHBOARD__ || {});
 refreshBilling();
+refreshPendingValidation();
 setInterval(refreshDashboard, 4000);
+setInterval(refreshPendingValidation, 5000);
 setInterval(refreshBilling, 30000);
 

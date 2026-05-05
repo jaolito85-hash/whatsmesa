@@ -201,6 +201,11 @@ MESSAGES = {
         "en": "We are setting something up. Please call staff to place your order.",
         "es": "Estamos ajustando algo. Llame al personal para hacer su pedido.",
     },
+    "awaiting_validation": {
+        "pt": "Mesa {table} registrada. Aguarde o atendente confirmar visualmente que voce esta na mesa para liberar o pedido.",
+        "en": "Table {table} registered. Please wait for staff to visually confirm you are seated before ordering.",
+        "es": "Mesa {table} registrada. Espera al personal confirmar visualmente que estas en la mesa antes de pedir.",
+    },
 }
 
 SECTOR_NAMES = {
@@ -256,6 +261,17 @@ class RestaurantAgent:
 
         activated = self.table_sessions.activate_from_message(remote_jid, text)
         if activated and self._is_table_intro(text):
+            if activated.get("status") == "sessao_pendente":
+                return {
+                    "reply": self._message(
+                        "awaiting_validation",
+                        language,
+                        table=activated["mesa_numero"],
+                    ),
+                    "session": activated,
+                    "action": "awaiting_validation",
+                    "language": language,
+                }
             return {
                 "reply": self._message(
                     "session_activated",
@@ -273,6 +289,18 @@ class RestaurantAgent:
                 "reply": self._message("need_table", language),
                 "session": None,
                 "action": "need_table",
+                "language": language,
+            }
+
+        if session.get("status") == "sessao_pendente":
+            return {
+                "reply": self._message(
+                    "awaiting_validation",
+                    language,
+                    table=session["mesa_numero"],
+                ),
+                "session": session,
+                "action": "awaiting_validation",
                 "language": language,
             }
 

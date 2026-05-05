@@ -37,6 +37,9 @@ class Settings:
     dashboard_user: str
     dashboard_password: str
     max_audio_seconds: int = 35
+    evolution_daily_limit: int = 200
+    require_table_validation: bool = False
+    session_idle_ttl_hours: int = 6
 
     @property
     def dashboard_auth_enabled(self) -> bool:
@@ -53,6 +56,23 @@ class Settings:
     @property
     def has_supabase(self) -> bool:
         return bool(self.supabase_url and self.supabase_service_role_key)
+
+
+def _bool_env(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _int_env(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
 
 
 def get_settings() -> Settings:
@@ -74,5 +94,8 @@ def get_settings() -> Settings:
         admin_token=os.getenv("MESAZAP_ADMIN_TOKEN", ""),
         dashboard_user=os.getenv("MESAZAP_DASHBOARD_USER", "admin"),
         dashboard_password=os.getenv("MESAZAP_DASHBOARD_PASSWORD", ""),
+        evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
+        require_table_validation=_bool_env("MESAZAP_REQUIRE_TABLE_VALIDATION", False),
+        session_idle_ttl_hours=_int_env("MESAZAP_SESSION_IDLE_TTL_HOURS", 6),
     )
 

@@ -13,9 +13,15 @@ IDLE_TTL_HOURS = 6
 
 
 class TableSessionService:
-    def __init__(self, db: Database, idle_ttl_hours: int = IDLE_TTL_HOURS):
+    def __init__(
+        self,
+        db: Database,
+        idle_ttl_hours: int = IDLE_TTL_HOURS,
+        require_validation: bool = False,
+    ):
         self.db = db
         self.idle_ttl_hours = idle_ttl_hours
+        self.require_validation = require_validation
 
     def parse_table_number(self, text: str) -> int | None:
         normalized = normalize_text(text)
@@ -99,7 +105,14 @@ class TableSessionService:
 
         session_id = new_id()
         now = utc_now()
-        status = "sessao_ativa"
+        if self.require_validation:
+            status = "sessao_pendente"
+            mesa_status = "sessao_pendente"
+            validada_em = None
+        else:
+            status = "sessao_ativa"
+            mesa_status = "sessao_ativa"
+            validada_em = now
         with self.db.transaction() as conn:
             conn.execute(
                 """
@@ -116,13 +129,68 @@ class TableSessionService:
                     remote_jid,
                     status,
                     now,
-                    now,
+                    validada_em,
                     now,
                 ),
             )
-            conn.execute("update mesas set status = 'sessao_ativa' where id = ?", (table["id"],))
+            conn.execute("update mesas set status = ? where id = ?", (mesa_status, table["id"]))
 
         return self.active_session_for_whatsapp(remote_jid)
+
+    def list_pending_sessions(self) -> list[dict[str, Any]]:
+        return self.db.fetchall(
+            """
+            select s.*, m.numero as mesa_numero, m.nome as mesa_nome
+            from sessoes_mesa s
+            join mesas m on m.id = s.mesa_id
+            where s.status = 'sessao_pendente'
+            order by s.aberta_em asc
+            """
+        )
+
+    def validate_session(self, session_id: str) -> dict[str, Any] | None:
+        session = self.db.fetchone("select * from sessoes_mesa where id = ?", (session_id,))
+        if not session or session["status"] != "sessao_pendente":
+            return session
+        now = utc_now()
+        with self.db.transaction() as conn:
+            conn.execute(
+                """
+                update sessoes_mesa
+                set status = 'sessao_ativa', validada_em = ?, ultima_atividade_em = ?
+                where id = ?
+                """,
+                (now, now, session_id),
+            )
+            conn.execute(
+                "update mesas set status = 'sessao_ativa' where id = ?",
+                (session["mesa_id"],),
+            )
+        return self.db.fetchone(
+            """
+            select s.*, m.numero as mesa_numero, m.nome as mesa_nome
+            from sessoes_mesa s
+            join mesas m on m.id = s.mesa_id
+            where s.id = ?
+            """,
+            (session_id,),
+        )
+
+    def reject_session(self, session_id: str) -> None:
+        session = self.db.fetchone("select * from sessoes_mesa where id = ?", (session_id,))
+        if not session or session["status"] not in ("sessao_pendente", "sessao_ativa"):
+            return
+        now = utc_now()
+        new_token = new_id()
+        with self.db.transaction() as conn:
+            conn.execute(
+                "update sessoes_mesa set status = 'sessao_recusada', fechada_em = ? where id = ?",
+                (now, session_id),
+            )
+            conn.execute(
+                "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
+                (new_token, session["mesa_id"]),
+            )
 
     def list_tables(self) -> list[dict[str, Any]]:
         return self.db.fetchall(

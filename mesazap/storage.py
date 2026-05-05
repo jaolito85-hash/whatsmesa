@@ -198,6 +198,17 @@ create index if not exists mensagens_remote_jid_idx on mensagens_whatsapp(remote
 create unique index if not exists billing_events_pedido_unq on billing_events(pedido_id) where pedido_id is not null and tipo = 'pedido_confirmado';
 create index if not exists billing_events_account_periodo_idx on billing_events(billing_account_id, periodo_ano_mes, status_cobranca);
 create index if not exists faturas_account_periodo_idx on faturas(billing_account_id, periodo_ano_mes);
+
+create table if not exists whatsapp_send_log (
+  id text primary key,
+  restaurante_id text,
+  remote_jid text,
+  sucesso integer not null default 1,
+  erro text,
+  criado_em text not null
+);
+
+create index if not exists whatsapp_send_log_criado_idx on whatsapp_send_log(criado_em);
 """
 
 
@@ -296,6 +307,52 @@ class Database:
                     utc_now(),
                 ),
             )
+
+    def record_whatsapp_send(
+        self,
+        *,
+        remote_jid: str,
+        sucesso: bool,
+        erro: str | None = None,
+        restaurante_id: str | None = None,
+    ) -> None:
+        self.execute(
+            """
+            insert into whatsapp_send_log (
+              id, restaurante_id, remote_jid, sucesso, erro, criado_em
+            ) values (?, ?, ?, ?, ?, ?)
+            """,
+            (new_id(), restaurante_id, remote_jid, 1 if sucesso else 0, erro, utc_now()),
+        )
+
+    def count_whatsapp_sends_today(self) -> int:
+        today = datetime.now(timezone.utc).date().isoformat()
+        row = self.fetchone(
+            "select count(*) as total from whatsapp_send_log where substr(criado_em, 1, 10) = ?",
+            (today,),
+        )
+        return int(row["total"]) if row else 0
+
+    def last_inbound_message_at(self) -> str | None:
+        row = self.fetchone(
+            "select max(criada_em) as ultima from mensagens_whatsapp"
+        )
+        return row["ultima"] if row else None
+
+    def count_active_sessions(self) -> int:
+        row = self.fetchone(
+            """
+            select count(*) as total from sessoes_mesa
+            where status in ('sessao_pendente', 'sessao_ativa', 'conta_solicitada')
+            """
+        )
+        return int(row["total"]) if row else 0
+
+    def count_pending_sessions(self) -> int:
+        row = self.fetchone(
+            "select count(*) as total from sessoes_mesa where status = 'sessao_pendente'"
+        )
+        return int(row["total"]) if row else 0
 
     def mark_message_processed(
         self,

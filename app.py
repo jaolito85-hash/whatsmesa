@@ -25,7 +25,11 @@ def create_app() -> Flask:
     db.init_schema()
     db.seed_demo()
 
-    table_sessions = TableSessionService(db)
+    table_sessions = TableSessionService(
+        db,
+        idle_ttl_hours=settings.session_idle_ttl_hours,
+        require_validation=settings.require_table_validation,
+    )
     menu = MenuService(db)
     orders = OrderService(db)
     billing = BillingService(db)
@@ -75,11 +79,69 @@ def create_app() -> Flask:
 
     @app.get("/health")
     def health():
-        return jsonify({"ok": True, "service": "mesazap"})
+        sends_today = db.count_whatsapp_sends_today()
+        limit = settings.evolution_daily_limit or 0
+        usage_pct = round((sends_today / limit) * 100, 1) if limit > 0 else None
+        return jsonify(
+            {
+                "ok": True,
+                "service": "mesazap",
+                "whatsapp": {
+                    "configured": settings.has_evolution,
+                    "sends_today": sends_today,
+                    "daily_limit": limit,
+                    "usage_pct": usage_pct,
+                    "warning": usage_pct is not None and usage_pct >= 70,
+                },
+                "sessions": {
+                    "active": db.count_active_sessions(),
+                    "pending_validation": db.count_pending_sessions(),
+                },
+                "last_inbound_at": db.last_inbound_message_at(),
+                "require_table_validation": settings.require_table_validation,
+            }
+        )
 
     @app.get("/api/dashboard")
     def api_dashboard():
         return jsonify(orders.dashboard())
+
+    @app.get("/api/sessions/pending")
+    def api_pending_sessions():
+        return jsonify({"sessions": table_sessions.list_pending_sessions()})
+
+    @app.post("/api/sessions/<session_id>/validate")
+    def api_validate_session(session_id: str):
+        session = table_sessions.validate_session(session_id)
+        if not session:
+            return jsonify({"ok": False, "reason": "not_found"}), 404
+        if settings.has_evolution and session.get("cliente_whatsapp"):
+            text = (
+                f"Mesa {session['mesa_numero']} liberada. "
+                "Pode pedir por audio ou texto."
+            )
+            try:
+                send_result = whatsapp.send_message(session["cliente_whatsapp"], text)
+                if send_result.get("sent"):
+                    db.record_whatsapp_send(
+                        remote_jid=session["cliente_whatsapp"],
+                        sucesso=True,
+                        restaurante_id=session.get("restaurante_id"),
+                    )
+            except Exception as exc:  # pragma: no cover - rede
+                db.record_whatsapp_send(
+                    remote_jid=session["cliente_whatsapp"],
+                    sucesso=False,
+                    erro=str(exc),
+                    restaurante_id=session.get("restaurante_id"),
+                )
+                app.logger.exception("Falha ao notificar mesa validada: %s", exc)
+        return jsonify({"ok": True, "session": session})
+
+    @app.post("/api/sessions/<session_id>/reject")
+    def api_reject_session(session_id: str):
+        table_sessions.reject_session(session_id)
+        return jsonify({"ok": True})
 
     @app.get("/api/tables")
     def api_tables():
@@ -189,7 +251,32 @@ def create_app() -> Flask:
         inbound = whatsapp.normalize_evolution_payload(payload)
         result = process_inbound(inbound)
         if result.get("reply") and inbound.remote_jid:
-            result["whatsapp"] = whatsapp.send_message(inbound.remote_jid, result["reply"])
+            try:
+                send_result = whatsapp.send_message(inbound.remote_jid, result["reply"])
+                result["whatsapp"] = send_result
+                if send_result.get("sent"):
+                    db.record_whatsapp_send(
+                        remote_jid=inbound.remote_jid,
+                        sucesso=True,
+                        restaurante_id=(result.get("session") or {}).get("restaurante_id"),
+                    )
+                    sends = db.count_whatsapp_sends_today()
+                    limit = settings.evolution_daily_limit or 0
+                    if limit > 0 and sends >= int(limit * 0.7):
+                        app.logger.warning(
+                            "evolution_daily_usage_high sends=%s limit=%s pct=%s",
+                            sends,
+                            limit,
+                            round((sends / limit) * 100, 1),
+                        )
+            except Exception as exc:
+                db.record_whatsapp_send(
+                    remote_jid=inbound.remote_jid,
+                    sucesso=False,
+                    erro=str(exc),
+                    restaurante_id=(result.get("session") or {}).get("restaurante_id"),
+                )
+                app.logger.exception("Falha ao enviar resposta WhatsApp: %s", exc)
         return jsonify({"ok": True, "action": result.get("action")})
 
     def process_inbound(inbound):
