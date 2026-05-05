@@ -60,7 +60,8 @@ create table if not exists sessoes_mesa (
   validada_por_funcionario_id text,
   aberta_em text not null,
   validada_em text,
-  fechada_em text
+  fechada_em text,
+  ultima_atividade_em text
 );
 
 create table if not exists produtos (
@@ -215,6 +216,15 @@ class Database:
     def init_schema(self) -> None:
         with self.connect() as conn:
             conn.executescript(SQLITE_SCHEMA)
+            self._apply_migrations(conn)
+
+    def _apply_migrations(self, conn: sqlite3.Connection) -> None:
+        cols = {row[1] for row in conn.execute("pragma table_info(sessoes_mesa)").fetchall()}
+        if "ultima_atividade_em" not in cols:
+            conn.execute("alter table sessoes_mesa add column ultima_atividade_em text")
+            conn.execute(
+                "update sessoes_mesa set ultima_atividade_em = coalesce(validada_em, aberta_em) where ultima_atividade_em is null"
+            )
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:

@@ -104,7 +104,16 @@ def create_app() -> Flask:
     @app.post("/api/requests/<request_id>/status")
     def api_update_request(request_id: str):
         payload = request.get_json(silent=True) or request.form
-        orders.update_request_status(request_id, payload.get("status", ""))
+        new_status = payload.get("status", "")
+        existing = orders.get_request(request_id)
+        orders.update_request_status(request_id, new_status)
+        if (
+            existing
+            and existing.get("tipo") == "fechar_conta"
+            and new_status == "concluida"
+            and existing.get("sessao_mesa_id")
+        ):
+            table_sessions.close_session(existing["sessao_mesa_id"])
         return jsonify({"ok": True})
 
     def require_admin() -> None:

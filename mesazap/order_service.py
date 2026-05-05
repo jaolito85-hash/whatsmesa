@@ -278,6 +278,12 @@ class OrderService:
             raise ValueError("Status de item invalido.")
         self.db.execute("update pedido_itens set status = ? where id = ?", (status, item_id))
 
+    def get_request(self, request_id: str) -> dict[str, Any] | None:
+        return self.db.fetchone(
+            "select * from solicitacoes_salao where id = ?",
+            (request_id,),
+        )
+
     def update_request_status(self, request_id: str, status: str) -> None:
         allowed = {"nova", "em_atendimento", "concluida", "cancelada"}
         if status not in allowed:

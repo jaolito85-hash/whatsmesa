@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from .storage import Database, new_id, utc_now
@@ -8,11 +9,13 @@ from .text_utils import normalize_text
 
 
 ACTIVE_SESSION_STATUSES = ("sessao_pendente", "sessao_ativa", "conta_solicitada")
+IDLE_TTL_HOURS = 6
 
 
 class TableSessionService:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, idle_ttl_hours: int = IDLE_TTL_HOURS):
         self.db = db
+        self.idle_ttl_hours = idle_ttl_hours
 
     def parse_table_number(self, text: str) -> int | None:
         normalized = normalize_text(text)
@@ -48,8 +51,9 @@ class TableSessionService:
         )
 
     def active_session_for_whatsapp(self, remote_jid: str) -> dict[str, Any] | None:
+        self._expire_idle_sessions()
         placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
-        return self.db.fetchone(
+        session = self.db.fetchone(
             f"""
             select s.*, m.numero as mesa_numero, m.nome as mesa_nome
             from sessoes_mesa s
@@ -61,6 +65,9 @@ class TableSessionService:
             """,
             (remote_jid, *ACTIVE_SESSION_STATUSES),
         )
+        if session:
+            self._touch(session["id"])
+        return session
 
     def activate_from_message(self, remote_jid: str, text: str) -> dict[str, Any] | None:
         number = self.parse_table_number(text)
@@ -70,8 +77,10 @@ class TableSessionService:
         if not table:
             return None
 
+        self._expire_idle_sessions()
+
         existing = self.db.fetchone(
-            """
+            f"""
             select s.*, m.numero as mesa_numero, m.nome as mesa_nome
             from sessoes_mesa s
             join mesas m on m.id = s.mesa_id
@@ -83,7 +92,10 @@ class TableSessionService:
             (table["id"], remote_jid),
         )
         if existing:
+            self._touch(existing["id"])
             return existing
+
+        self._close_other_sessions_for_jid(remote_jid, table["id"])
 
         session_id = new_id()
         now = utc_now()
@@ -93,8 +105,8 @@ class TableSessionService:
                 """
                 insert into sessoes_mesa (
                   id, restaurante_id, unidade_id, mesa_id, cliente_whatsapp,
-                  status, aberta_em, validada_em
-                ) values (?, ?, ?, ?, ?, ?, ?, ?)
+                  status, aberta_em, validada_em, ultima_atividade_em
+                ) values (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session_id,
@@ -103,6 +115,7 @@ class TableSessionService:
                     table["id"],
                     remote_jid,
                     status,
+                    now,
                     now,
                     now,
                 ),
@@ -127,13 +140,19 @@ class TableSessionService:
         session = self.db.fetchone("select * from sessoes_mesa where id = ?", (session_id,))
         if not session:
             return
+        if session["status"] == "sessao_fechada":
+            return
         now = utc_now()
+        new_token = new_id()
         with self.db.transaction() as conn:
             conn.execute(
                 "update sessoes_mesa set status = 'sessao_fechada', fechada_em = ? where id = ?",
                 (now, session_id),
             )
-            conn.execute("update mesas set status = 'sessao_fechada' where id = ?", (session["mesa_id"],))
+            conn.execute(
+                "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
+                (new_token, session["mesa_id"]),
+            )
 
     def request_account_close(self, session_id: str) -> None:
         session = self.db.fetchone("select * from sessoes_mesa where id = ?", (session_id,))
@@ -141,7 +160,43 @@ class TableSessionService:
             return
         with self.db.transaction() as conn:
             conn.execute(
-                "update sessoes_mesa set status = 'conta_solicitada' where id = ?",
-                (session_id,),
+                "update sessoes_mesa set status = 'conta_solicitada', ultima_atividade_em = ? where id = ?",
+                (utc_now(), session_id),
             )
             conn.execute("update mesas set status = 'conta_solicitada' where id = ?", (session["mesa_id"],))
+
+    def _close_other_sessions_for_jid(self, remote_jid: str, current_table_id: str) -> None:
+        rows = self.db.fetchall(
+            f"""
+            select id from sessoes_mesa
+            where cliente_whatsapp = ?
+              and mesa_id != ?
+              and status in ({",".join("?" for _ in ACTIVE_SESSION_STATUSES)})
+            """,
+            (remote_jid, current_table_id, *ACTIVE_SESSION_STATUSES),
+        )
+        for row in rows:
+            self.close_session(row["id"])
+
+    def _expire_idle_sessions(self) -> None:
+        if self.idle_ttl_hours <= 0:
+            return
+        cutoff = (
+            datetime.now(timezone.utc) - timedelta(hours=self.idle_ttl_hours)
+        ).isoformat(timespec="seconds")
+        rows = self.db.fetchall(
+            f"""
+            select id from sessoes_mesa
+            where status in ({",".join("?" for _ in ACTIVE_SESSION_STATUSES)})
+              and coalesce(ultima_atividade_em, validada_em, aberta_em) < ?
+            """,
+            (*ACTIVE_SESSION_STATUSES, cutoff),
+        )
+        for row in rows:
+            self.close_session(row["id"])
+
+    def _touch(self, session_id: str) -> None:
+        self.db.execute(
+            "update sessoes_mesa set ultima_atividade_em = ? where id = ?",
+            (utc_now(), session_id),
+        )
