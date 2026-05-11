@@ -6,8 +6,8 @@ from typing import Any
 from .storage import Database, new_id, utc_now
 
 
-DEFAULT_PRICE_PER_ORDER = 1.97
-DEFAULT_SETUP_FEE = 99.00
+DEFAULT_PRICE_PER_SESSION = 3.97
+DEFAULT_SETUP_FEE = 147.00
 DEFAULT_CURRENCY = "BRL"
 
 ACCOUNT_STATUSES = ("aguardando_setup", "ativo", "suspenso", "cancelado")
@@ -38,7 +38,7 @@ class BillingService:
             (
                 new_id(),
                 restaurante_id,
-                DEFAULT_PRICE_PER_ORDER,
+                DEFAULT_PRICE_PER_SESSION,
                 DEFAULT_SETUP_FEE,
                 DEFAULT_CURRENCY,
                 utc_now(),
@@ -71,8 +71,8 @@ class BillingService:
             conn.execute(
                 """
                 insert into billing_events (
-                  id, billing_account_id, tipo, valor, moeda,
-                  periodo_ano_mes, status_cobranca, criado_em
+                   id, billing_account_id, tipo, valor, moeda,
+                   periodo_ano_mes, status_cobranca, criado_em
                 ) values (?, ?, 'setup', ?, ?, ?, 'pago', ?)
                 """,
                 (
@@ -104,23 +104,24 @@ class BillingService:
         )
         return self.account_for_restaurant(restaurante_id)
 
-    def record_confirmed_order(
+    def record_session_billing(
         self,
         *,
         restaurante_id: str,
-        pedido_id: str,
+        sessao_id: str,
     ) -> dict[str, Any] | None:
         account = self.account_for_restaurant(restaurante_id)
         if account["status"] != "ativo":
             return None
 
+        # Usando sessao_mesa_id para evitar IntegrityError de FK com pedidos
         existing = self.db.fetchone(
             """
             select id
             from billing_events
-            where pedido_id = ? and tipo = 'pedido_confirmado'
+            where sessao_mesa_id = ? and tipo = 'mesa_aberta'
             """,
-            (pedido_id,),
+            (sessao_id,),
         )
         if existing:
             return None
@@ -129,14 +130,14 @@ class BillingService:
         self.db.execute(
             """
             insert into billing_events (
-              id, billing_account_id, tipo, pedido_id, valor, moeda,
-              periodo_ano_mes, status_cobranca, criado_em
-            ) values (?, ?, 'pedido_confirmado', ?, ?, ?, ?, 'pendente', ?)
+               id, billing_account_id, tipo, sessao_mesa_id, valor, moeda,
+               periodo_ano_mes, status_cobranca, criado_em
+            ) values (?, ?, 'mesa_aberta', ?, ?, ?, ?, 'pendente', ?)
             """,
             (
                 event_id,
                 account["id"],
-                pedido_id,
+                sessao_id,
                 account["preco_por_pedido"],
                 account["moeda"],
                 current_period(),
@@ -144,6 +145,10 @@ class BillingService:
             ),
         )
         return self.db.fetchone("select * from billing_events where id = ?", (event_id,))
+
+    def record_confirmed_order(self, **kwargs):
+        # Desativado: Agora cobramos por mesa aberta
+        pass
 
     def usage_summary(
         self,
@@ -158,7 +163,7 @@ class BillingService:
             select count(*) as qtd, coalesce(sum(valor), 0) as total
             from billing_events
             where billing_account_id = ?
-              and tipo = 'pedido_confirmado'
+              and tipo = 'mesa_aberta'
               and periodo_ano_mes = ?
             """,
             (account["id"], periodo),
@@ -198,8 +203,8 @@ class BillingService:
             (account["id"], periodo),
         )
 
-        qtd_pedidos = sum(1 for e in events if e["tipo"] == "pedido_confirmado")
-        valor_pedidos = sum(float(e["valor"]) for e in events if e["tipo"] == "pedido_confirmado")
+        qtd_pedidos = sum(1 for e in events if e["tipo"] == "mesa_aberta")
+        valor_pedidos = sum(float(e["valor"]) for e in events if e["tipo"] == "mesa_aberta")
         valor_setup = sum(float(e["valor"]) for e in events if e["tipo"] == "setup")
         valor_total = valor_pedidos + valor_setup
 

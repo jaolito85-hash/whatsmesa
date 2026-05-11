@@ -57,17 +57,21 @@ class DashboardAuthTest(unittest.TestCase):
         response = self.client.get("/qr/unknown-token")
         self.assertEqual(response.status_code, 404)
 
-    def test_dashboard_requires_auth(self):
+    def test_landing_is_public(self):
         response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_dashboard_requires_auth(self):
+        response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(response.headers.get("WWW-Authenticate", "").startswith("Basic"))
 
     def test_dashboard_accepts_correct_password(self):
-        response = self.client.get("/", headers=_basic_auth("joao", "super-secret"))
+        response = self.client.get("/dashboard", headers=_basic_auth("joao", "super-secret"))
         self.assertEqual(response.status_code, 200)
 
     def test_dashboard_rejects_wrong_password(self):
-        response = self.client.get("/", headers=_basic_auth("joao", "errada"))
+        response = self.client.get("/dashboard", headers=_basic_auth("joao", "errada"))
         self.assertEqual(response.status_code, 401)
 
     def test_api_endpoint_requires_auth(self):

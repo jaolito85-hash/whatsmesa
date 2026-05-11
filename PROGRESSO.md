@@ -58,6 +58,26 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 11/05/2026 — Landing Page e Novo Modelo de Cobrança (Klink)
+**Commit:** `landing-page-billing`
+
+Criei uma landing page moderna e atualizei o modelo de negócio:
+
+1. **Nova Landing Page:** Criado `templates/landing.html` com design focado em conversão, usando Tailwind CSS e a identidade visual do projeto (Klink). Inclui o screenshot real do painel Kanban.
+2. **Novo Modelo de Cobrança:**
+   - **Setup Inicial:** R$ 147,00 (configuração e QR Codes).
+   - **Uso:** R$ 3,97 por **mesa aberta** (em vez de por pedido).
+3. **Reorganização de Rotas:** 
+   - A landing page agora está na raiz (`/`).
+   - O painel operacional (dashboard) foi movido para `/dashboard`.
+4. **Segurança e Backend:** 
+   - Atualizada a lógica de autenticação no `app.py`.
+   - Sistema de cobrança migrado para registrar eventos por sessão de mesa.
+   - Adicionada migração automática de banco de dados para suportar o novo modelo.
+5. **Testes:** Todos os 54 testes unitários e de integração atualizados e passando.
+
+---
+
 ### 05/05/2026 — Robustez para cliente pagante real
 **Commit:** `bc670a1`
 

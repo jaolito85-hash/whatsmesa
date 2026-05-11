@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klink - O Garçom Invisível no WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        :root {
+            --lemon: #d6f04a;
+            --ink: #151515;
+            --paper: #fbfbf8;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: "Rockwell", "Georgia", serif;
+        }
+        .btn-primary {
+            background-color: var(--lemon);
+            border: 2px solid var(--ink);
+            box-shadow: 4px 4px 0 var(--ink);
+            transition: all 0.1s ease;
+        }
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--ink);
+        }
+        .btn-primary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0 var(--ink);
+        }
+        .card-neo {
+            background: white;
+            border: 2px solid var(--ink);
+            box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.1);
+        }
+        .bg-grid {
+            background-image: 
+                linear-gradient(90deg, rgba(21, 21, 21, 0.035) 1px, transparent 1px),
+                linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+    </style>
+</head>
+<body class="bg-[#fbfbf8] bg-grid text-[#151515]">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-[#fbfbf8]/90 backdrop-blur-md border-b-2 border-[#151515] px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 border-2 border-[#151515] bg-[#d6f04a] rounded-lg shadow-[3px_3px_0_#151515] grid place-items-center font-bold brand-font text-xl">
+                    K
+                </div>
+                <span class="text-2xl font-black brand-font tracking-tight">Klink</span>
+            </div>
+            <div class="flex gap-4 items-center">
+                <a href="/dashboard" class="font-bold hover:underline">Entrar no Painel</a>
+                <a href="#precos" class="btn-primary px-5 py-2 rounded-lg font-bold text-sm">Começar Agora</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="max-w-7xl mx-auto px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+            <div class="inline-block px-3 py-1 border-2 border-[#151515] bg-white rounded-full text-xs font-black uppercase tracking-widest mb-6">
+                🚀 O Garçom Invisível
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black leading-none mb-8">
+                O seu WhatsApp <br> <span class="text-[#147a5c]">agora atende</span> as mesas.
+            </h1>
+            <p class="text-xl text-[#6d706c] font-medium mb-10 max-w-lg leading-relaxed">
+                Aumente o faturamento reduzindo o atrito do re-pedido. Seus clientes pedem por áudio ou texto, sem baixar nenhum app.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="#como-funciona" class="btn-primary px-8 py-4 rounded-xl font-bold text-lg text-center">
+                    Ver como funciona
+                </a>
+                <div class="flex items-center gap-3 px-4 py-2 border-2 border-dashed border-[#d7d9d1] rounded-xl text-sm font-bold text-[#6d706c]">
+                    <span class="flex -space-x-2">
+                        <img class="w-8 h-8 rounded-full border-2 border-white bg-slate-200" src="https://i.pravatar.cc/100?u=1" alt="">
+                        <img class="w-8 h-8 rounded-full border-2 border-white bg-slate-200" src="https://i.pravatar.cc/100?u=2" alt="">
+                        <img class="w-8 h-8 rounded-full border-2 border-white bg-slate-200" src="https://i.pravatar.cc/100?u=3" alt="">
+                    </span>
+                    +12 restaurantes pilotos
+                </div>
+            </div>
+        </div>
+        <div class="relative">
+            <div class="absolute inset-0 bg-[#d6f04a] rounded-3xl rotate-3 -z-10 border-2 border-[#151515]"></div>
+            <div class="bg-white border-2 border-[#151515] rounded-3xl p-4 shadow-xl">
+                <!-- WhatsApp Mockup -->
+                <div class="bg-[#e5ddd5] rounded-2xl overflow-hidden border-2 border-[#151515] h-[500px] flex flex-col">
+                    <div class="bg-[#075e54] p-4 text-white flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[#128c7e] border border-white/20"></div>
+                        <div>
+                            <div class="font-bold leading-none">Garçom Klink</div>
+                            <div class="text-[10px] opacity-70">Online agora</div>
+                        </div>
+                    </div>
+                    <div class="flex-1 p-4 space-y-4 overflow-y-auto font-sans">
+                        <div class="bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm self-start">
+                            Olá! Mesa 12 liberada. O que posso trazer para vocês? 🍻
+                        </div>
+                        <div class="bg-[#dcf8c6] p-3 rounded-lg shadow-sm max-w-[80%] text-sm self-end ml-auto">
+                            Me vê 2 Coronas e uma porção de batata.
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm self-start italic text-slate-500">
+                            Digitando...
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm self-start">
+                            Perfeito! 2 Coronas e 1 Batata Frita na Mesa 12. Confirma? <br>
+                            1 - Confirmar <br>
+                            2 - Alterar
+                        </div>
+                        <div class="bg-[#dcf8c6] p-2 rounded-lg shadow-sm self-end ml-auto font-bold px-4">
+                            1
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Problema -->
+    <section class="bg-[#151515] text-white py-20 px-6">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
+            <div>
+                <div class="text-[#e13d2f] text-4xl mb-4 font-black">01.</div>
+                <h3 class="text-2xl font-black mb-4 brand-font">Garçom Ocupado</h3>
+                <p class="text-[#dee4e2]/70 leading-relaxed">O cliente quer pedir outra bebida, mas o garçom está correndo com pratos. O tempo passa e a vontade de consumir diminui.</p>
+            </div>
+            <div>
+                <div class="text-[#e13d2f] text-4xl mb-4 font-black">02.</div>
+                <h3 class="text-2xl font-black mb-4 brand-font">Apps Barulhentos</h3>
+                <p class="text-[#dee4e2]/70 leading-relaxed">Ninguém quer baixar um app ou se cadastrar para pedir uma cerveja. Cardápios digitais em PDF são lentos e difíceis de ler.</p>
+            </div>
+            <div>
+                <div class="text-[#e13d2f] text-4xl mb-4 font-black">03.</div>
+                <h3 class="text-2xl font-black mb-4 brand-font">Perda de Venda</h3>
+                <p class="text-[#dee4e2]/70 leading-relaxed">Cada minuto que o cliente espera para pedir é um minuto a menos de consumo. Reduzir esse atrito aumenta o seu faturamento médio.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Como Funciona -->
+    <section id="como-funciona" class="max-w-7xl mx-auto px-6 py-24">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-black mb-4">Como o Klink funciona</h2>
+            <p class="text-[#6d706c] font-medium max-w-2xl mx-auto">Tão simples que até seu cliente que não gosta de tecnologia vai usar.</p>
+        </div>
+        <div class="grid md:grid-cols-4 gap-8">
+            <div class="text-center p-8 card-neo rounded-2xl relative">
+                <div class="w-12 h-12 bg-[#d6f04a] border-2 border-[#151515] rounded-full grid place-items-center font-black mx-auto mb-6">1</div>
+                <h4 class="font-black brand-font text-lg mb-2">QR Code na Mesa</h4>
+                <p class="text-sm text-[#6d706c]">O cliente escaneia o código único da mesa dele.</p>
+            </div>
+            <div class="text-center p-8 card-neo rounded-2xl">
+                <div class="w-12 h-12 bg-[#d6f04a] border-2 border-[#151515] rounded-full grid place-items-center font-black mx-auto mb-6">2</div>
+                <h4 class="font-black brand-font text-lg mb-2">Mande um Zap</h4>
+                <p class="text-sm text-[#6d706c]">O WhatsApp abre já com o número da mesa. Ele escreve ou manda áudio.</p>
+            </div>
+            <div class="text-center p-8 card-neo rounded-2xl">
+                <div class="w-12 h-12 bg-[#d6f04a] border-2 border-[#151515] rounded-full grid place-items-center font-black mx-auto mb-6">3</div>
+                <h4 class="font-black brand-font text-lg mb-2">IA Interpreta</h4>
+                <p class="text-sm text-[#6d706c]">Nossa IA entende o pedido (mesmo com gírias) e confirma com o cliente.</p>
+            </div>
+            <div class="text-center p-8 card-neo rounded-2xl">
+                <div class="w-12 h-12 bg-[#d6f04a] border-2 border-[#151515] rounded-full grid place-items-center font-black mx-auto mb-6">4</div>
+                <h4 class="font-black brand-font text-lg mb-2">Cai no Painel</h4>
+                <p class="text-sm text-[#6d706c]">O bar ou cozinha recebe o pedido limpo e organizado no Kanban.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Diferenciais -->
+    <section class="bg-white border-y-2 border-[#151515] py-24 px-6 overflow-hidden">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div class="relative">
+                <div class="absolute -top-10 -left-10 w-40 h-40 bg-[#d6f04a]/30 rounded-full blur-3xl -z-10"></div>
+                <img src="https://sc01.alicdn.com/kf/A930f5d953cb640e09798dcba881c0e39X.png" alt="Painel Kanban" class="rounded-2xl border-2 border-[#151515] shadow-[12px_12px_0_#151515]">
+            </div>
+            <div>
+                <h2 class="text-4xl font-black mb-8 leading-tight">Painel Operacional <br> que sua equipe vai amar.</h2>
+                <ul class="space-y-6">
+                    <li class="flex gap-4">
+                        <div class="w-6 h-6 bg-[#147a5c] text-white rounded-full flex-shrink-0 grid place-items-center text-xs">✓</div>
+                        <div>
+                            <strong class="block text-lg brand-font">Divisão por Setores</strong>
+                            <p class="text-[#6d706c]">Bebidas vão para o Bar, pratos para a Cozinha. Tudo automático.</p>
+                        </div>
+                    </li>
+                    <li class="flex gap-4">
+                        <div class="w-6 h-6 bg-[#147a5c] text-white rounded-full flex-shrink-0 grid place-items-center text-xs">✓</div>
+                        <div>
+                            <strong class="block text-lg brand-font">IA que entende Áudio</strong>
+                            <p class="text-[#6d706c]">O cliente manda áudio de 10s e o Klink transcreve e organiza os itens.</p>
+                        </div>
+                    </li>
+                    <li class="flex gap-4">
+                        <div class="w-6 h-6 bg-[#147a5c] text-white rounded-full flex-shrink-0 grid place-items-center text-xs">✓</div>
+                        <div>
+                            <strong class="block text-lg brand-font">Multilíngue (Turismo)</strong>
+                            <p class="text-[#6d706c]">Se o cliente pedir em Inglês, a IA entende e o pedido cai em Português no painel.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preços -->
+    <section id="precos" class="max-w-7xl mx-auto px-6 py-24 text-center">
+        <h2 class="text-4xl md:text-5xl font-black mb-4">Investimento justo</h2>
+        <p class="text-[#6d706c] font-medium mb-16">Sem mensalidades fixas abusivas. Nós crescemos com você.</p>
+        
+        <div class="max-w-lg mx-auto card-neo rounded-3xl p-10 bg-white relative">
+            <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#151515] text-[#d6f04a] px-6 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+                Plano Piloto
+            </div>
+            <div class="mb-8">
+                <span class="text-sm font-bold text-[#6d706c] uppercase">Setup inicial</span>
+                <div class="text-5xl font-black brand-font mt-2">R$ 147,00</div>
+                <p class="text-xs text-[#6d706c] mt-2">Pagamento único para ativação e QR Codes.</p>
+            </div>
+            <div class="border-t-2 border-dashed border-[#d7d9d1] py-8">
+                <span class="text-sm font-bold text-[#6d706c] uppercase">Por mesa aberta</span>
+                <div class="text-5xl font-black brand-font mt-2">R$ 3,97</div>
+                <p class="text-xs text-[#6d706c] mt-2">Você só paga quando seu cliente abre uma mesa validada.</p>
+            </div>
+            <a href="https://wa.me/5511999999999?text=Olá, quero saber mais sobre o Klink" class="btn-primary block w-full py-4 rounded-xl font-black text-xl mb-4">
+                Quero ser Piloto
+            </a>
+            <p class="text-[10px] text-[#6d706c] uppercase font-bold tracking-widest">Vagas limitadas para o piloto inicial</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#151515] text-white py-12 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:row justify-between items-center gap-8">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 border-2 border-white bg-[#d6f04a] rounded-lg grid place-items-center font-bold brand-font text-[#151515]">
+                    K
+                </div>
+                <span class="text-xl font-black brand-font">Klink</span>
+            </div>
+            <div class="text-[#dee4e2]/50 text-sm font-medium">
+                © 2026 Klink. Todos os direitos reservados.
+            </div>
+            <div class="flex gap-6 text-sm font-bold">
+                <a href="#" class="hover:text-[#d6f04a]">Termos</a>
+                <a href="#" class="hover:text-[#d6f04a]">Privacidade</a>
+                <a href="mailto:contato@klink.bar" class="hover:text-[#d6f04a]">Contato</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

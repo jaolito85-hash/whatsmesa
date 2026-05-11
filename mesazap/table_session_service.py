@@ -16,10 +16,12 @@ class TableSessionService:
     def __init__(
         self,
         db: Database,
+        billing: BillingService | None = None,
         idle_ttl_hours: int = IDLE_TTL_HOURS,
         require_validation: bool = False,
     ):
         self.db = db
+        self.billing = billing
         self.idle_ttl_hours = idle_ttl_hours
         self.require_validation = require_validation
 
@@ -135,6 +137,12 @@ class TableSessionService:
             )
             conn.execute("update mesas set status = ? where id = ?", (mesa_status, table["id"]))
 
+        if not self.require_validation and self.billing:
+            self.billing.record_session_billing(
+                restaurante_id=table["restaurante_id"],
+                sessao_id=session_id,
+            )
+
         return self.active_session_for_whatsapp(remote_jid)
 
     def list_pending_sessions(self) -> list[dict[str, Any]]:
@@ -166,6 +174,13 @@ class TableSessionService:
                 "update mesas set status = 'sessao_ativa' where id = ?",
                 (session["mesa_id"],),
             )
+        
+        if self.billing:
+            self.billing.record_session_billing(
+                restaurante_id=session["restaurante_id"],
+                sessao_id=session_id,
+            )
+
         return self.db.fetchone(
             """
             select s.*, m.numero as mesa_numero, m.nome as mesa_nome

@@ -25,14 +25,15 @@ def create_app() -> Flask:
     db.init_schema()
     db.seed_demo()
 
+    billing = BillingService(db)
     table_sessions = TableSessionService(
         db,
+        billing=billing,
         idle_ttl_hours=settings.session_idle_ttl_hours,
         require_validation=settings.require_table_validation,
     )
     menu = MenuService(db)
     orders = OrderService(db)
-    billing = BillingService(db)
     interpreter = OpenAIInterpreter(settings)
     agent = RestaurantAgent(
         table_sessions=table_sessions,
@@ -45,14 +46,14 @@ def create_app() -> Flask:
     audio = AudioService(settings)
     qr = QRService(settings, table_sessions)
 
-    PUBLIC_PREFIXES = ("/health", "/webhook", "/qr/", "/static/")
+    PUBLIC_PATHS = ("/", "/health", "/webhook", "/qr/", "/static/")
 
     @app.before_request
     def enforce_dashboard_auth():
         if not settings.dashboard_auth_enabled:
             return None
         path = request.path or ""
-        if any(path == p or path.startswith(p) for p in PUBLIC_PREFIXES):
+        if path in PUBLIC_PATHS or any(path.startswith(p) for p in PUBLIC_PATHS if p != "/"):
             return None
         auth = request.authorization
         if auth and auth.type == "basic":
@@ -67,6 +68,10 @@ def create_app() -> Flask:
         )
 
     @app.get("/")
+    def landing():
+        return render_template("landing.html")
+
+    @app.get("/dashboard")
     def dashboard():
         restaurant = table_sessions.restaurant()
         return render_template(

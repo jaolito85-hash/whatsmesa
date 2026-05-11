@@ -178,6 +178,7 @@ create table if not exists billing_events (
   billing_account_id text not null references billing_accounts(id) on delete cascade,
   tipo text not null,
   pedido_id text references pedidos(id) on delete set null,
+  sessao_mesa_id text references sessoes_mesa(id) on delete set null,
   valor real not null,
   moeda text not null default 'BRL',
   periodo_ano_mes text not null,
@@ -196,6 +197,7 @@ create index if not exists pedido_itens_setor_status_idx on pedido_itens(setor, 
 create index if not exists solicitacoes_setor_status_idx on solicitacoes_salao(setor, status);
 create index if not exists mensagens_remote_jid_idx on mensagens_whatsapp(remote_jid);
 create unique index if not exists billing_events_pedido_unq on billing_events(pedido_id) where pedido_id is not null and tipo = 'pedido_confirmado';
+create unique index if not exists billing_events_sessao_unq on billing_events(sessao_mesa_id) where sessao_mesa_id is not null and tipo = 'mesa_aberta';
 create index if not exists billing_events_account_periodo_idx on billing_events(billing_account_id, periodo_ano_mes, status_cobranca);
 create index if not exists faturas_account_periodo_idx on faturas(billing_account_id, periodo_ano_mes);
 
@@ -230,12 +232,17 @@ class Database:
             self._apply_migrations(conn)
 
     def _apply_migrations(self, conn: sqlite3.Connection) -> None:
-        cols = {row[1] for row in conn.execute("pragma table_info(sessoes_mesa)").fetchall()}
-        if "ultima_atividade_em" not in cols:
+        cols_sessao = {row[1] for row in conn.execute("pragma table_info(sessoes_mesa)").fetchall()}
+        if "ultima_atividade_em" not in cols_sessao:
             conn.execute("alter table sessoes_mesa add column ultima_atividade_em text")
             conn.execute(
                 "update sessoes_mesa set ultima_atividade_em = coalesce(validada_em, aberta_em) where ultima_atividade_em is null"
             )
+        
+        cols_events = {row[1] for row in conn.execute("pragma table_info(billing_events)").fetchall()}
+        if "sessao_mesa_id" not in cols_events:
+            conn.execute("alter table billing_events add column sessao_mesa_id text references sessoes_mesa(id) on delete set null")
+            conn.execute("create unique index if not exists billing_events_sessao_unq on billing_events(sessao_mesa_id) where sessao_mesa_id is not null and tipo = 'mesa_aberta'")
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
@@ -420,7 +427,7 @@ class Database:
                 insert into billing_accounts (
                   id, restaurante_id, status, preco_por_pedido, setup_fee,
                   setup_fee_paid_em, moeda, criado_em
-                ) values (?, ?, 'ativo', 1.97, 99.00, ?, 'BRL', ?)
+                ) values (?, ?, 'ativo', 3.97, 147.00, ?, 'BRL', ?)
                 """,
                 (new_id(), restaurante_id, now, now),
             )
