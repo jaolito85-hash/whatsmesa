@@ -456,7 +456,7 @@ class Database:
                 insert into billing_accounts (
                   id, restaurante_id, status, preco_por_pedido, setup_fee,
                   setup_fee_paid_em, moeda, criado_em
-                ) values (?, ?, 'ativo', 3.97, 147.00, ?, 'BRL', ?)
+                ) values (?, ?, 'ativo', 1.97, 147.00, ?, 'BRL', ?)
                 """,
                 (new_id(), restaurante_id, now, now),
             )

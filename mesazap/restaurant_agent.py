@@ -318,6 +318,10 @@ class RestaurantAgent:
                     "language": language,
                 }
             confirmed = self.orders.confirm_order(pending["id"])
+            self.billing.record_confirmed_order(
+                restaurante_id=session["restaurante_id"],
+                pedido_id=confirmed["id"],
+            )
             sectors = self._human_sectors(confirmed["setores"], language)
             return {
                 "reply": self._message("order_confirmed", language, sectors=sectors),
