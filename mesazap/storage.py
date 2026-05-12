@@ -196,8 +196,6 @@ create index if not exists pedidos_sessao_status_idx on pedidos(sessao_mesa_id, 
 create index if not exists pedido_itens_setor_status_idx on pedido_itens(setor, status);
 create index if not exists solicitacoes_setor_status_idx on solicitacoes_salao(setor, status);
 create index if not exists mensagens_remote_jid_idx on mensagens_whatsapp(remote_jid);
-create unique index if not exists billing_events_pedido_unq on billing_events(pedido_id) where pedido_id is not null and tipo = 'pedido_confirmado';
-create unique index if not exists billing_events_sessao_unq on billing_events(sessao_mesa_id) where sessao_mesa_id is not null and tipo = 'mesa_aberta';
 create index if not exists billing_events_account_periodo_idx on billing_events(billing_account_id, periodo_ano_mes, status_cobranca);
 create index if not exists faturas_account_periodo_idx on faturas(billing_account_id, periodo_ano_mes);
 
@@ -242,7 +240,17 @@ class Database:
         cols_events = {row[1] for row in conn.execute("pragma table_info(billing_events)").fetchall()}
         if "sessao_mesa_id" not in cols_events:
             conn.execute("alter table billing_events add column sessao_mesa_id text references sessoes_mesa(id) on delete set null")
+        
+        # Criar indices que podem falhar no script principal se a coluna for nova
+        try:
+            conn.execute("create unique index if not exists billing_events_pedido_unq on billing_events(pedido_id) where pedido_id is not null and tipo = 'pedido_confirmado'")
+        except sqlite3.OperationalError:
+            pass
+            
+        try:
             conn.execute("create unique index if not exists billing_events_sessao_unq on billing_events(sessao_mesa_id) where sessao_mesa_id is not null and tipo = 'mesa_aberta'")
+        except sqlite3.OperationalError:
+            pass
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
