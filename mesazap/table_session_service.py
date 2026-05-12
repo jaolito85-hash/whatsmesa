@@ -143,6 +143,12 @@ class TableSessionService:
                 sessao_id=session_id,
             )
 
+        if not self.require_validation and self.billing:
+            self.billing.record_session_billing(
+                restaurante_id=table["restaurante_id"],
+                sessao_id=session_id,
+            )
+
         return self.active_session_for_whatsapp(remote_jid)
 
     def list_pending_sessions(self) -> list[dict[str, Any]]:

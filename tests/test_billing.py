@@ -59,7 +59,7 @@ class BillingServiceTest(unittest.TestCase):
         account = billing.account_for_restaurant(restaurant_id(sessions))
         self.assertEqual(account["status"], "ativo")
         self.assertIsNotNone(account["setup_fee_paid_em"])
-        self.assertAlmostEqual(float(account["preco_por_pedido"]), 1.97)
+        self.assertAlmostEqual(float(account["preco_por_pedido"]), 3.97)
         self.assertAlmostEqual(float(account["setup_fee"]), 147.00)
 
     def test_mark_setup_paid_is_idempotent(self):
@@ -83,34 +83,30 @@ class BillingServiceTest(unittest.TestCase):
         first = agent.handle_message(remote_jid=remote, text="Mesa 12")
         self.assertEqual(first["action"], "account_inactive")
 
-    def test_confirmed_order_creates_billing_event(self):
+    def test_open_table_creates_billing_event(self):
         _db, sessions, _orders, billing, agent = make_environment()
         remote = "5511999992222"
 
         agent.handle_message(remote_jid=remote, text="Mesa 12")
-        agent.handle_message(remote_jid=remote, text="Me ve 2 Corona")
-        agent.handle_message(remote_jid=remote, text="1")
 
         summary = billing.usage_summary(restaurant_id(sessions))
         self.assertEqual(summary["qtd_pedidos"], 1)
-        self.assertAlmostEqual(summary["valor_pedidos"], 1.97)
+        self.assertAlmostEqual(summary["valor_pedidos"], 3.97)
 
-    def test_record_confirmed_order_is_idempotent(self):
+    def test_record_session_billing_is_idempotent(self):
         db, sessions, orders, billing, agent = make_environment()
         rid = restaurant_id(sessions)
         remote = "5511999993333"
 
-        agent.handle_message(remote_jid=remote, text="Mesa 12")
-        agent.handle_message(remote_jid=remote, text="Me ve 1 Corona")
-        confirmed = agent.handle_message(remote_jid=remote, text="1")
-        pedido_id = confirmed["order"]["id"]
+        session = sessions.activate_from_message(remote, "Mesa 12")
+        sessao_id = session["id"]
 
-        billing.record_confirmed_order(restaurante_id=rid, pedido_id=pedido_id)
-        billing.record_confirmed_order(restaurante_id=rid, pedido_id=pedido_id)
+        billing.record_session_billing(restaurante_id=rid, sessao_id=sessao_id)
+        billing.record_session_billing(restaurante_id=rid, sessao_id=sessao_id)
 
         events = db.fetchall(
-            "select id from billing_events where pedido_id = ?",
-            (pedido_id,),
+            "select id from billing_events where sessao_mesa_id = ? and tipo = 'mesa_aberta'",
+            (sessao_id,),
         )
         self.assertEqual(len(events), 1)
 
@@ -119,15 +115,11 @@ class BillingServiceTest(unittest.TestCase):
         rid = restaurant_id(sessions)
 
         agent.handle_message(remote_jid="5511999994444", text="Mesa 12")
-        agent.handle_message(remote_jid="5511999994444", text="Me ve 2 Corona")
-        agent.handle_message(remote_jid="5511999994444", text="1")
         agent.handle_message(remote_jid="5511999995555", text="Mesa 3")
-        agent.handle_message(remote_jid="5511999995555", text="Manda 1 porcao de batata")
-        agent.handle_message(remote_jid="5511999995555", text="1")
 
         fatura = billing.generate_invoice(rid)
         self.assertEqual(fatura["qtd_pedidos"], 2)
-        self.assertAlmostEqual(float(fatura["valor_pedidos"]), 2 * 1.97)
+        self.assertAlmostEqual(float(fatura["valor_pedidos"]), 2 * 3.97)
         self.assertEqual(fatura["status"], "aberta")
 
         again = billing.generate_invoice(rid)
