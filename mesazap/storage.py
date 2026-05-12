@@ -192,7 +192,6 @@ create index if not exists sessoes_mesa_mesa_status_idx on sessoes_mesa(mesa_id,
 create index if not exists sessoes_mesa_whatsapp_status_idx on sessoes_mesa(cliente_whatsapp, status);
 create index if not exists produtos_restaurante_ativo_idx on produtos(restaurante_id, ativo, disponivel);
 create index if not exists produto_aliases_alias_idx on produto_aliases(alias);
-create index if not exists pedidos_sessao_status_idx on pedidos(sessao_mesa_id, status);
 create index if not exists pedido_itens_setor_status_idx on pedido_itens(setor, status);
 create index if not exists solicitacoes_setor_status_idx on solicitacoes_salao(setor, status);
 create index if not exists mensagens_remote_jid_idx on mensagens_whatsapp(remote_jid);
@@ -230,6 +229,7 @@ class Database:
             self._apply_migrations(conn)
 
     def _apply_migrations(self, conn: sqlite3.Connection) -> None:
+        # sessoes_mesa
         cols_sessao = {row[1] for row in conn.execute("pragma table_info(sessoes_mesa)").fetchall()}
         if "ultima_atividade_em" not in cols_sessao:
             conn.execute("alter table sessoes_mesa add column ultima_atividade_em text")
@@ -237,11 +237,32 @@ class Database:
                 "update sessoes_mesa set ultima_atividade_em = coalesce(validada_em, aberta_em) where ultima_atividade_em is null"
             )
         
+        # pedidos
+        cols_pedidos = {row[1] for row in conn.execute("pragma table_info(pedidos)").fetchall()}
+        if "sessao_mesa_id" not in cols_pedidos:
+            conn.execute("alter table pedidos add column sessao_mesa_id text references sessoes_mesa(id) on delete cascade")
+        
+        # solicitacoes_salao
+        cols_solicitacoes = {row[1] for row in conn.execute("pragma table_info(solicitacoes_salao)").fetchall()}
+        if "sessao_mesa_id" not in cols_solicitacoes:
+            conn.execute("alter table solicitacoes_salao add column sessao_mesa_id text references sessoes_mesa(id) on delete cascade")
+            
+        # mensagens_whatsapp
+        cols_mensagens = {row[1] for row in conn.execute("pragma table_info(mensagens_whatsapp)").fetchall()}
+        if "sessao_mesa_id" not in cols_mensagens:
+            conn.execute("alter table mensagens_whatsapp add column sessao_mesa_id text")
+
+        # billing_events
         cols_events = {row[1] for row in conn.execute("pragma table_info(billing_events)").fetchall()}
         if "sessao_mesa_id" not in cols_events:
             conn.execute("alter table billing_events add column sessao_mesa_id text references sessoes_mesa(id) on delete set null")
         
-        # Criar indices que podem falhar no script principal se a coluna for nova
+        # Criar indices que dependem das colunas migradas
+        try:
+            conn.execute("create index if not exists pedidos_sessao_status_idx on pedidos(sessao_mesa_id, status)")
+        except sqlite3.OperationalError:
+            pass
+
         try:
             conn.execute("create unique index if not exists billing_events_pedido_unq on billing_events(pedido_id) where pedido_id is not null and tipo = 'pedido_confirmado'")
         except sqlite3.OperationalError:
