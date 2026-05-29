@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from decimal import Decimal, ROUND_HALF_UP
+from typing import Any, Iterable
 
 from .storage import Database, new_id, utc_now
 
@@ -11,6 +12,21 @@ DEFAULT_SETUP_FEE = 147.00
 DEFAULT_CURRENCY = "BRL"
 
 ACCOUNT_STATUSES = ("aguardando_setup", "ativo", "suspenso", "cancelado")
+
+_CENTS = Decimal("0.01")
+
+
+def money_round(value: Any) -> float:
+    # Arredonda um valor monetario para 2 casas (centavos), meio-para-cima.
+    # Evita exibir/gravar restos de ponto flutuante (ex.: 396.9999999999994).
+    return float(Decimal(str(value)).quantize(_CENTS, rounding=ROUND_HALF_UP))
+
+
+def money_sum(values: Iterable[Any]) -> float:
+    # Soma valores monetarios em Decimal (sem erro de acumulacao de float) e
+    # devolve o total ja arredondado em centavos.
+    total = sum((Decimal(str(v)) for v in values), Decimal("0"))
+    return float(total.quantize(_CENTS, rounding=ROUND_HALF_UP))
 
 
 def current_period() -> str:
@@ -168,7 +184,7 @@ class BillingService:
             "account": account,
             "periodo": periodo,
             "qtd_pedidos": int(stats["qtd"]) if stats else 0,
-            "valor_pedidos": float(stats["total"]) if stats else 0.0,
+            "valor_pedidos": money_round(stats["total"]) if stats else 0.0,
             "preco_por_pedido": float(account["preco_por_pedido"]),
             "moeda": account["moeda"],
         }
@@ -200,9 +216,9 @@ class BillingService:
         )
 
         qtd_pedidos = sum(1 for e in events if e["tipo"] == "mesa_aberta")
-        valor_pedidos = sum(float(e["valor"]) for e in events if e["tipo"] == "mesa_aberta")
-        valor_setup = sum(float(e["valor"]) for e in events if e["tipo"] == "setup")
-        valor_total = valor_pedidos + valor_setup
+        valor_pedidos = money_sum(e["valor"] for e in events if e["tipo"] == "mesa_aberta")
+        valor_setup = money_sum(e["valor"] for e in events if e["tipo"] == "setup")
+        valor_total = money_round(valor_pedidos + valor_setup)
 
         fatura_id = new_id()
         now = utc_now()

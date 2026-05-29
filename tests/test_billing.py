@@ -3,13 +3,13 @@ from __future__ import annotations
 import tempfile
 import unittest
 
-from mesazap.billing_service import BillingService
+from mesazap.billing_service import BillingService, current_period
 from mesazap.config import Settings
 from mesazap.menu_service import MenuService
 from mesazap.openai_interpreter import OpenAIInterpreter
 from mesazap.order_service import OrderService
 from mesazap.restaurant_agent import RestaurantAgent
-from mesazap.storage import Database
+from mesazap.storage import Database, utc_now
 from mesazap.table_session_service import TableSessionService
 
 
@@ -146,6 +146,50 @@ class BillingServiceTest(unittest.TestCase):
         )
         self.assertTrue(events)
         self.assertTrue(all(row["status_cobranca"] == "pago" for row in events))
+
+    def test_valor_pedidos_sem_resto_de_float_em_muitas_mesas(self):
+        # Achado 7: somar muitos eventos a 3,97 nao pode deixar resto de float.
+        # 100 mesas a 3,97 = 397,00 exatos (em float puro daria 396.9999...994).
+        # sessao_mesa_id fica NULL aqui so para evitar a FK com sessoes_mesa; o
+        # que importa para o calculo e billing_account_id + tipo + periodo.
+        db, sessions, _orders, billing, _agent = make_environment()
+        rid = restaurant_id(sessions)
+        account = billing.account_for_restaurant(rid)
+        for i in range(100):
+            db.execute(
+                """
+                insert into billing_events (
+                   id, billing_account_id, tipo, sessao_mesa_id, valor, moeda,
+                   periodo_ano_mes, status_cobranca, criado_em
+                ) values (?, ?, 'mesa_aberta', NULL, 3.97, 'BRL', ?, 'pendente', ?)
+                """,
+                (f"evt-{i}", account["id"], current_period(), utc_now()),
+            )
+
+        summary = billing.usage_summary(rid)
+        self.assertEqual(summary["qtd_pedidos"], 100)
+        self.assertEqual(summary["valor_pedidos"], 397.00)
+
+        fatura = billing.generate_invoice(rid)
+        self.assertEqual(fatura["valor_pedidos"], 397.00)
+        self.assertEqual(fatura["valor_total"], 397.00)
+
+
+class BillingSchemaDefaultsTest(unittest.TestCase):
+    def test_default_de_preco_e_setup_batem_com_o_modelo_atual(self):
+        # Achado 5: o default do schema deve refletir o modelo de cobranca atual
+        # (3,97 por mesa + 147 de setup), nao os valores antigos (1,97 / 99).
+        handle = tempfile.NamedTemporaryFile(suffix=".db")
+        handle.close()
+        db = Database(handle.name)
+        db.init_schema()
+
+        columns = {
+            col["name"]: col["dflt_value"]
+            for col in db.fetchall("PRAGMA table_info(billing_accounts)")
+        }
+        self.assertEqual(float(columns["preco_por_pedido"]), 3.97)
+        self.assertEqual(float(columns["setup_fee"]), 147.00)
 
 
 if __name__ == "__main__":

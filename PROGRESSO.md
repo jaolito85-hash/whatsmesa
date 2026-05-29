@@ -27,7 +27,7 @@ o garçom acompanha pelo computador/celular.
 | Servidor | Coolify, na sua VPS |
 | URL do app | `https://g7yafnc904l4nk0rkfibx6fa.72.60.13.166.sslip.io` |
 | WhatsApp (Evolution) | URL configurada, falta API Key + número |
-| Testes automáticos | 327/327 passando ✅ |
+| Testes automáticos | 329/329 passando ✅ |
 | Cliente do piloto | Ainda não definido |
 | Nome final do produto | A decidir (favorito: **Klink**) |
 | Domínio | `klink.bar` comprado por US$ 2,80/ano |
@@ -107,10 +107,16 @@ nesta mesma rodada**:
    rodar localmente sem token, basta ligar `MESAZAP_DEV_MODE=1` (nunca em
    produção).
 
-Achados médios/baixos (preço padrão 1,97 vs 3,97 no banco, valores em "float")
-ficaram anotados para depois — não bloqueiam o deploy.
+Também resolvemos os achados médios/baixos da auditoria:
 
-**Resultado:** a suíte foi de **186 para 327 testes**, todos passando. ✅
+- **Preço padrão do banco desatualizado:** o "valor de fábrica" gravado no banco
+  ainda era o antigo (1,97 e setup 99). Alinhamos para o modelo atual (3,97 e
+  setup 147), evitando cobrar errado uma conta criada fora do fluxo normal.
+- **Centavos com "sobra" de calculadora:** valores de dinheiro eram somados de um
+  jeito que podia deixar resto (ex.: 100 mesas davam R$ 396,9999 em vez de
+  R$ 397,00). Passamos a somar em centavos exatos.
+
+**Resultado:** a suíte foi de **186 para 329 testes**, todos passando. ✅
 
 ### 11/05/2026 — Landing Page e Novo Modelo de Cobrança (Klink)
 **Commit:** `landing-page-billing`

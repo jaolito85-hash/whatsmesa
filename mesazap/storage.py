@@ -150,8 +150,8 @@ create table if not exists billing_accounts (
   id text primary key,
   restaurante_id text not null unique references restaurantes(id) on delete cascade,
   status text not null default 'aguardando_setup',
-  preco_por_pedido real not null default 1.97,
-  setup_fee real not null default 99.00,
+  preco_por_pedido real not null default 3.97,
+  setup_fee real not null default 147.00,
   setup_fee_paid_em text,
   moeda text not null default 'BRL',
   criado_em text not null
