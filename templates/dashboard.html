@@ -4,14 +4,26 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Klink - Painel</title>
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon.ico') }}" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
     <header class="topbar">
       <div class="brand-lockup">
-        <span class="brand-mark">MZ</span>
+        <img
+          class="brand-mascote"
+          src="{{ url_for('static', filename='brand/klink-mascote.png') }}"
+          alt="Klink"
+          width="50"
+          height="50"
+        />
         <div>
-          <p class="eyebrow">garçom invisível</p>
+          <span class="klink-logo klink-logo--sm" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
           <h1>{{ restaurant.nome }}</h1>
         </div>
       </div>

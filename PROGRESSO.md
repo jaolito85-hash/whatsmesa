@@ -58,6 +58,21 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 29/05/2026 — Logos e identidade visual do Klink no site e no painel
+- Você criou a marca: o **mascote** (campainha de recepção com rostinho e fone de
+  atendente) + a palavra **klink** com o pontinho do "i" em verde.
+- Coloquei essas logos no **painel** (onde aparecia "MZ", agora aparece o mascote +
+  "klink") e na **landing page** (topo, rodapé e o mascote "espiando" no celular).
+- Recortei o fundo do mascote pra ele ficar **transparente** e funcionar em qualquer
+  lugar. A palavra "klink" foi refeita de um jeito que **nunca borra** (fica nítida em
+  qualquer tamanho, do favicon ao banner) e o pontinho verde fica sempre no lugar.
+- Troquei a cor antiga (amarelo-limão, herança do MesaZap) pelo **verde da marca**
+  (#49B548) no site e no painel. Mantive um amarelo só para avisos de "aguardando".
+- Troquei uma foto genérica de banco de imagens por um **print real do nosso painel**
+  na landing. Adicionei o **favicon** (ícone da abinha do navegador) nas duas páginas.
+- Corrigi o e-mail de contato para **contato@klinkai.com.br**.
+- Conferi tudo abrindo as telas de verdade (screenshots) e rodei os testes: **329 ok**.
+
 ### 29/05/2026 — Nome oficial agora é Klink
 - Você registrou a marca **`klinkai.com.br`**. Decidimos adotar o nome **Klink** em tudo.
 - Trocamos **todas as 175 menções** de "MesaZap" por "Klink" no projeto:

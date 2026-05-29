@@ -6,7 +6,11 @@
   --panel: #ffffff;
   --tomato: #e13d2f;
   --leaf: #147a5c;
-  --lemon: #d6f04a;
+  --lemon: #49b548; /* acento da marca Klink (verde) */
+  --warn: #f5c518; /* status de atenção / aguardando */
+  --brand-green: #49b548;
+  --brand-green-deep: #3c9e3c;
+  --brand-ink: #20242c;
   --steel: #dee4e2;
   --shadow: 0 20px 50px rgba(18, 18, 18, 0.12);
 }
@@ -55,17 +59,12 @@ textarea {
   gap: 14px;
 }
 
-.brand-mark {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  place-items: center;
-  border: 2px solid var(--ink);
-  background: var(--lemon);
-  border-radius: 8px;
-  box-shadow: 4px 4px 0 var(--ink);
-  font-family: "Rockwell", "Georgia", serif;
-  font-weight: 900;
+.brand-mascote {
+  height: 50px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 5px rgba(18, 18, 18, 0.18));
 }
 
 .eyebrow {
@@ -158,8 +157,8 @@ h2 {
 }
 
 .billing-pill-dot[data-billing-status="aguardando_setup"] {
-  background: var(--lemon);
-  box-shadow: 0 0 0 3px rgba(214, 240, 74, 0.35);
+  background: var(--warn);
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.35);
 }
 
 .billing-pill-dot[data-billing-status="suspenso"],
@@ -276,7 +275,7 @@ h2 {
 }
 
 .billing-badge[data-billing-status="aguardando_setup"] {
-  background: var(--lemon);
+  background: var(--warn);
 }
 
 .billing-badge[data-billing-status="suspenso"],
@@ -348,7 +347,7 @@ h2 {
   padding: 14px 16px;
   border: 2px solid var(--ink);
   border-radius: 10px;
-  background: var(--lemon);
+  background: var(--warn);
 }
 
 .billing-setup-row {
@@ -435,7 +434,7 @@ h2 {
 }
 
 .billing-invoice-status[data-invoice-status="aberta"] {
-  background: var(--lemon);
+  background: var(--warn);
 }
 
 .billing-invoice-status[data-invoice-status="enviada"] {
@@ -574,7 +573,7 @@ pre {
   gap: 18px;
   margin-bottom: 18px;
   padding: 16px;
-  background: linear-gradient(135deg, #fff 0%, #fff 64%, rgba(214, 240, 74, 0.34) 64%);
+  background: linear-gradient(135deg, #fff 0%, #fff 64%, rgba(73, 181, 72, 0.22) 64%);
 }
 
 .pending-list {
@@ -865,5 +864,42 @@ pre {
     width: 100vw;
     padding: 18px 16px 24px;
   }
+}
+
+/* ===== Logo da marca Klink (wordmark vetorial) ===== */
+.klink-logo {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Fredoka", "Baloo 2", "Quicksand", "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--brand-ink);
+  white-space: nowrap;
+}
+
+.klink-logo .kdot {
+  position: relative;
+}
+
+.klink-logo .kdot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.30em;
+  transform: translateX(-50%);
+  width: 0.30em;
+  height: 0.30em;
+  border-radius: 50%;
+  background: var(--brand-green);
+}
+
+.klink-logo--sm {
+  font-size: 1.2rem;
+}
+
+.klink-logo--on-dark {
+  color: #ffffff;
 }
 
