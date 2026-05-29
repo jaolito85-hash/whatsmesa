@@ -3,7 +3,7 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    MESAZAP_DATABASE=/data/mesazap.db \
+    KLINK_DATABASE=/data/klink.db \
     PORT=5000
 
 WORKDIR /app
@@ -17,17 +17,17 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
 COPY app.py ./
-COPY mesazap ./mesazap
+COPY klink ./klink
 COPY templates ./templates
 COPY static ./static
 COPY supabase ./supabase
 
 RUN mkdir -p /data \
-    && groupadd --system mesazap \
-    && useradd --system --gid mesazap --home-dir /app mesazap \
-    && chown -R mesazap:mesazap /app /data
+    && groupadd --system klink \
+    && useradd --system --gid klink --home-dir /app klink \
+    && chown -R klink:klink /app /data
 
-USER mesazap
+USER klink
 
 EXPOSE 5000
 

@@ -17,16 +17,16 @@ class DashboardAuthTest(unittest.TestCase):
         handle.close()
         self._db_path = handle.name
         self._prev_env = {
-            "MESAZAP_DATABASE": os.environ.get("MESAZAP_DATABASE"),
-            "MESAZAP_DASHBOARD_USER": os.environ.get("MESAZAP_DASHBOARD_USER"),
-            "MESAZAP_DASHBOARD_PASSWORD": os.environ.get("MESAZAP_DASHBOARD_PASSWORD"),
+            "KLINK_DATABASE": os.environ.get("KLINK_DATABASE"),
+            "KLINK_DASHBOARD_USER": os.environ.get("KLINK_DASHBOARD_USER"),
+            "KLINK_DASHBOARD_PASSWORD": os.environ.get("KLINK_DASHBOARD_PASSWORD"),
         }
-        os.environ["MESAZAP_DATABASE"] = self._db_path
-        os.environ["MESAZAP_DASHBOARD_USER"] = "joao"
-        os.environ["MESAZAP_DASHBOARD_PASSWORD"] = "super-secret"
+        os.environ["KLINK_DATABASE"] = self._db_path
+        os.environ["KLINK_DASHBOARD_USER"] = "joao"
+        os.environ["KLINK_DASHBOARD_PASSWORD"] = "super-secret"
 
         import importlib
-        from mesazap import config as config_module
+        from klink import config as config_module
 
         importlib.reload(config_module)
         import app as app_module

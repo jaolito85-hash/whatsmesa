@@ -41,7 +41,7 @@ class Settings:
     require_table_validation: bool = False
     session_idle_ttl_hours: int = 6
     # Modo de desenvolvimento explicito. Quando True, as rotas /admin/* podem
-    # ser usadas sem MESAZAP_ADMIN_TOKEN. Em producao deve ficar False (padrao),
+    # ser usadas sem KLINK_ADMIN_TOKEN. Em producao deve ficar False (padrao),
     # para que falta de token signifique acesso negado, nao acesso liberado.
     dev_mode: bool = False
 
@@ -82,8 +82,8 @@ def _int_env(name: str, default: int) -> int:
 def get_settings() -> Settings:
     load_env_file()
     return Settings(
-        database_path=os.getenv("MESAZAP_DATABASE", "mesazap.local.db"),
-        public_base_url=os.getenv("MESAZAP_PUBLIC_BASE_URL", "http://localhost:5000"),
+        database_path=os.getenv("KLINK_DATABASE", "klink.local.db"),
+        public_base_url=os.getenv("KLINK_PUBLIC_BASE_URL", "http://localhost:5000"),
         whatsapp_phone=os.getenv("WHATSAPP_PHONE", ""),
         evolution_api_url=os.getenv("EVOLUTION_API_URL", "").rstrip("/"),
         evolution_api_key=os.getenv("EVOLUTION_API_KEY", ""),
@@ -95,12 +95,12 @@ def get_settings() -> Settings:
         ),
         supabase_url=os.getenv("SUPABASE_URL", ""),
         supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
-        admin_token=os.getenv("MESAZAP_ADMIN_TOKEN", ""),
-        dashboard_user=os.getenv("MESAZAP_DASHBOARD_USER", "admin"),
-        dashboard_password=os.getenv("MESAZAP_DASHBOARD_PASSWORD", ""),
+        admin_token=os.getenv("KLINK_ADMIN_TOKEN", ""),
+        dashboard_user=os.getenv("KLINK_DASHBOARD_USER", "admin"),
+        dashboard_password=os.getenv("KLINK_DASHBOARD_PASSWORD", ""),
         evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
-        require_table_validation=_bool_env("MESAZAP_REQUIRE_TABLE_VALIDATION", False),
-        session_idle_ttl_hours=_int_env("MESAZAP_SESSION_IDLE_TTL_HOURS", 6),
-        dev_mode=_bool_env("MESAZAP_DEV_MODE", False),
+        require_table_validation=_bool_env("KLINK_REQUIRE_TABLE_VALIDATION", False),
+        session_idle_ttl_hours=_int_env("KLINK_SESSION_IDLE_TTL_HOURS", 6),
+        dev_mode=_bool_env("KLINK_DEV_MODE", False),
     )
 

@@ -14,7 +14,7 @@ def _reload_app(env: dict[str, str | None]):
         else:
             os.environ[key] = value
 
-    from mesazap import config as config_module
+    from klink import config as config_module
 
     importlib.reload(config_module)
     import app as app_module
@@ -26,10 +26,10 @@ def _reload_app(env: dict[str, str | None]):
 class AdminAuthTest(unittest.TestCase):
     # Chaves de ambiente que cada teste manipula e que precisam ser restauradas.
     _KEYS = (
-        "MESAZAP_DATABASE",
-        "MESAZAP_ADMIN_TOKEN",
-        "MESAZAP_DEV_MODE",
-        "MESAZAP_DASHBOARD_PASSWORD",
+        "KLINK_DATABASE",
+        "KLINK_ADMIN_TOKEN",
+        "KLINK_DEV_MODE",
+        "KLINK_DASHBOARD_PASSWORD",
     )
 
     def setUp(self):
@@ -39,8 +39,8 @@ class AdminAuthTest(unittest.TestCase):
         self._prev_env = {key: os.environ.get(key) for key in self._KEYS}
         # Dashboard sem senha => before_request de auth do painel fica desligado,
         # isolando o comportamento de require_admin nas rotas /admin/*.
-        os.environ["MESAZAP_DATABASE"] = self._db_path
-        os.environ["MESAZAP_DASHBOARD_PASSWORD"] = ""
+        os.environ["KLINK_DATABASE"] = self._db_path
+        os.environ["KLINK_DASHBOARD_PASSWORD"] = ""
 
     def tearDown(self):
         for key, value in self._prev_env.items():
@@ -52,10 +52,10 @@ class AdminAuthTest(unittest.TestCase):
     def _client(self, *, admin_token: str | None, dev_mode: str | None):
         app = _reload_app(
             {
-                "MESAZAP_DATABASE": self._db_path,
-                "MESAZAP_DASHBOARD_PASSWORD": "",
-                "MESAZAP_ADMIN_TOKEN": admin_token,
-                "MESAZAP_DEV_MODE": dev_mode,
+                "KLINK_DATABASE": self._db_path,
+                "KLINK_DASHBOARD_PASSWORD": "",
+                "KLINK_ADMIN_TOKEN": admin_token,
+                "KLINK_DEV_MODE": dev_mode,
             }
         )
         return app.test_client()

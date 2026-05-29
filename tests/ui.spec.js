@@ -33,7 +33,7 @@ test("dashboard loads with operational columns", async ({ page }) => {
 
   await page.goto("http://127.0.0.1:5000/dashboard", { waitUntil: "networkidle" });
 
-  await expect(page.getByRole("heading", { name: "MesaZap Demo" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Klink Demo" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Bar" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cozinha" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Salão" })).toBeVisible();

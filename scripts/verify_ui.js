@@ -18,7 +18,7 @@ const { chromium } = require("playwright");
   });
   const bodyText = await page.locator("body").innerText();
   const title = await page.title();
-  const keyElements = await page.locator("text=MesaZap Demo").count();
+  const keyElements = await page.locator("text=Klink Demo").count();
 
   await browser.close();
 

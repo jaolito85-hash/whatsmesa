@@ -1,5 +1,5 @@
 {
-  "name": "mesazap",
+  "name": "klink",
   "private": true,
   "scripts": {
     "test:ui": "playwright test tests/ui.spec.js --browser=chromium --reporter=line",

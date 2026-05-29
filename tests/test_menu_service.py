@@ -3,8 +3,8 @@ from __future__ import annotations
 import tempfile
 import unittest
 
-from mesazap.menu_service import MenuMatch, MenuService, NUMBER_WORDS
-from mesazap.storage import Database
+from klink.menu_service import MenuMatch, MenuService, NUMBER_WORDS
+from klink.storage import Database
 
 
 # ---------------------------------------------------------------------------

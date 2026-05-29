@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from mesazap.audio_service import AudioService, SUPPORTED_AUDIO_SUFFIXES
-from mesazap.config import Settings
+from klink.audio_service import AudioService, SUPPORTED_AUDIO_SUFFIXES
+from klink.config import Settings
 
 
 def make_settings() -> Settings:

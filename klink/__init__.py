@@ -1,4 +1,4 @@
-"""MesaZap MVP package."""
+"""Klink MVP package."""
 
 from .config import get_settings
 

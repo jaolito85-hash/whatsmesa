@@ -1,14 +1,14 @@
 services:
-  mesazap:
+  klink:
     build: .
-    image: mesazap:local
-    container_name: mesazap
+    image: klink:local
+    container_name: klink
     restart: unless-stopped
     ports:
       - "5000:5000"
     environment:
-      MESAZAP_DATABASE: /data/mesazap.db
-      MESAZAP_PUBLIC_BASE_URL: http://localhost:5000
+      KLINK_DATABASE: /data/klink.db
+      KLINK_PUBLIC_BASE_URL: http://localhost:5000
       WHATSAPP_PHONE: ""
       EVOLUTION_API_URL: ""
       EVOLUTION_API_KEY: ""
@@ -18,11 +18,11 @@ services:
       OPENAI_TRANSCRIPTION_MODEL: gpt-4o-mini-transcribe
       SUPABASE_URL: ""
       SUPABASE_SERVICE_ROLE_KEY: ""
-      MESAZAP_ADMIN_TOKEN: ""
-      MESAZAP_DASHBOARD_USER: admin
-      MESAZAP_DASHBOARD_PASSWORD: ""
+      KLINK_ADMIN_TOKEN: ""
+      KLINK_DASHBOARD_USER: admin
+      KLINK_DASHBOARD_PASSWORD: ""
     volumes:
-      - mesazap_data:/data
+      - klink_data:/data
 
 volumes:
-  mesazap_data:
+  klink_data:

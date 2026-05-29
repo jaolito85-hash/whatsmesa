@@ -3,14 +3,14 @@ from __future__ import annotations
 import tempfile
 import unittest
 
-from mesazap.billing_service import BillingService
-from mesazap.config import Settings
-from mesazap.menu_service import MenuService
-from mesazap.openai_interpreter import OpenAIInterpreter
-from mesazap.order_service import OrderService
-from mesazap.restaurant_agent import RestaurantAgent
-from mesazap.storage import Database
-from mesazap.table_session_service import TableSessionService
+from klink.billing_service import BillingService
+from klink.config import Settings
+from klink.menu_service import MenuService
+from klink.openai_interpreter import OpenAIInterpreter
+from klink.order_service import OrderService
+from klink.restaurant_agent import RestaurantAgent
+from klink.storage import Database
+from klink.table_session_service import TableSessionService
 
 
 def make_agent() -> tuple[RestaurantAgent, OrderService]:

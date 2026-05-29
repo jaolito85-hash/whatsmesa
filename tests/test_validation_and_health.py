@@ -4,8 +4,8 @@ import os
 import tempfile
 import unittest
 
-from mesazap.storage import Database
-from mesazap.table_session_service import TableSessionService
+from klink.storage import Database
+from klink.table_session_service import TableSessionService
 
 
 def fresh_db() -> tuple[Database, str]:
@@ -86,12 +86,12 @@ class ValidationFlowTest(unittest.TestCase):
 
 class AgentInteractsWithValidationTest(unittest.TestCase):
     def test_bot_blocks_orders_until_validated(self):
-        from mesazap.billing_service import BillingService
-        from mesazap.config import Settings
-        from mesazap.menu_service import MenuService
-        from mesazap.openai_interpreter import OpenAIInterpreter
-        from mesazap.order_service import OrderService
-        from mesazap.restaurant_agent import RestaurantAgent
+        from klink.billing_service import BillingService
+        from klink.config import Settings
+        from klink.menu_service import MenuService
+        from klink.openai_interpreter import OpenAIInterpreter
+        from klink.order_service import OrderService
+        from klink.restaurant_agent import RestaurantAgent
 
         db, path = fresh_db()
         sessions = TableSessionService(db, require_validation=True)
@@ -146,11 +146,11 @@ class HealthAndRateMetricsTest(unittest.TestCase):
     def setUp(self):
         handle = tempfile.NamedTemporaryFile(suffix=".db")
         handle.close()
-        os.environ["MESAZAP_DATABASE"] = handle.name
-        os.environ["MESAZAP_DASHBOARD_PASSWORD"] = ""
-        os.environ["MESAZAP_PUBLIC_BASE_URL"] = "http://localhost:5000"
+        os.environ["KLINK_DATABASE"] = handle.name
+        os.environ["KLINK_DASHBOARD_PASSWORD"] = ""
+        os.environ["KLINK_PUBLIC_BASE_URL"] = "http://localhost:5000"
         os.environ["EVOLUTION_DAILY_LIMIT"] = "10"
-        os.environ.pop("MESAZAP_REQUIRE_TABLE_VALIDATION", None)
+        os.environ.pop("KLINK_REQUIRE_TABLE_VALIDATION", None)
 
         import app as app_module
         self.flask_app = app_module.create_app()
@@ -197,17 +197,17 @@ class HealthAndRateMetricsTest(unittest.TestCase):
         self.assertTrue(body["whatsapp"]["warning"])
 
     def test_pending_sessions_listed_in_health_count(self):
-        os.environ["MESAZAP_REQUIRE_TABLE_VALIDATION"] = "true"
+        os.environ["KLINK_REQUIRE_TABLE_VALIDATION"] = "true"
         try:
             handle = tempfile.NamedTemporaryFile(suffix=".db")
             handle.close()
-            os.environ["MESAZAP_DATABASE"] = handle.name
+            os.environ["KLINK_DATABASE"] = handle.name
             import app as app_module
             flask_app = app_module.create_app()
             client = flask_app.test_client()
             db = Database(handle.name)
 
-            from mesazap.table_session_service import TableSessionService
+            from klink.table_session_service import TableSessionService
 
             sessions = TableSessionService(db, require_validation=True)
             sessions.activate_from_message("5511900000099", "Mesa 11")
@@ -216,16 +216,16 @@ class HealthAndRateMetricsTest(unittest.TestCase):
             self.assertEqual(body["sessions"]["pending_validation"], 1)
             self.assertTrue(body["require_table_validation"])
         finally:
-            os.environ.pop("MESAZAP_REQUIRE_TABLE_VALIDATION", None)
+            os.environ.pop("KLINK_REQUIRE_TABLE_VALIDATION", None)
 
 
 class SessionEndpointsTest(unittest.TestCase):
     def setUp(self):
         handle = tempfile.NamedTemporaryFile(suffix=".db")
         handle.close()
-        os.environ["MESAZAP_DATABASE"] = handle.name
-        os.environ["MESAZAP_DASHBOARD_PASSWORD"] = ""
-        os.environ["MESAZAP_REQUIRE_TABLE_VALIDATION"] = "true"
+        os.environ["KLINK_DATABASE"] = handle.name
+        os.environ["KLINK_DASHBOARD_PASSWORD"] = ""
+        os.environ["KLINK_REQUIRE_TABLE_VALIDATION"] = "true"
 
         import app as app_module
         self.flask_app = app_module.create_app()
@@ -234,10 +234,10 @@ class SessionEndpointsTest(unittest.TestCase):
         self.db = Database(handle.name)
 
     def tearDown(self):
-        os.environ.pop("MESAZAP_REQUIRE_TABLE_VALIDATION", None)
+        os.environ.pop("KLINK_REQUIRE_TABLE_VALIDATION", None)
 
     def test_pending_endpoint_lists_open_validations(self):
-        from mesazap.table_session_service import TableSessionService
+        from klink.table_session_service import TableSessionService
 
         sessions = TableSessionService(self.db, require_validation=True)
         sessions.activate_from_message("5511900000040", "Mesa 9")
@@ -249,7 +249,7 @@ class SessionEndpointsTest(unittest.TestCase):
         self.assertEqual(body["sessions"][0]["mesa_numero"], 9)
 
     def test_validate_endpoint_activates_session(self):
-        from mesazap.table_session_service import TableSessionService
+        from klink.table_session_service import TableSessionService
 
         sessions = TableSessionService(self.db, require_validation=True)
         session = sessions.activate_from_message("5511900000041", "Mesa 10")
@@ -261,7 +261,7 @@ class SessionEndpointsTest(unittest.TestCase):
         self.assertEqual(body["session"]["status"], "sessao_ativa")
 
     def test_reject_endpoint_closes_session(self):
-        from mesazap.table_session_service import TableSessionService
+        from klink.table_session_service import TableSessionService
 
         sessions = TableSessionService(self.db, require_validation=True)
         session = sessions.activate_from_message("5511900000042", "Mesa 11")

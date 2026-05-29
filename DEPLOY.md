@@ -1,6 +1,6 @@
-# Deploy no Coolify — MesaZap
+# Deploy no Coolify — Klink
 
-Guia passo a passo para subir o MesaZap numa VPS com Coolify usando SQLite em
+Guia passo a passo para subir o Klink numa VPS com Coolify usando SQLite em
 volume persistente.
 
 ## Pre-requisitos
@@ -12,34 +12,34 @@ volume persistente.
 - Chave da OpenAI (opcional; sem ela o parser heuristico assume).
 
 Dominio: piloto usa o sslip.io que o Coolify gera automaticamente
-(ex.: `mesazap-xxx.72.60.13.166.sslip.io`). Nao precisa configurar DNS.
+(ex.: `klink-xxx.72.60.13.166.sslip.io`). Nao precisa configurar DNS.
 
 ## 1. Criar a aplicacao no Coolify
 
-1. **Projects → New Project** → nome: `MesaZap`.
+1. **Projects → New Project** → nome: `Klink`.
 2. **New Resource → Application → Public Repository**.
 3. **Repository URL**: `https://github.com/jaolito85-hash/whatsmesa`.
 4. **Branch**: `main`.
 5. **Build Pack**: `Dockerfile`.
 6. **Dockerfile Location**: `Dockerfile` (raiz).
 7. Salvar. Coolify ja gera um sslip.io automaticamente (anote a URL — sera
-   usada como `MESAZAP_PUBLIC_BASE_URL` e como webhook na Evolution).
+   usada como `KLINK_PUBLIC_BASE_URL` e como webhook na Evolution).
 
 ## 3. Configurar volume persistente para o SQLite
 
 Em **Persistent Storage** da aplicacao:
 
-- **Name**: `mesazap-data`
+- **Name**: `klink-data`
 - **Mount Path**: `/data`
 - **Type**: Volume
 
-Isso garante que o arquivo `mesazap.db` sobrevive a rebuilds.
+Isso garante que o arquivo `klink.db` sobrevive a rebuilds.
 
 ## 4. Porta e dominio
 
 - **Port Exposes**: `5000`
 - **Domains**: deixar em branco — Coolify gera automaticamente um sslip.io
-  (ex.: `https://mesazap-abc123.72.60.13.166.sslip.io`). Anote essa URL.
+  (ex.: `https://klink-abc123.72.60.13.166.sslip.io`). Anote essa URL.
 
 Quando migrar para dominio proprio, adicione aqui e Coolify cuida do
 Traefik + Lets Encrypt.
@@ -50,8 +50,8 @@ Em **Environment Variables** (substitua `<URL_GERADA>` pela URL sslip.io
 do passo 4):
 
 ```env
-MESAZAP_DATABASE=/data/mesazap.db
-MESAZAP_PUBLIC_BASE_URL=https://<URL_GERADA>
+KLINK_DATABASE=/data/klink.db
+KLINK_PUBLIC_BASE_URL=https://<URL_GERADA>
 
 WHATSAPP_PHONE=
 EVOLUTION_API_URL=http://evo-h8cos48wogk0w804ss08soko.72.60.13.166.sslip.io
@@ -62,9 +62,9 @@ OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
 
-MESAZAP_DASHBOARD_USER=admin
-MESAZAP_DASHBOARD_PASSWORD=GERE-UMA-SENHA-FORTE
-MESAZAP_ADMIN_TOKEN=GERE-UM-TOKEN-ALEATORIO-32-CHARS
+KLINK_DASHBOARD_USER=admin
+KLINK_DASHBOARD_PASSWORD=GERE-UMA-SENHA-FORTE
+KLINK_ADMIN_TOKEN=GERE-UM-TOKEN-ALEATORIO-32-CHARS
 ```
 
 Preencha `WHATSAPP_PHONE`, `EVOLUTION_API_KEY` e `EVOLUTION_INSTANCE` antes
@@ -95,7 +95,7 @@ Primeiro deploy leva ~3-5 minutos. Logs aparecem em tempo real.
 ```bash
 # 1. Healthcheck
 curl https://<URL_GERADA>/health
-# {"ok": true, "service": "mesazap"}
+# {"ok": true, "service": "klink"}
 
 # 2. Painel (pede login HTTP Basic com user e senha do env)
 curl -u "admin:SUA-SENHA" https://<URL_GERADA>/ | head -20
@@ -150,12 +150,12 @@ Usar o id que vier na resposta do `generate-invoice`.
 
 ## 12. Backup do SQLite
 
-Uma vez por dia, copiar `/data/mesazap.db` para um bucket ou pasta segura.
+Uma vez por dia, copiar `/data/klink.db` para um bucket ou pasta segura.
 Use `sqlite3 .backup` (online, atomico, sem lock longo) em vez de `cp`:
 
 ```bash
 # Dentro do container (Coolify -> Terminal)
-sqlite3 /data/mesazap.db ".backup '/data/backup-$(date +%F).db'"
+sqlite3 /data/klink.db ".backup '/data/backup-$(date +%F).db'"
 ```
 
 ### Automatizar via Coolify Scheduled Tasks
@@ -166,7 +166,7 @@ sqlite3 /data/mesazap.db ".backup '/data/backup-$(date +%F).db'"
 4. **Command**:
 
    ```bash
-   sqlite3 /data/mesazap.db ".backup '/data/backup-$(date +%F).db'" \
+   sqlite3 /data/klink.db ".backup '/data/backup-$(date +%F).db'" \
      && find /data -name 'backup-*.db' -mtime +14 -delete
    ```
 
@@ -187,7 +187,7 @@ Resposta:
 ```json
 {
   "ok": true,
-  "service": "mesazap",
+  "service": "klink",
   "whatsapp": {
     "configured": true,
     "sends_today": 47,
@@ -216,7 +216,7 @@ validacao visual: o garcom precisa clicar **validar** no painel antes do
 bot aceitar pedidos.
 
 ```env
-MESAZAP_REQUIRE_TABLE_VALIDATION=true
+KLINK_REQUIRE_TABLE_VALIDATION=true
 ```
 
 Fluxo:
@@ -232,7 +232,7 @@ Fluxo:
 ## Problemas comuns
 
 - **401 em todas as rotas privadas**: senha do dashboard nao foi setada ou
-  esta diferente. Confira `MESAZAP_DASHBOARD_PASSWORD`.
+  esta diferente. Confira `KLINK_DASHBOARD_PASSWORD`.
 - **Webhook nao responde**: verifique se a rota `/webhook/evolution` esta
   publica (nao exige auth) no seu deploy. Teste com `curl` direto.
 - **Audio nao transcreve**: confira `OPENAI_API_KEY` e o formato enviado.
@@ -243,7 +243,7 @@ Fluxo:
   8 threads e WAL mode + busy_timeout. Isso aguenta bem o MVP. Se escalar,
   migre para Postgres via Supabase antes de aumentar workers.
 - **Sessoes ficam abertas para sempre**: TTL padrao e 6h ocioso. Ajuste
-  com `MESAZAP_SESSION_IDLE_TTL_HOURS=4` (ou outro valor).
+  com `KLINK_SESSION_IDLE_TTL_HOURS=4` (ou outro valor).
 - **Limite Evolution proximo**: monitore `usage_pct` em `/health`. Acima de
   70%, log de warning aparece e voce deve reduzir volume ou migrar para
   WhatsApp Cloud API.

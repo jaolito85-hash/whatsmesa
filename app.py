@@ -5,17 +5,17 @@ import hmac
 
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
 
-from mesazap.audio_service import AudioService
-from mesazap.billing_service import BillingService
-from mesazap.config import get_settings
-from mesazap.menu_service import MenuService
-from mesazap.openai_interpreter import OpenAIInterpreter
-from mesazap.order_service import OrderService
-from mesazap.qr_service import QRService
-from mesazap.restaurant_agent import RestaurantAgent
-from mesazap.storage import Database
-from mesazap.table_session_service import TableSessionService
-from mesazap.whatsapp_adapter import WhatsAppAdapter
+from klink.audio_service import AudioService
+from klink.billing_service import BillingService
+from klink.config import get_settings
+from klink.menu_service import MenuService
+from klink.openai_interpreter import OpenAIInterpreter
+from klink.order_service import OrderService
+from klink.qr_service import QRService
+from klink.restaurant_agent import RestaurantAgent
+from klink.storage import Database
+from klink.table_session_service import TableSessionService
+from klink.whatsapp_adapter import WhatsAppAdapter
 
 
 def create_app() -> Flask:
@@ -64,7 +64,7 @@ def create_app() -> Flask:
         return Response(
             "Autenticacao necessaria.",
             status=401,
-            headers={"WWW-Authenticate": 'Basic realm="MesaZap"'},
+            headers={"WWW-Authenticate": 'Basic realm="Klink"'},
         )
 
     @app.get("/")
@@ -90,7 +90,7 @@ def create_app() -> Flask:
         return jsonify(
             {
                 "ok": True,
-                "service": "mesazap",
+                "service": "klink",
                 "whatsapp": {
                     "configured": settings.has_evolution,
                     "sends_today": sends_today,
@@ -187,9 +187,9 @@ def create_app() -> Flask:
         expected = settings.admin_token
         if not expected:
             # Sem token configurado: so liberamos em modo de desenvolvimento
-            # explicito (MESAZAP_DEV_MODE=1). Em producao, falta de token =
+            # explicito (KLINK_DEV_MODE=1). Em producao, falta de token =
             # acesso negado (seguro por padrao). Assim, um deploy que esqueca o
-            # MESAZAP_ADMIN_TOKEN nao deixa as rotas /admin/* (cobranca) abertas.
+            # KLINK_ADMIN_TOKEN nao deixa as rotas /admin/* (cobranca) abertas.
             if settings.dev_mode:
                 return
             abort(403)

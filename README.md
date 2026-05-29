@@ -1,4 +1,4 @@
-# MesaZap
+# Klink
 
 MVP de garcom por WhatsApp para restaurantes. O cliente escaneia o QR da mesa, manda texto ou audio no WhatsApp, recebe uma confirmacao curta e o pedido cai no painel certo: bar, cozinha, salao ou caixa.
 
@@ -78,7 +78,7 @@ As policies finais devem ser criadas quando o modelo de usuarios do painel estiv
 
 ## OpenAI
 
-Sem `OPENAI_API_KEY`, o MVP usa um parser local simples por aliases do cardapio. Com a chave configurada, `mesazap/openai_interpreter.py` tenta interpretar a mensagem por JSON Schema antes de cair no parser local.
+Sem `OPENAI_API_KEY`, o MVP usa um parser local simples por aliases do cardapio. Com a chave configurada, `klink/openai_interpreter.py` tenta interpretar a mensagem por JSON Schema antes de cair no parser local.
 O bot responde em portugues, ingles ou espanhol conforme a mensagem do cliente. O painel continua recebendo os itens no nome operacional cadastrado no cardapio.
 
 Audio usa `OPENAI_TRANSCRIPTION_MODEL` e rejeita audios acima de 35 segundos quando o payload informa duracao.

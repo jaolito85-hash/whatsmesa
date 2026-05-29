@@ -4,8 +4,8 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from mesazap.storage import Database
-from mesazap.table_session_service import TableSessionService
+from klink.storage import Database
+from klink.table_session_service import TableSessionService
 
 
 def make_service(idle_ttl_hours: int = 6) -> tuple[TableSessionService, Database]:
@@ -235,7 +235,7 @@ class IdleTTLTest(unittest.TestCase):
 
 class CloseAccountFlowTest(unittest.TestCase):
     def test_get_request_returns_full_row(self):
-        from mesazap.order_service import OrderService
+        from klink.order_service import OrderService
 
         service, db = make_service()
         orders = OrderService(db)
@@ -257,22 +257,22 @@ class CloseAccountFlowTest(unittest.TestCase):
     def test_concluding_close_account_request_via_app_closes_session(self):
         import tempfile
         import os
-        from mesazap.config import Settings
-        from mesazap.storage import Database
+        from klink.config import Settings
+        from klink.storage import Database
         import app as app_module
 
         handle = tempfile.NamedTemporaryFile(suffix=".db")
         handle.close()
-        os.environ["MESAZAP_DATABASE"] = handle.name
-        os.environ["MESAZAP_DASHBOARD_PASSWORD"] = ""
-        os.environ["MESAZAP_PUBLIC_BASE_URL"] = "http://localhost:5000"
+        os.environ["KLINK_DATABASE"] = handle.name
+        os.environ["KLINK_DASHBOARD_PASSWORD"] = ""
+        os.environ["KLINK_PUBLIC_BASE_URL"] = "http://localhost:5000"
 
         flask_app = app_module.create_app()
         flask_app.testing = True
         client = flask_app.test_client()
 
-        from mesazap.table_session_service import TableSessionService
-        from mesazap.order_service import OrderService
+        from klink.table_session_service import TableSessionService
+        from klink.order_service import OrderService
 
         db = Database(handle.name)
         sessions = TableSessionService(db)

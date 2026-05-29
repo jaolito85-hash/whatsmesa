@@ -934,7 +934,7 @@ Antes de programar, leia o arquivo MVP_GARCOM_WHATSAPP.md e monte o plano de imp
 
 Opcoes:
 
-- MesaZap
+- Klink
 - ZapGarcom
 - Garcom de Bolso
 - ComandaZap
@@ -944,7 +944,7 @@ Opcoes:
 
 Nome interno recomendado para o MVP:
 
-> MesaZap
+> Klink
 
 Motivo:
 

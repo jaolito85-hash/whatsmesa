@@ -3,9 +3,9 @@ from __future__ import annotations
 import tempfile
 import unittest
 
-from mesazap.order_service import ITEM_STATUS_NEXT, REQUEST_STATUS_NEXT, OrderService
-from mesazap.storage import Database
-from mesazap.table_session_service import TableSessionService
+from klink.order_service import ITEM_STATUS_NEXT, REQUEST_STATUS_NEXT, OrderService
+from klink.storage import Database
+from klink.table_session_service import TableSessionService
 
 
 # ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-Testes para mesazap/restaurant_agent.py.
+Testes para klink/restaurant_agent.py.
 
 Complementa test_agent_flow.py — não duplica casos já cobertos lá.
 Cobre: métodos auxiliares (_is_confirm, _is_alter, _is_repeat, _is_account_request,
@@ -17,20 +17,20 @@ import unittest
 from typing import Any
 from unittest.mock import MagicMock
 
-from mesazap.billing_service import BillingService
-from mesazap.config import Settings
-from mesazap.menu_service import MenuService
-from mesazap.openai_interpreter import OpenAIInterpreter
-from mesazap.order_service import OrderService
-from mesazap.restaurant_agent import (
+from klink.billing_service import BillingService
+from klink.config import Settings
+from klink.menu_service import MenuService
+from klink.openai_interpreter import OpenAIInterpreter
+from klink.order_service import OrderService
+from klink.restaurant_agent import (
     CONFIRM_WORDS,
     ALTER_WORDS,
     REPEAT_MARKERS,
     ACCOUNT_MARKERS,
     RestaurantAgent,
 )
-from mesazap.storage import Database
-from mesazap.table_session_service import TableSessionService
+from klink.storage import Database
+from klink.table_session_service import TableSessionService
 
 
 # ---------------------------------------------------------------------------

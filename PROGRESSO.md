@@ -1,4 +1,4 @@
-# Progresso — MesaZap (futuro Klink)
+# Progresso — Klink
 
 > Diário de bordo do projeto, em linguagem simples. Atualizado a cada mudança.
 > Última atualização: **29/05/2026**
@@ -51,12 +51,25 @@ o garçom acompanha pelo computador/celular.
 - [ ] Trocar o ícone do WhatsApp na logo (usar literalmente o logo da Meta = risco de processo).
 - [ ] Pegar API Key + nome da instância da Evolution e botar no Coolify.
 - [ ] Pegar o número de WhatsApp do garçom (chip dedicado de preferência).
-- [ ] Cadastrar o primeiro restaurante de verdade (substituir o "MesaZap Demo" pelo nome real do estabelecimento).
+- [ ] Cadastrar o primeiro restaurante de verdade (substituir o "Klink Demo" pelo nome real do estabelecimento).
 - [ ] Trocar a foto stock do painel pela foto real do estabelecimento.
 
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 29/05/2026 — Nome oficial agora é Klink
+- Você registrou a marca **`klinkai.com.br`**. Decidimos adotar o nome **Klink** em tudo.
+- Trocamos **todas as 175 menções** de "MesaZap" por "Klink" no projeto:
+  textos do site/painel, documentação, e também a "pasta do motor" do sistema
+  (que se chamava `mesazap` e agora se chama `klink`).
+- As "etiquetas técnicas" usadas no servidor também mudaram de nome
+  (ex.: `MESAZAP_DATABASE` virou `KLINK_DATABASE`). **Atenção na próxima subida:**
+  é preciso atualizar essas etiquetas no Coolify (detalhes ao final desta sessão).
+- O nome que o cliente vê é só **Klink** (o `.ai` é só o endereço do site, não o nome).
+- Rodamos os testes depois da troca: **329 passaram, nada quebrou.**
+- Pastas de vídeo de demonstração antigas (`video-mesazap-*`) foram mantidas como
+  estão, por estarem fora do código do produto.
 
 ### 29/05/2026 — Mais testes automáticos + correção do carimbo duplo
 
@@ -104,7 +117,7 @@ nesta mesma rodada**:
    `hmac.compare_digest` (impede descobrir a senha "medindo o tempo").
 3. **Painel aberto se esquecer a senha:** se o token de admin ficar vazio no
    servidor, as rotas de cobrança agora **negam acesso** (antes liberavam). Para
-   rodar localmente sem token, basta ligar `MESAZAP_DEV_MODE=1` (nunca em
+   rodar localmente sem token, basta ligar `KLINK_DEV_MODE=1` (nunca em
    produção).
 
 Também resolvemos os achados médios/baixos da auditoria:

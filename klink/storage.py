@@ -437,8 +437,8 @@ class Database:
                 """,
                 (
                     restaurante_id,
-                    "MesaZap Demo",
-                    "mesazap-demo",
+                    "Klink Demo",
+                    "klink-demo",
                     "5500000000000",
                     "America/Sao_Paulo",
                     now,
