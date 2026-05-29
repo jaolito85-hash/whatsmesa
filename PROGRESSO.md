@@ -1,7 +1,7 @@
 # Progresso — MesaZap (futuro Klink)
 
 > Diário de bordo do projeto, em linguagem simples. Atualizado a cada mudança.
-> Última atualização: **05/05/2026**
+> Última atualização: **29/05/2026**
 
 ---
 
@@ -27,7 +27,7 @@ o garçom acompanha pelo computador/celular.
 | Servidor | Coolify, na sua VPS |
 | URL do app | `https://g7yafnc904l4nk0rkfibx6fa.72.60.13.166.sslip.io` |
 | WhatsApp (Evolution) | URL configurada, falta API Key + número |
-| Testes automáticos | 53/53 passando ✅ |
+| Testes automáticos | 186/186 passando ✅ |
 | Cliente do piloto | Ainda não definido |
 | Nome final do produto | A decidir (favorito: **Klink**) |
 | Domínio | `klink.bar` comprado por US$ 2,80/ano |
@@ -57,6 +57,24 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 29/05/2026 — Mais testes automáticos + correção do carimbo duplo
+
+Usamos o ajudante "test-writer" para cobrir dois pedaços importantes do
+sistema que ainda não tinham testes próprios:
+
+1. **Pedidos (`order_service`):** 60 novos testes — transições de status,
+   cálculo do total (com cuidado nos centavos) e confirmação de pedido.
+2. **Cardápio (`menu_service`):** 72 novos testes — busca de itens por nome
+   e apelidos (português, inglês, espanhol), quantidade por extenso,
+   itens indisponíveis e desambiguação (ex.: qual "Brahma").
+
+**Correção feita:** ao escrever os testes, descobrimos que confirmar o mesmo
+pedido duas vezes gravava **dois carimbos** de "pedido confirmado" no
+histórico. Corrigimos para gravar só quando a confirmação realmente acontece.
+O status do pedido já estava protegido — era só o histórico que duplicava.
+
+**Resultado:** a suíte saltou de **54 para 186 testes**, todos passando. ✅
 
 ### 11/05/2026 — Landing Page e Novo Modelo de Cobrança (Klink)
 **Commit:** `landing-page-billing`

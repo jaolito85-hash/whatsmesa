@@ -106,7 +106,7 @@ class OrderService:
     def confirm_order(self, order_id: str) -> dict[str, Any]:
         now = utc_now()
         with self.db.transaction() as conn:
-            conn.execute(
+            cursor = conn.execute(
                 """
                 update pedidos
                 set status = 'enviado_setor', confirmado_em = ?
@@ -114,13 +114,17 @@ class OrderService:
                 """,
                 (now, order_id),
             )
-            conn.execute(
-                """
-                insert into eventos_pedido (id, pedido_id, tipo, descricao, criado_por, criado_em)
-                values (?, ?, 'pedido_confirmado', 'Cliente confirmou o pedido no WhatsApp.', 'cliente', ?)
-                """,
-                (new_id(), order_id, now),
-            )
+            # So registra o evento se a confirmacao realmente aconteceu agora.
+            # Sem essa checagem, confirmar o mesmo pedido duas vezes criaria
+            # eventos 'pedido_confirmado' duplicados no historico.
+            if cursor.rowcount > 0:
+                conn.execute(
+                    """
+                    insert into eventos_pedido (id, pedido_id, tipo, descricao, criado_por, criado_em)
+                    values (?, ?, 'pedido_confirmado', 'Cliente confirmou o pedido no WhatsApp.', 'cliente', ?)
+                    """,
+                    (new_id(), order_id, now),
+                )
 
         order = self.db.fetchone("select * from pedidos where id = ?", (order_id,))
         if not order:
