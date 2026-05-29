@@ -186,9 +186,16 @@ def create_app() -> Flask:
     def require_admin() -> None:
         expected = settings.admin_token
         if not expected:
-            return
+            # Sem token configurado: so liberamos em modo de desenvolvimento
+            # explicito (MESAZAP_DEV_MODE=1). Em producao, falta de token =
+            # acesso negado (seguro por padrao). Assim, um deploy que esqueca o
+            # MESAZAP_ADMIN_TOKEN nao deixa as rotas /admin/* (cobranca) abertas.
+            if settings.dev_mode:
+                return
+            abort(403)
         provided = request.headers.get("X-Admin-Token", "")
-        if provided != expected:
+        # compare_digest evita timing attack na comparacao do token de admin.
+        if not hmac.compare_digest(provided, expected):
             abort(401)
 
     @app.get("/api/billing/usage")

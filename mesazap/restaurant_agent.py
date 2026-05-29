@@ -186,6 +186,11 @@ MESSAGES = {
         "en": "{names} is not available right now. Should I call staff to help?",
         "es": "{names} no esta disponible ahora. Puedo llamar a un atendente para ayudar?",
     },
+    "order_partial": {
+        "pt": "Só um aviso: não temos {names} no momento.",
+        "en": "Just so you know: we don't have {names} right now.",
+        "es": "Solo un aviso: no tenemos {names} en este momento.",
+    },
     "human_called": {
         "pt": "Não encontrei esse item no cardápio da casa. Chamei um atendente para ajudar.",
         "en": "I could not find that item on the menu. I called staff to help.",
@@ -525,10 +530,17 @@ class RestaurantAgent:
 
         restaurant = self.table_sessions.restaurant()
         items = []
+        missing = []
         for item in result.get("items", []):
             product = self.menu.product_by_name_or_alias(restaurant["id"], item.get("name", ""))
             if not product or not product.get("disponivel"):
-                return None
+                # Em vez de descartar o pedido inteiro, registramos o item que
+                # faltou e seguimos com os demais. Assim o cliente recebe o que
+                # temos e um aviso claro do que nao foi possivel atender.
+                name = (item.get("name") or "").strip()
+                if name:
+                    missing.append(name)
+                continue
             items.append(
                 {
                     "product_id": product["id"],
@@ -540,6 +552,16 @@ class RestaurantAgent:
                 }
             )
         if not items:
+            # Nenhum item valido. Se algum nome foi pedido mas nao existe/esta
+            # indisponivel, avisamos em vez de sumir silenciosamente.
+            if missing:
+                names = ", ".join(missing)
+                return {
+                    "reply": self._message("unavailable", language, names=names),
+                    "session": session,
+                    "action": "unavailable",
+                    "language": language,
+                }
             return None
         draft = self.orders.create_draft_order(
             session=session,
@@ -547,8 +569,12 @@ class RestaurantAgent:
             texto_original=text,
             origem=origem,
         )
+        reply = self._confirmation_message(session["mesa_numero"], draft["items"], language)
+        if missing:
+            names = ", ".join(missing)
+            reply = self._message("order_partial", language, names=names) + "\n" + reply
         return {
-            "reply": self._confirmation_message(session["mesa_numero"], draft["items"], language),
+            "reply": reply,
             "session": session,
             "order": draft,
             "action": "order_draft_created",

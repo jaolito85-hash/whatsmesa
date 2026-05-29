@@ -27,7 +27,7 @@ o garçom acompanha pelo computador/celular.
 | Servidor | Coolify, na sua VPS |
 | URL do app | `https://g7yafnc904l4nk0rkfibx6fa.72.60.13.166.sslip.io` |
 | WhatsApp (Evolution) | URL configurada, falta API Key + número |
-| Testes automáticos | 186/186 passando ✅ |
+| Testes automáticos | 327/327 passando ✅ |
 | Cliente do piloto | Ainda não definido |
 | Nome final do produto | A decidir (favorito: **Klink**) |
 | Domínio | `klink.bar` comprado por US$ 2,80/ano |
@@ -75,6 +75,42 @@ histórico. Corrigimos para gravar só quando a confirmação realmente acontece
 O status do pedido já estava protegido — era só o histórico que duplicava.
 
 **Resultado:** a suíte saltou de **54 para 186 testes**, todos passando. ✅
+
+### 29/05/2026 — Testes do coração do app + 2 correções e auditoria de segurança
+
+Cobrimos com testes o módulo mais importante e arriscado, o `restaurant_agent`
+(o "cérebro" que lê a mensagem do cliente e vira pedido): **135 novos testes**.
+
+Escrevendo esses testes, apareceram dois problemas, ambos corrigidos:
+
+1. **Cobrança duplicada (copia-e-cola):** o trecho que registra a cobrança ao
+   abrir a mesa estava escrito **duas vezes seguidas, idêntico**. Apagamos a
+   cópia. (Na prática não cobrava em dobro graças a uma trava, mas era
+   perigoso.)
+2. **Pedido sumia quando faltava um item:** se o cliente pedia dois itens e um
+   não existia no cardápio, o app **descartava o pedido inteiro em silêncio**.
+   Agora ele **cria o pedido com o que existe e avisa** o que faltou. Se nada
+   existe, dá um aviso claro em vez de sumir.
+
+**Auditoria de segurança (security-reviewer):** rodamos uma revisão focada em
+cobrança e login do painel. Ela apontou 3 pontos críticos — **todos corrigidos
+nesta mesma rodada**:
+
+1. **Cobrança dupla em corrida:** se chegarem duas mensagens iguais ao mesmo
+   tempo, podia cobrar 2x. Trocamos por uma trava forte no próprio banco
+   (`INSERT OR IGNORE` + índice único): agora só uma cobrança "vence" e a outra
+   é ignorada sem erro.
+2. **Senha do admin sem proteção:** a comparação do token de admin agora usa
+   `hmac.compare_digest` (impede descobrir a senha "medindo o tempo").
+3. **Painel aberto se esquecer a senha:** se o token de admin ficar vazio no
+   servidor, as rotas de cobrança agora **negam acesso** (antes liberavam). Para
+   rodar localmente sem token, basta ligar `MESAZAP_DEV_MODE=1` (nunca em
+   produção).
+
+Achados médios/baixos (preço padrão 1,97 vs 3,97 no banco, valores em "float")
+ficaram anotados para depois — não bloqueiam o deploy.
+
+**Resultado:** a suíte foi de **186 para 327 testes**, todos passando. ✅
 
 ### 11/05/2026 — Landing Page e Novo Modelo de Cobrança (Klink)
 **Commit:** `landing-page-billing`

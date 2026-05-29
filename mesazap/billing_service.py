@@ -114,36 +114,36 @@ class BillingService:
         if account["status"] != "ativo":
             return None
 
-        # Usando sessao_mesa_id para evitar IntegrityError de FK com pedidos
-        existing = self.db.fetchone(
-            """
-            select id
-            from billing_events
-            where sessao_mesa_id = ? and tipo = 'mesa_aberta'
-            """,
-            (sessao_id,),
-        )
-        if existing:
-            return None
-
         event_id = new_id()
-        self.db.execute(
-            """
-            insert into billing_events (
-               id, billing_account_id, tipo, sessao_mesa_id, valor, moeda,
-               periodo_ano_mes, status_cobranca, criado_em
-            ) values (?, ?, 'mesa_aberta', ?, ?, ?, ?, 'pendente', ?)
-            """,
-            (
-                event_id,
-                account["id"],
-                sessao_id,
-                account["preco_por_pedido"],
-                account["moeda"],
-                current_period(),
-                utc_now(),
-            ),
-        )
+        # INSERT OR IGNORE + indice unico parcial (billing_events_sessao_unq, em
+        # sessao_mesa_id where tipo='mesa_aberta') tornam esta operacao atomica e
+        # idempotente: se dois processos/workers tentarem cobrar a MESMA sessao ao
+        # mesmo tempo (ex.: webhook da Evolution entregando a mensagem em duplicata),
+        # apenas um INSERT vence e o outro e ignorado em silencio, sem IntegrityError.
+        # Substitui o antigo check-then-insert, que tinha janela de race => cobranca dupla.
+        with self.db.transaction() as conn:
+            cursor = conn.execute(
+                """
+                insert or ignore into billing_events (
+                   id, billing_account_id, tipo, sessao_mesa_id, valor, moeda,
+                   periodo_ano_mes, status_cobranca, criado_em
+                ) values (?, ?, 'mesa_aberta', ?, ?, ?, ?, 'pendente', ?)
+                """,
+                (
+                    event_id,
+                    account["id"],
+                    sessao_id,
+                    account["preco_por_pedido"],
+                    account["moeda"],
+                    current_period(),
+                    utc_now(),
+                ),
+            )
+            inserted = cursor.rowcount > 0
+
+        if not inserted:
+            # Ja existia cobranca para esta sessao: idempotente, nada a cobrar.
+            return None
         return self.db.fetchone("select * from billing_events where id = ?", (event_id,))
 
     def usage_summary(

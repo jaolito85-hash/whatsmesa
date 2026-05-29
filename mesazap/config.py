@@ -40,6 +40,10 @@ class Settings:
     evolution_daily_limit: int = 200
     require_table_validation: bool = False
     session_idle_ttl_hours: int = 6
+    # Modo de desenvolvimento explicito. Quando True, as rotas /admin/* podem
+    # ser usadas sem MESAZAP_ADMIN_TOKEN. Em producao deve ficar False (padrao),
+    # para que falta de token signifique acesso negado, nao acesso liberado.
+    dev_mode: bool = False
 
     @property
     def dashboard_auth_enabled(self) -> bool:
@@ -97,5 +101,6 @@ def get_settings() -> Settings:
         evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
         require_table_validation=_bool_env("MESAZAP_REQUIRE_TABLE_VALIDATION", False),
         session_idle_ttl_hours=_int_env("MESAZAP_SESSION_IDLE_TTL_HOURS", 6),
+        dev_mode=_bool_env("MESAZAP_DEV_MODE", False),
     )
 
