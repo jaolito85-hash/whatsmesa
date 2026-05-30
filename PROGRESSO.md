@@ -14,7 +14,7 @@ WhatsApp do estabelecimento e começa a pedir por texto ou áudio. O pedido
 cai num painel kanban dividido por setor (Bar, Cozinha, Salão, Caixa) que
 o garçom acompanha pelo computador/celular.
 
-**Cobrança do nosso lado:** R$ 99 de setup + **R$ 1,97 por pedido confirmado**.
+**Cobrança do nosso lado:** R$ 147 de setup + **R$ 3,97 por mesa aberta**.
 
 ---
 
@@ -57,6 +57,19 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 29/05/2026 — Sai o "MesaZap Demo"; preço correto (3,97 por mesa)
+- No painel, enquanto o restaurante **não tem nome configurado**, agora aparece só a
+  **logo do Klink** (não mais "MesaZap Demo" nem "Klink Demo"). Quando você cadastra o
+  nome nas Configurações, o painel passa a mostrar **o nome do restaurante**.
+- O "MesaZap Demo" e o preço antigo de **R$ 1,97** estavam **gravados no banco do
+  servidor** (não no código). Criei uma **correção automática** que roda toda vez que o
+  sistema sobe: troca "MesaZap Demo" por Klink e o preço **1,97 → 3,97**. Então, no
+  próximo deploy no Coolify, o servidor se corrige sozinho — sem mexer em banco à mão.
+- Acertei os textos de cobrança: agora falam **"R$ 3,97 por mesa aberta"** (antes diziam
+  "R$ 1,97" e "por pedido") no painel e no resumo de cobrança.
+- Alinhei os valores-padrão de cobrança em todos os cantos do sistema (3,97 + setup 147).
+- Cobri tudo com **testes novos** (9) e a suíte segue verde: **338 ok**.
 
 ### 29/05/2026 — Tela de Configurações + página de QR codes
 - Agora dá pra **cadastrar o restaurante do cliente sozinho**, sem mexer em banco:
@@ -296,7 +309,7 @@ prontas:
 - Reconhecimento de pedidos por texto e áudio (transcrição via OpenAI)
 - Confirmação antes de mandar pra cozinha (cliente confirma com "1")
 - Painel kanban Bar/Cozinha/Salão/Caixa em tempo real
-- Sistema de cobrança (R$ 99 setup + R$ 1,97/pedido) com faturas mensais
+- Sistema de cobrança (R$ 147 setup + R$ 3,97/mesa aberta) com faturas mensais
 - Auth no painel (usuário/senha)
 - Multi-idioma no bot (responde no idioma do cliente)
 - Suporte a chamados (chamar garçom, pedir guardanapo, etc.)

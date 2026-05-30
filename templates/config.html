@@ -250,7 +250,7 @@
             id="nome"
             name="nome"
             type="text"
-            value="{{ restaurant.nome }}"
+            value="{% if not is_demo %}{{ restaurant.nome }}{% endif %}"
             placeholder="Ex: Bar do João"
             maxlength="80"
             required

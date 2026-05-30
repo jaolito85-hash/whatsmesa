@@ -18,7 +18,7 @@ const billingStatusLabels = {
 };
 
 const billingStatusLines = {
-  ativo: "Conta em dia. Pedidos confirmados são cobrados por R$ 1,97.",
+  ativo: "Conta em dia. Cada mesa aberta é cobrada por R$ 3,97.",
   aguardando_setup:
     "Aguardando pagamento da taxa de ativação. O bot ainda não aceita pedidos.",
   suspenso:
@@ -260,7 +260,7 @@ function renderBilling(usage, invoices) {
   if (pillDot) pillDot.setAttribute("data-billing-status", status);
   if (pillValue) pillValue.textContent = `R$ ${formatBRL(usage.valor_pedidos)}`;
   if (pillMeta) {
-    pillMeta.textContent = `${usage.qtd_pedidos} pedido${usage.qtd_pedidos === 1 ? "" : "s"}`;
+    pillMeta.textContent = `${usage.qtd_pedidos} mesa${usage.qtd_pedidos === 1 ? "" : "s"}`;
   }
 
   const badge = document.querySelector(".billing-badge");
@@ -290,12 +290,12 @@ function renderBilling(usage, invoices) {
   const setupNote = document.getElementById("billing-setup-note");
   if (setupBlock && setupStatus && setupValue && setupNote) {
     const setupPaid = Boolean(account.setup_fee_paid_em);
-    const setupFee = account.setup_fee != null ? account.setup_fee : 99;
+    const setupFee = account.setup_fee != null ? account.setup_fee : 147;
     setupValue.textContent = `R$ ${formatBRL(setupFee)}`;
     if (setupPaid) {
       setupBlock.hidden = status !== "ativo";
       setupStatus.textContent = "pago";
-      setupNote.textContent = "Taxa de ativação já foi paga. Cobrança recorrente por pedido confirmado.";
+      setupNote.textContent = "Taxa de ativação já foi paga. Cobrança recorrente por mesa aberta.";
     } else {
       setupBlock.hidden = false;
       setupStatus.textContent = "pendente";
@@ -316,7 +316,7 @@ function renderBilling(usage, invoices) {
           return `
             <article class="billing-invoice-row">
               <span class="billing-invoice-period">${formatPeriodo(inv.periodo_ano_mes)}</span>
-              <span class="billing-invoice-detail">${inv.qtd_pedidos} pedido${inv.qtd_pedidos === 1 ? "" : "s"}</span>
+              <span class="billing-invoice-detail">${inv.qtd_pedidos} mesa${inv.qtd_pedidos === 1 ? "" : "s"}</span>
               <span class="billing-invoice-value">R$ ${formatBRL(inv.valor_total)}</span>
               <span class="billing-invoice-status" data-invoice-status="${invStatus}">${invoiceStatusLabel(invStatus)}</span>
             </article>

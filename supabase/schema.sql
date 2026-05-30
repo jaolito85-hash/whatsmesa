@@ -139,8 +139,8 @@ create table if not exists public.billing_accounts (
   restaurante_id uuid not null unique references public.restaurantes(id) on delete cascade,
   status text not null default 'aguardando_setup'
     check (status in ('aguardando_setup', 'ativo', 'suspenso', 'cancelado')),
-  preco_por_pedido numeric(10, 2) not null default 1.97 check (preco_por_pedido >= 0),
-  setup_fee numeric(10, 2) not null default 99.00 check (setup_fee >= 0),
+  preco_por_pedido numeric(10, 2) not null default 3.97 check (preco_por_pedido >= 0),
+  setup_fee numeric(10, 2) not null default 147.00 check (setup_fee >= 0),
   setup_fee_paid_em timestamptz,
   moeda text not null default 'BRL',
   criado_em timestamptz not null default now()

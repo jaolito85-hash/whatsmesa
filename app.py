@@ -13,7 +13,7 @@ from klink.openai_interpreter import OpenAIInterpreter
 from klink.order_service import OrderService
 from klink.qr_service import QRService
 from klink.restaurant_agent import RestaurantAgent
-from klink.storage import Database
+from klink.storage import DEMO_SLUG, Database
 from klink.table_session_service import TableSessionService
 from klink.whatsapp_adapter import WhatsAppAdapter
 
@@ -23,6 +23,7 @@ def create_app() -> Flask:
     settings = get_settings()
     db = Database(settings.database_path)
     db.init_schema()
+    db.migrate_legacy_data()
     db.seed_demo()
 
     billing = BillingService(db)
@@ -77,6 +78,7 @@ def create_app() -> Flask:
         return render_template(
             "dashboard.html",
             restaurant=restaurant,
+            is_demo=restaurant.get("slug") == DEMO_SLUG,
             tables=table_sessions.list_tables(),
             dashboard=orders.dashboard(),
             public_base_url=settings.public_base_url,
@@ -88,6 +90,7 @@ def create_app() -> Flask:
         return render_template(
             "config.html",
             restaurant=restaurant,
+            is_demo=restaurant.get("slug") == DEMO_SLUG,
             bot_phone=qr.bot_phone(),
             whatsapp_connected=settings.has_evolution,
         )

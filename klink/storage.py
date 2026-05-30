@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
+import unicodedata
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -15,6 +17,17 @@ def new_id() -> str:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+# Slug usado para o restaurante de demonstração (estado "ainda não configurado").
+DEMO_SLUG = "klink-demo"
+
+
+def slugify(value: str) -> str:
+    """Transforma um nome em um slug simples (sem acentos, minúsculo, com hífens)."""
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", normalized).strip("-").lower()
+    return slug or "restaurante"
 
 
 SQLITE_SCHEMA = """
@@ -311,6 +324,9 @@ class Database:
         if nome is not None:
             sets.append("nome = ?")
             params.append(nome)
+            # Ao definir um nome real, saímos do estado "demo" gerando um slug próprio.
+            sets.append("slug = ?")
+            params.append(slugify(nome))
         if telefone_whatsapp is not None:
             sets.append("telefone_whatsapp = ?")
             params.append(telefone_whatsapp)
@@ -429,6 +445,25 @@ class Database:
             where message_id = ?
             """,
             (restaurante_id, mesa_id, sessao_mesa_id, message_id),
+        )
+
+    def migrate_legacy_data(self) -> None:
+        """Corrige dados gravados por versões antigas. Idempotente, roda no boot.
+
+        - Renomeia o restaurante demo "MesaZap Demo" -> "Klink Demo".
+        - Atualiza o preço do modelo antigo (1,97/pedido) para o atual
+          (3,97 por mesa aberta). Só afeta linhas com os valores legados conhecidos,
+          então é seguro rodar em todo boot.
+        """
+        self.execute(
+            "update restaurantes set nome = 'Klink Demo' where nome = 'MesaZap Demo'"
+        )
+        self.execute(
+            "update restaurantes set slug = ? where slug = 'mesazap-demo'", (DEMO_SLUG,)
+        )
+        self.execute(
+            "update billing_accounts set preco_por_pedido = 3.97 "
+            "where preco_por_pedido = 1.97"
         )
 
     def seed_demo(self) -> None:

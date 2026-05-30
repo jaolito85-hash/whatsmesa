@@ -23,8 +23,12 @@
           height="50"
         />
         <div>
-          <span class="klink-logo klink-logo--sm" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
-          <h1>{{ restaurant.nome }}</h1>
+          {% if is_demo %}
+            <span class="klink-logo" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+          {% else %}
+            <span class="klink-logo klink-logo--sm" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+            <h1>{{ restaurant.nome }}</h1>
+          {% endif %}
         </div>
       </div>
       <div class="topbar-right">
