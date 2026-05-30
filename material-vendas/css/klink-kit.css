@@ -1,0 +1,352 @@
+/* ============================================================
+   Klink — Kit de Vendas · estilo compartilhado
+   Identidade: verde #49B548 · grafite #20242C · prata · Fredoka
+   ============================================================ */
+
+:root {
+  --green: #49b548;
+  --green-deep: #2e7d32;
+  --green-soft: #eaf6ea;
+  --ink: #20242c;
+  --ink-soft: #4a5160;
+  --paper: #fbfbf8;
+  --panel: #ffffff;
+  --line: #e4e6e0;
+  --silver-1: #e9edf1;
+  --silver-2: #c2cad3;
+  --silver-3: #9aa3ad;
+  --gold: #f5c518;
+  --tomato: #e3503f;
+  --shadow-hard: 6px 6px 0 var(--ink);
+  --shadow-soft: 0 18px 40px rgba(24, 26, 32, 0.12);
+  --radius: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .display {
+  font-family: "Fredoka", "Segoe UI", sans-serif;
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ----- Marca: wordmark klink ----- */
+.klink-logo {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.klink-logo .kdot {
+  position: relative;
+}
+.klink-logo .kdot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.3em;
+  transform: translateX(-50%);
+  width: 0.3em;
+  height: 0.3em;
+  border-radius: 50%;
+  background: var(--green);
+}
+.klink-logo.on-dark {
+  color: #fff;
+}
+
+/* ----- Layout ----- */
+.wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+section {
+  padding: 56px 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green-deep);
+  margin-bottom: 14px;
+}
+
+/* ----- Cartões ----- */
+.card {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard);
+  padding: 22px;
+}
+
+.card-soft {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 22px;
+}
+
+/* ----- Botões ----- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 54px;
+  padding: 0 26px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.09s ease, box-shadow 0.09s ease;
+}
+.btn-green {
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow-hard);
+}
+.btn-ink {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--green);
+}
+.btn-ghost {
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-hard);
+}
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+.btn-ink:hover {
+  box-shadow: 8px 8px 0 var(--green);
+}
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+/* ----- Pílulas / selos ----- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+.pill-green {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--ink);
+}
+.pill-gold {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+/* ----- Números / stats ----- */
+.big-number {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--green-deep);
+}
+
+/* ----- Mascote ----- */
+.mascote {
+  filter: drop-shadow(0 10px 22px rgba(24, 26, 32, 0.22));
+}
+
+/* ----- Listas com check ----- */
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.checklist li {
+  position: relative;
+  padding-left: 40px;
+  min-height: 26px;
+  font-weight: 600;
+}
+.checklist li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.9rem;
+}
+
+/* ----- Faixa metálica decorativa (referência ao mascote) ----- */
+.metal-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--silver-3),
+    var(--silver-1),
+    var(--silver-3),
+    var(--silver-1),
+    var(--silver-3)
+  );
+}
+
+/* ----- Gramado (toque Copa) ----- */
+.turf {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(73, 181, 72, 0.07) 0 18px,
+    rgba(73, 181, 72, 0.12) 18px 36px
+  );
+}
+
+/* ----- Animações de entrada ----- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ----- Divisor ----- */
+.rule {
+  height: 2px;
+  background: var(--ink);
+  opacity: 0.1;
+  border: 0;
+  margin: 0;
+}
+
+/* ----- Tabela ----- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.tbl th, .tbl td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.tbl th {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  background: var(--green-soft);
+}
+.tbl tr:last-child td { border-bottom: 0; }
+
+/* ----- Bloco de fala (script) ----- */
+.speech {
+  border-left: 4px solid var(--green);
+  background: var(--green-soft);
+  border-radius: 0 12px 12px 0;
+  padding: 14px 18px;
+  font-style: italic;
+  font-weight: 600;
+}
+
+/* ----- Acordeão de objeções ----- */
+details.obj {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+details.obj > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 18px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 1.02rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+details.obj > summary::-webkit-details-marker { display: none; }
+details.obj > summary::after {
+  content: "+";
+  font-size: 1.4rem;
+  color: var(--green-deep);
+  transition: transform 0.2s ease;
+}
+details.obj[open] > summary::after { transform: rotate(45deg); }
+details.obj .obj-body {
+  padding: 0 18px 18px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+details.obj .obj-body strong { color: var(--ink); }

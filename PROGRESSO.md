@@ -46,6 +46,15 @@ o garçom acompanha pelo computador/celular.
 
 ## O que falta antes do primeiro cliente pagante
 
+- [ ] 🚨 **CRÍTICO antes de colar QR em mesa de verdade:** hoje, quando a conta de uma
+  mesa fecha, o sistema troca o "código interno" do QR. Na prática, isso faz o **QR
+  colado parar de funcionar para o próximo grupo** (ele veria "QR inválido"). Precisamos
+  ajustar pra que o QR da mesa seja **permanente** (a segurança fica por conta da
+  validação do garçom, que vamos deixar ligada no piloto). **Eu (Claude) não mexi nisso
+  sozinho** porque envolve a parte de cobrança/segurança — quero seu OK antes. É rápido
+  de corrigir. Enquanto não corrigir, o material de vendas pode circular, mas **não cole
+  QRs num bar real ainda.**
+- [ ] Ligar a **validação do garçom** no piloto (`KLINK_REQUIRE_TABLE_VALIDATION=true`).
 - [ ] Definir nome final (Klink ou outro). Verificar marca registrada no INPI classes 9 (software) e 43 (restaurante).
 - [ ] Comprar `klink.app` adicional (~US$ 8) pra travar a marca.
 - [ ] Trocar o ícone do WhatsApp na logo (usar literalmente o logo da Meta = risco de processo).
@@ -57,6 +66,21 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 30/05/2026 — Kit de Vendas pro tio apresentar (HTML bonitão)
+- Criei o **Kit de Vendas Klink** na pasta `material-vendas/` — 3 páginas web lindas,
+  feitas pra abrir no celular dentro do bar:
+  1. **index** — capa que organiza as duas peças.
+  2. **apresentacao** — o pitch que o tio MOSTRA pro dono (problema da Copa, como
+     funciona, ROI, preço/risco zero, CTA).
+  3. **guia-do-vendedor** — o manual SÓ do tio: como funciona por dentro, o ciclo da
+     mesa (abre/valida/fecha/reabre), segurança, como cadastrar + QR codes, a
+     matemática da venda, script de abordagem, resposta pra toda objeção e FAQ.
+- Tudo no visual da marca (verde, mascote, fonte) e com a pegada da Copa.
+- Conferi cada página em tela de celular (screenshots) e corrigi um detalhe de
+  formatação nas listas. Está pronto pra enviar.
+- ⚠️ Achei um ponto técnico importante lendo o código — veja o item **CRÍTICO**
+  na lista de pendências abaixo (sobre os QRs depois que a mesa fecha).
 
 ### 29/05/2026 — Sai o "MesaZap Demo"; preço correto (3,97 por mesa)
 - No painel, enquanto o restaurante **não tem nome configurado**, agora aparece só a

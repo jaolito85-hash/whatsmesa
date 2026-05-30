@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guia do Vendedor — Klink</title>
+    <link rel="icon" href="img/favicon-64.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/klink-kit.css" />
+    <style>
+      .nav { position: sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:rgba(251,251,248,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+      .nav .brand { display:flex; align-items:center; gap:8px; text-decoration:none; }
+      .nav .brand img { height:32px; }
+      .nav .tag { font-weight:800; font-size:.8rem; color:var(--green-deep); }
+
+      .guide-hero { text-align:center; padding:34px 0 18px; background:radial-gradient(120% 70% at 50% 0%, rgba(73,181,72,.10), transparent 60%); }
+      .guide-hero img { width:110px; margin:0 auto 12px; }
+      .guide-hero h1 { font-size:clamp(2rem,8vw,2.8rem); }
+      .guide-hero p { color:var(--ink-soft); font-weight:600; max-width:40ch; margin:10px auto 0; }
+
+      /* índice */
+      .toc { display:grid; gap:8px; margin-top:8px; }
+      .toc a { display:flex; align-items:center; gap:12px; text-decoration:none; padding:14px 16px; border:2px solid var(--ink); border-radius:12px; background:#fff; font-family:"Fredoka",sans-serif; font-weight:600; box-shadow:3px 3px 0 rgba(24,26,32,.13); transition:transform .08s ease, box-shadow .08s ease; }
+      .toc a:hover { transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--green); }
+      .toc a .num { display:grid; place-items:center; width:30px; height:30px; border-radius:8px; background:var(--green-soft); color:var(--green-deep); font-weight:700; flex-shrink:0; }
+
+      .sec-head { margin-bottom:14px; }
+      .sec-head h2 { font-size:clamp(1.6rem,6vw,2.1rem); }
+      .sec-head .kicker { font-weight:800; font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--green-deep); }
+
+      .mini { font-size:.82rem; color:var(--ink-soft); font-weight:600; }
+
+      /* ciclo timeline */
+      .cycle { display:grid; gap:0; margin-top:18px; }
+      .cyc { display:grid; grid-template-columns:38px 1fr; gap:14px; }
+      .cyc .rail { display:flex; flex-direction:column; align-items:center; }
+      .cyc .dot { width:38px; height:38px; border-radius:50%; background:var(--green); color:#fff; display:grid; place-items:center; font-size:1.1rem; border:2px solid var(--ink); flex-shrink:0; }
+      .cyc .ln { width:3px; flex:1; background:var(--line); margin:4px 0; }
+      .cyc:last-child .ln { display:none; }
+      .cyc .body { padding-bottom:18px; }
+      .cyc .body h4 { margin:6px 0 2px; font-family:"Fredoka",sans-serif; font-weight:600; font-size:1.1rem; }
+      .cyc .body p { margin:0; color:var(--ink-soft); font-weight:500; }
+      .loop-note { margin-top:8px; text-align:center; font-family:"Fredoka",sans-serif; font-weight:600; color:var(--green-deep); }
+
+      .note { border:2px dashed var(--green); border-radius:12px; background:var(--green-soft); padding:16px 18px; font-weight:600; }
+      .warn { border:2px solid var(--gold); border-radius:12px; background:#fff8e1; padding:16px 18px; font-weight:600; }
+
+      .stepnum { counter-reset:cad; display:grid; gap:14px; margin-top:16px; }
+      .cad { display:grid; grid-template-columns:40px 1fr; gap:14px; align-items:start; }
+      .cad .n { counter-increment:cad; width:40px; height:40px; border-radius:10px; background:var(--ink); color:#fff; display:grid; place-items:center; font-family:"Fredoka",sans-serif; font-weight:700; flex-shrink:0; }
+      .cad .n::before { content:counter(cad); }
+      .cad h4 { margin:6px 0 2px; font-family:"Fredoka",sans-serif; font-weight:600; }
+      .cad p { margin:0; color:var(--ink-soft); font-weight:500; }
+
+      .money-hero { text-align:center; }
+      .money-hero .big-number { font-size:clamp(2.6rem,14vw,4rem); }
+      .compare { display:grid; gap:12px; margin-top:18px; }
+      .compare .row { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:14px 16px; border:2px solid var(--ink); border-radius:12px; box-shadow:3px 3px 0 rgba(24,26,32,.13); }
+      .compare .row .v { font-family:"Fredoka",sans-serif; font-weight:700; font-size:1.2rem; }
+      .compare .row.bad { background:#fdecea; }
+      .compare .row.good { background:var(--green-soft); }
+
+      .back-top { display:inline-flex; align-items:center; gap:6px; font-weight:700; color:var(--green-deep); text-decoration:none; font-size:.85rem; margin-top:8px; }
+      section { padding:38px 0; border-bottom:1px solid var(--line); }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <a class="brand" href="index.html"><img src="img/klink-mascote.png" alt="Klink" /><span class="klink-logo" style="font-size:1.35rem">kl<span class="kdot">ı</span>nk</span></a>
+      <span class="tag">🎓 Guia do Vendedor</span>
+    </nav>
+
+    <header class="guide-hero">
+      <img class="mascote" src="img/klink-mascote.png" alt="Klink" />
+      <div class="wrap">
+        <h1>Seu manual pra<br />fechar bares 🛎️</h1>
+        <p>Leia até dominar. Quando você entende o Klink de verdade, a venda fica fácil — porque ele realmente resolve a dor do dono.</p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section style="border:0; padding-top:24px;">
+        <nav class="toc">
+          <a href="#oque"><span class="num">1</span> O que é o Klink (resuma em 30s)</a>
+          <a href="#ciclo"><span class="num">2</span> Como a mesa abre, fecha e reabre</a>
+          <a href="#seguranca"><span class="num">3</span> Por que é seguro (sem perigo)</a>
+          <a href="#cadastro"><span class="num">4</span> Como cadastrar um bar + os QR codes</a>
+          <a href="#matematica"><span class="num">5</span> A matemática que fecha a venda</a>
+          <a href="#script"><span class="num">6</span> Como abordar (o que falar)</a>
+          <a href="#objecoes"><span class="num">7</span> Resposta pra toda objeção</a>
+          <a href="#faq"><span class="num">8</span> FAQ — dúvidas do dono</a>
+          <a href="#fechar"><span class="num">9</span> Checklist pra fechar</a>
+        </nav>
+      </section>
+
+      <!-- 1 -->
+      <section id="oque">
+        <div class="sec-head"><span class="kicker">1 · A essência</span><h2>O que é o Klink</h2></div>
+        <p><strong>Klink é um garçom virtual que mora no WhatsApp.</strong> O cliente do bar escaneia um QR Code na mesa, manda o pedido por <strong>áudio ou texto</strong>, e ele cai na hora, organizado, no painel do restaurante — separado por Bar, Cozinha, Salão e Caixa.</p>
+        <div class="note">🎤 <strong>Seu resumo de elevador (decore):</strong> "É um garçom invisível no WhatsApp. O cliente aponta o QR da mesa, pede por áudio, e o pedido cai direto na cozinha. Sem app, sem cadastro, e sem mudar nada na operação do bar."</div>
+        <p style="margin-top:16px"><strong>O nome é o som da campainha de recepção</strong> 🛎️ — aquele <em>"tlim"</em> que chamava o atendente. Agora é um <em>Klink</em> no WhatsApp. Esse é o mascote.</p>
+      </section>
+
+      <!-- 2 -->
+      <section id="ciclo">
+        <div class="sec-head"><span class="kicker">2 · O coração do produto</span><h2>Como a mesa abre, fecha e reabre</h2></div>
+        <p>Essa é a pergunta que todo dono faz. Entenda o ciclo de uma mesa numa noite cheia:</p>
+        <div class="cycle">
+          <div class="cyc"><div class="rail"><div class="dot">📷</div><div class="ln"></div></div><div class="body"><h4>O grupo senta e escaneia</h4><p>Aponta a câmera no QR da mesa. Abre o WhatsApp já com "Mesa 12".</p></div></div>
+          <div class="cyc"><div class="rail"><div class="dot">🙋</div><div class="ln"></div></div><div class="body"><h4>O garçom confirma a mesa</h4><p>Aparece no painel "Mesa 12 quer abrir". O garçom dá um clique pra confirmar que tem gente sentada ali. <strong>Só então a mesa abre.</strong></p></div></div>
+          <div class="cyc"><div class="rail"><div class="dot">🍺</div><div class="ln"></div></div><div class="body"><h4>Os pedidos rolam</h4><p>Tudo que esse grupo pedir fica amarrado à Mesa 12 e cai separado por setor.</p></div></div>
+          <div class="cyc"><div class="rail"><div class="dot">🧾</div><div class="ln"></div></div><div class="body"><h4>Pede a conta e fecha</h4><p>O grupo pede a conta, paga, vai embora. A mesa <strong>volta a ficar livre</strong> e aquela rodada se encerra.</p></div></div>
+          <div class="cyc"><div class="rail"><div class="dot">🔁</div><div class="ln"></div></div><div class="body"><h4>Chega o próximo grupo</h4><p>Senta, escaneia o mesmo QR e abre uma <strong>mesa nova, do zero</strong>. Os pedidos do grupo anterior <strong>não se misturam</strong> com os novos.</p></div></div>
+        </div>
+        <p class="loop-note">↻ E assim a noite inteira: abre → atende → fecha → reabre.</p>
+      </section>
+
+      <!-- 3 -->
+      <section id="seguranca">
+        <div class="sec-head"><span class="kicker">3 · Sem perigo</span><h2>Por que é seguro</h2></div>
+        <ul class="checklist">
+          <li><strong>O garçom valida cada mesa.</strong> Ninguém de fora (que pegou o link) consegue abrir mesa fantasma — o garçom confirma que tem gente sentada antes de liberar.</li>
+          <li><strong>Cada grupo é uma rodada isolada.</strong> Quando a conta fecha, aquela rodada encerra. O próximo grupo começa limpo, sem ver nada do anterior.</li>
+          <li><strong>Não cobra dobrado.</strong> O Klink cobra <strong>uma única vez por mesa aberta</strong> — não por mensagem. O cliente pode mandar 10 áudios que conta como uma mesa só.</li>
+          <li><strong>Mesa esquecida fecha sozinha.</strong> Se um grupo esquecer de pedir a conta, a mesa se encerra automaticamente depois de algumas horas.</li>
+          <li><strong>Recusou, não cobra.</strong> Se o garçom recusar uma abertura suspeita, não gera custo nenhum.</li>
+        </ul>
+        <div class="warn" style="margin-top:16px">🛡️ <strong>No piloto, a gente liga a "confirmação do garçom".</strong> Assim toda mesa passa pelo olho do salão antes de abrir. É isso que deixa tudo blindado.</div>
+      </section>
+
+      <!-- 4 -->
+      <section id="cadastro">
+        <div class="sec-head"><span class="kicker">4 · Mão na massa</span><h2>Como cadastrar um bar e os QR codes</h2></div>
+        <p>Tecnicamente quem cadastra é o João, mas você precisa saber explicar como é simples:</p>
+        <div class="stepnum">
+          <div class="cad"><div class="n"></div><div><h4>Nome do bar + WhatsApp</h4><p>Na tela de <strong>Configurações</strong> do painel, digita o nome do estabelecimento e o número de WhatsApp do bot. Clica em salvar. Pronto, o bar tá no ar.</p></div></div>
+          <div class="cad"><div class="n"></div><div><h4>As mesas já vêm prontas</h4><p>O bar diz quantas mesas tem. Cada mesa ganha o seu QR Code único, automático.</p></div></div>
+          <div class="cad"><div class="n"></div><div><h4>Imprime os QRs</h4><p>Na tela <strong>QR codes</strong>, é só clicar em <strong>Imprimir</strong>. Sai uma folha organizada, com um cartãozinho bonito por mesa (Mesa 1, Mesa 2…).</p></div></div>
+          <div class="cad"><div class="n"></div><div><h4>Cola nas mesas</h4><p>Recorta e cola cada QR na mesa certa. Acabou. O bar já pode receber pedidos pelo Klink.</p></div></div>
+        </div>
+        <div class="note" style="margin-top:16px">💡 Cada bar pode ter <strong>quantas mesas quiser</strong>. 10, 30, 80 — o sistema gera um QR pra cada uma.</div>
+      </section>
+
+      <!-- 5 -->
+      <section id="matematica">
+        <div class="sec-head"><span class="kicker">5 · O argumento que fecha</span><h2>A matemática da venda</h2></div>
+        <p>O Klink <strong>não é barato</strong> — ele é <strong>quase sem risco</strong>. Essa é a diferença que você vende:</p>
+
+        <div class="card money-hero" style="margin-top:16px">
+          <span class="mini">CUSTO PRA TESTAR</span>
+          <div class="big-number">R$ 147</div>
+          <p style="margin:8px 0 0; font-weight:600; color:var(--ink-soft)">Ativação única. Depois, só <strong>R$ 3,97 por mesa que abrir</strong> no Klink. Sem mensalidade.</p>
+        </div>
+
+        <p style="margin-top:18px"><strong>Por que isso é poderoso:</strong></p>
+        <ul class="checklist">
+          <li><strong>Sem uso = sem custo.</strong> Bar parado não paga nada. O dono não tem o que perder testando.</li>
+          <li><strong>Se paga na 1ª rodada extra.</strong> Mesa que pede mais rápido consome mais. Uma única cerveja a mais (R$ 8–12) já cobre 2 ou 3 mesas de Klink.</li>
+          <li><strong>Na Copa, troca a contratação extra.</strong> Em vez de pagar 1–2 garçons temporários (caros e somem depois), a equipe atual atende muito mais mesas.</li>
+        </ul>
+
+        <div class="compare">
+          <div class="row bad"><div>Contratar 2 garçons na correria da Copa</div><div class="v">~R$ 5–7 mil/mês</div></div>
+          <div class="row good"><div>Klink: setup + só as mesas que abrirem</div><div class="v">fração disso</div></div>
+        </div>
+
+        <div class="warn" style="margin-top:18px">🧠 <strong>Dica de ouro (estratégia):</strong> NÃO venda como "demita seu garçom". O dono ama a equipe e o garçom vira inimigo do Klink. Venda como <strong>"sua equipe rende como uma equipe maior"</strong> e <strong>"você não precisa contratar extra pra Copa"</strong>. Se o dono <em>mesmo</em> falar em cortar pessoal, aí você concorda. Mas não comece por aí.</div>
+      </section>
+
+      <!-- 6 -->
+      <section id="script">
+        <div class="sec-head"><span class="kicker">6 · A abordagem</span><h2>Como chegar e o que falar</h2></div>
+        <p><strong>Vá no horário calmo</strong> (meio da tarde), peça pra falar com o dono ou gerente. Seja rápido e gentil:</p>
+        <div class="speech">"Oi, tudo bem? Eu trabalho com uma novidade pra bar que tá bombando pra Copa. Me dá 2 minutinhos? Vou te mostrar no celular, e se não fizer sentido pra você, eu vou embora na hora."</div>
+        <p style="margin-top:16px"><strong>Aí você abre a Apresentação e deixa ela contar a história.</strong> No fim, faça as 3 perguntas que abrem a venda:</p>
+        <ul class="checklist">
+          <li>"Na correria da Copa, quantas vezes o cliente desiste de pedir porque o garçom tá ocupado?"</li>
+          <li>"Quanto você acha que isso te custa numa noite cheia?"</li>
+          <li>"Se desse pra testar sem mensalidade e sem mudar nada na sua operação, você toparia ver funcionando?"</li>
+        </ul>
+        <div class="note" style="margin-top:14px">🎯 Seu objetivo NÃO é fechar na hora. É <strong>conseguir o "sim, quero ver funcionando"</strong> e pegar o WhatsApp dele pro João.</div>
+      </section>
+
+      <!-- 7 -->
+      <section id="objecoes">
+        <div class="sec-head"><span class="kicker">7 · Blindagem</span><h2>Resposta pra toda objeção</h2></div>
+        <p class="mini" style="margin-bottom:14px">Toca pra abrir cada uma. Decore o espírito da resposta, não as palavras.</p>
+
+        <details class="obj"><summary>"Tá caro."</summary><div class="obj-body">Caro comparado a quê? <strong>Não tem mensalidade.</strong> Você só paga R$ 3,97 quando uma mesa realmente abre pelo Klink. Uma única cerveja a mais que ele te faz vender já paga várias mesas. E pra testar, o risco é praticamente zero.</div></details>
+
+        <details class="obj"><summary>"Vou ter que trocar meu sistema / PDV?"</summary><div class="obj-body">Não. <strong>O Klink não mexe em nada</strong> do que você já usa. Ele só faz o pedido chegar mais rápido. Seu caixa, seu sistema, seu jeito de trabalhar continuam idênticos.</div></details>
+
+        <details class="obj"><summary>"Minha equipe não vai saber usar."</summary><div class="obj-body">Não tem o que aprender. <strong>Quem usa é o cliente</strong>, no WhatsApp dele. O garçom só olha o painel e dá um clique pra confirmar a mesa — em 1 minuto ele pega.</div></details>
+
+        <details class="obj"><summary>"Meu cliente é mais velho, não vai saber."</summary><div class="obj-body">É o <strong>WhatsApp que ele já usa todo dia</strong> — é só apontar a câmera e mandar um áudio. E quem preferir, continua chamando o garçom normalmente. O Klink é uma opção a mais, não uma obrigação.</div></details>
+
+        <details class="obj"><summary>"E se alguém ficar fazendo pedido falso?"</summary><div class="obj-body"><strong>O garçom valida cada mesa antes de abrir.</strong> Se aparecer um pedido de mesa sem ninguém sentado, ele simplesmente não confirma. Nada passa sem o olho do salão.</div></details>
+
+        <details class="obj"><summary>"E quando fecha a conta e senta outro grupo?"</summary><div class="obj-body">A mesa volta a ficar livre e o próximo grupo abre do zero, escaneando o mesmo QR. <strong>Os pedidos não se misturam</strong> — cada grupo é uma rodada separada.</div></details>
+
+        <details class="obj"><summary>"Vou pagar dobrado se mandarem várias mensagens?"</summary><div class="obj-body">Não. <strong>Conta como uma mesa só</strong>, não importa quantos áudios ou textos o cliente mande. Cobra uma vez por mesa aberta.</div></details>
+
+        <details class="obj"><summary>"E se cair a internet?"</summary><div class="obj-body">Seu bar continua funcionando do jeito tradicional — o garçom atende normal. <strong>O Klink é um reforço, não uma muleta.</strong> Quando voltar, ele volta junto.</div></details>
+
+        <details class="obj"><summary>"Tô na correria, não tenho tempo pra implantar."</summary><div class="obj-body">A instalação é <strong>nossa</strong>. A gente cadastra o bar e te entrega os QR codes prontos pra colar. Seu trabalho é só colar na mesa. Leva minutos.</div></details>
+
+        <details class="obj"><summary>"Deixa eu pensar."</summary><div class="obj-body">Claro! Só uma coisa: <strong>a Copa começa em 2 semanas</strong> — é justo quando isso mais faz diferença. Que tal a gente deixar instalado pra você testar bem nos primeiros jogos? Se não gostar, é só parar, sem multa nem fidelidade.</div></details>
+      </section>
+
+      <!-- 8 -->
+      <section id="faq">
+        <div class="sec-head"><span class="kicker">8 · Perguntas comuns</span><h2>FAQ — dúvidas do dono</h2></div>
+        <details class="obj"><summary>Quantas mesas posso ter?</summary><div class="obj-body">Quantas quiser. O sistema gera um QR para cada mesa.</div></details>
+        <details class="obj"><summary>Como o cliente paga a conta?</summary><div class="obj-body">Do jeito de sempre — no caixa, com a maquininha, como você já faz. O Klink organiza os pedidos; o pagamento é com você.</div></details>
+        <details class="obj"><summary>Funciona com turista / outra língua?</summary><div class="obj-body">Sim. Se o cliente pedir em inglês ou espanhol, a IA entende e o pedido cai em português no painel. Ótimo pra Copa.</div></details>
+        <details class="obj"><summary>Como eu (dono) recebo a cobrança?</summary><div class="obj-body">Uma fatura por mês, com as mesas que abriram no período + a ativação. Simples e transparente.</div></details>
+        <details class="obj"><summary>Preciso de um número de WhatsApp novo?</summary><div class="obj-body">A parte técnica do número a gente resolve na instalação. Você não precisa se preocupar com isso.</div></details>
+        <details class="obj"><summary>E se eu quiser parar?</summary><div class="obj-body">Para quando quiser. Sem fidelidade, sem multa. Você só pagou pelas mesas que usou.</div></details>
+      </section>
+
+      <!-- 9 -->
+      <section id="fechar" style="border:0;">
+        <div class="sec-head"><span class="kicker">9 · Hora de fechar</span><h2>Checklist pra fechar</h2></div>
+        <ul class="checklist">
+          <li>Mostrei a Apresentação inteira no celular</li>
+          <li>Fiz as 3 perguntas de abertura</li>
+          <li>Respondi as dúvidas com segurança</li>
+          <li>Deixei claro: <strong>sem mensalidade, sem fidelidade, risco zero pra testar</strong></li>
+          <li>Usei a urgência da Copa (2 semanas!)</li>
+          <li><strong>Peguei o WhatsApp do dono e mandei pro João ✅</strong></li>
+        </ul>
+        <div class="note" style="margin-top:18px">🛎️ <strong>Lembra:</strong> você não tá empurrando nada. Tá oferecendo mais velocidade, mais pedidos e menos correria — bem na hora que o bar mais precisa. Confiança vende. Boa sorte!</div>
+        <p style="text-align:center; margin-top:26px;"><span class="klink-logo" style="font-size:1.5rem">kl<span class="kdot">ı</span>nk</span></p>
+        <p style="text-align:center; color:var(--silver-3); font-size:.85rem;">O Garçom Invisível · klinkai.com.br</p>
+        <p style="text-align:center;"><a class="btn btn-ghost" href="index.html">← Voltar ao início</a></p>
+      </section>
+    </main>
+  </body>
+</html>

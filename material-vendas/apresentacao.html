@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Klink — Peça direto da mesa</title>
+    <link rel="icon" href="img/favicon-64.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/klink-kit.css" />
+    <style>
+      .nav {
+        position: sticky; top: 0; z-index: 30;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 20px;
+        background: rgba(251, 251, 248, 0.9);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav .brand { display: flex; align-items: center; gap: 8px; }
+      .nav .brand img { height: 34px; }
+
+      /* HERO */
+      .hero {
+        text-align: center;
+        padding: 30px 0 40px;
+        background: radial-gradient(120% 70% at 50% 0%, rgba(73,181,72,.12), transparent 62%);
+      }
+      .hero .mascote { width: 168px; margin: 6px auto 18px; }
+      .hero h1 { font-size: clamp(2.3rem, 10vw, 3.6rem); }
+      .hero h1 em { color: var(--green-deep); font-style: italic; }
+      .hero .sub { font-size: 1.12rem; color: var(--ink-soft); font-weight: 600; max-width: 36ch; margin: 14px auto 22px; }
+
+      .section-title { font-size: clamp(1.7rem, 6vw, 2.3rem); margin-bottom: 10px; }
+      .lead { font-size: 1.08rem; color: var(--ink-soft); font-weight: 600; }
+
+      /* problema */
+      .pain { background: var(--ink); color: #fff; }
+      .pain .eyebrow { color: #8be38a; }
+      .pain .section-title { color: #fff; }
+      .pain .lead { color: rgba(255,255,255,.8); }
+      .pain-grid { display: grid; gap: 14px; margin-top: 22px; }
+      .pain-item { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
+      .pain-item .ic { font-size: 1.7rem; }
+      .pain-item strong { display: block; font-family: "Fredoka",sans-serif; font-weight: 600; font-size: 1.1rem; }
+      .pain-item span { color: rgba(255,255,255,.7); font-weight: 500; }
+      .pain .punch { margin-top: 26px; font-family: "Fredoka",sans-serif; font-size: 1.35rem; line-height: 1.2; }
+      .pain .punch b { color: var(--gold); }
+
+      /* passos */
+      .steps { display: grid; gap: 16px; margin-top: 24px; counter-reset: s; }
+      .step { display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: center; }
+      .step .n {
+        counter-increment: s;
+        display: grid; place-items: center;
+        width: 56px; height: 56px; border-radius: 50%;
+        background: var(--green); color: #fff;
+        font-family: "Fredoka",sans-serif; font-weight: 700; font-size: 1.5rem;
+        border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+      }
+      .step .n::before { content: counter(s); }
+      .step h3 { font-size: 1.18rem; }
+      .step p { margin: 2px 0 0; color: var(--ink-soft); font-weight: 500; }
+
+      /* painel setores */
+      .sectors { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 20px; }
+      .sector { border: 2px solid var(--ink); border-radius: 12px; padding: 14px; font-weight: 800; text-align: center; box-shadow: 3px 3px 0 rgba(24,26,32,.14); }
+      .sector small { display:block; font-weight:700; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:4px; }
+      .sector.bar { background: var(--green); color:#fff; }
+      .sector.coz { background: #ffe1da; }
+      .sector.sal { background: #d8f3df; }
+      .sector.cax { background: var(--silver-1); }
+
+      /* não muda */
+      .nochange { background: var(--green-soft); }
+      .twocol { display: grid; gap: 18px; }
+      .nochange .card h3 { font-size:1.2rem; margin-bottom:10px; }
+
+      /* roi */
+      .roi-card { text-align: center; }
+      .roi-card .big-number { font-size: clamp(3rem, 16vw, 5rem); }
+      .roi-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top: 18px; }
+      .roi-box { border:2px solid var(--ink); border-radius:12px; padding:16px; text-align:center; box-shadow:3px 3px 0 rgba(24,26,32,.14); }
+      .roi-box .v { font-family:"Fredoka",sans-serif; font-weight:700; font-size:1.6rem; color:var(--green-deep); }
+      .roi-box .l { font-size:.82rem; font-weight:700; color:var(--ink-soft); }
+
+      /* preço */
+      .price { background: var(--ink); color:#fff; text-align:center; }
+      .price .eyebrow { color:#8be38a; }
+      .price .section-title { color:#fff; }
+      .price-card {
+        background:#fff; color:var(--ink); border-radius:18px; padding:26px;
+        max-width:420px; margin:24px auto 0; border:2px solid var(--ink); box-shadow:8px 8px 0 var(--green);
+      }
+      .price-line { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px dashed var(--line); }
+      .price-line:last-child{ border:0; }
+      .price-line .tag { font-weight:800; }
+      .price-line .val { font-family:"Fredoka",sans-serif; font-weight:700; font-size:1.5rem; color:var(--green-deep); }
+      .price .free { margin-top:18px; font-family:"Fredoka",sans-serif; font-size:1.25rem; }
+      .price .free b { color: var(--gold); }
+
+      /* cta */
+      .cta { text-align:center; }
+      .cta .mascote { width: 120px; margin: 0 auto 16px; }
+      .cta .section-title { font-size: clamp(2rem,8vw,2.8rem); }
+
+      .deco-ball { font-size: 1.1rem; }
+      @media (min-width:680px){ .twocol{ grid-template-columns:1fr 1fr; } }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <a class="brand" href="index.html" style="text-decoration:none">
+        <img src="img/klink-mascote.png" alt="Klink" />
+        <span class="klink-logo" style="font-size:1.5rem">kl<span class="kdot">ı</span>nk</span>
+      </a>
+      <span class="pill pill-gold">⚽ Copa</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <div class="wrap">
+        <img class="mascote reveal" src="img/klink-mascote.png" alt="Mascote Klink" />
+        <span class="eyebrow reveal" style="animation-delay:.05s">🛎️ O Garçom Invisível</span>
+        <h1 class="reveal" style="animation-delay:.1s">Peça <em>direto</em><br />da mesa.</h1>
+        <p class="sub reveal" style="animation-delay:.16s">Seu cliente escaneia o QR, manda um áudio no WhatsApp e o pedido cai na hora na sua cozinha. Sem app. Sem garçom no sufoco.</p>
+        <a class="btn btn-green reveal" style="animation-delay:.22s" href="#como">Ver como funciona ↓</a>
+      </div>
+    </header>
+
+    <!-- PROBLEMA -->
+    <section class="pain">
+      <div class="wrap">
+        <span class="eyebrow">A real do seu salão</span>
+        <h2 class="section-title">Daqui 2 semanas, seu bar vai <span style="color:var(--gold)">lotar.</span> ⚽</h2>
+        <p class="lead">Copa do Mundo é dinheiro entrando pela porta. Mas é também o momento em que mais se <b>perde</b> venda — e nem dá pra ver.</p>
+
+        <div class="pain-grid">
+          <div class="pain-item"><span class="ic">🙋‍♂️</span><div><strong>O cliente de mão levantada</strong><span>Ele quer outra rodada. Mas o garçom tá voando com 4 pratos. O tempo passa…</span></div></div>
+          <div class="pain-item"><span class="ic">🍺</span><div><strong>A rodada que não rolou</strong><span>Cada minuto esperando é uma cerveja a menos. E na Copa, são MUITAS mesas ao mesmo tempo.</span></div></div>
+          <div class="pain-item"><span class="ic">😤</span><div><strong>Garçom no limite</strong><span>Mais erro de pedido, mais correria, mais cliente impaciente. E você sem conseguir contratar bom garçom de última hora.</span></div></div>
+        </div>
+
+        <p class="punch">Você não perde venda porque falta cliente.<br />Perde porque <b>falta velocidade</b> pra atender ele.</p>
+      </div>
+    </section>
+
+    <!-- SOLUÇÃO -->
+    <section id="como">
+      <div class="wrap">
+        <span class="eyebrow">A virada de jogo</span>
+        <h2 class="section-title">Um garçom que nunca está ocupado.</h2>
+        <p class="lead">O <span class="klink-logo">kl<span class="kdot">ı</span>nk</span> põe um garçom invisível em cada mesa — dentro do WhatsApp que o cliente já tem no bolso.</p>
+
+        <div class="steps">
+          <div class="step"><div class="n"></div><div><h3>Aponta no QR da mesa</h3><p>Sem baixar app, sem cadastro. Abre direto no WhatsApp dele.</p></div></div>
+          <div class="step"><div class="n"></div><div><h3>Manda o pedido por áudio ou texto</h3><p>"Me vê duas geladas e uma porção." A IA entende — até gíria e turista.</p></div></div>
+          <div class="step"><div class="n"></div><div><h3>Cai na hora no seu painel</h3><p>Organizado e separado por setor. Sua equipe só executa.</p></div></div>
+        </div>
+
+        <div class="sectors">
+          <div class="sector bar"><small>Balcão</small>Bar</div>
+          <div class="sector coz"><small>Produção</small>Cozinha</div>
+          <div class="sector sal"><small>Atendimento</small>Salão</div>
+          <div class="sector cax"><small>Conta</small>Caixa</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NÃO MUDA -->
+    <section class="nochange">
+      <div class="wrap">
+        <span class="eyebrow">Fica tranquilo</span>
+        <h2 class="section-title">Não muda nada na sua operação.</h2>
+        <p class="lead">O Klink não vira a sua casa de cabeça pra baixo. Ele só tira o gargalo do "anotar pedido".</p>
+        <div class="twocol" style="margin-top:22px">
+          <div class="card">
+            <h3>O que continua igual ✅</h3>
+            <ul class="checklist">
+              <li>Sua equipe, sua cozinha, seu caixa</li>
+              <li>Seu cardápio e seus preços</li>
+              <li>O jeito que você já trabalha</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>O que some 🚫</h3>
+            <ul class="checklist">
+              <li>App pra baixar e cadastro chato</li>
+              <li>Treinar a equipe num sistema novo</li>
+              <li>Cliente esperando pra ser visto</li>
+            </ul>
+          </div>
+        </div>
+        <p style="text-align:center; margin-top:24px; font-family:'Fredoka',sans-serif; font-size:1.3rem;">Só muda <span style="color:var(--green-deep)">uma coisa</span>: a velocidade. ⚡</p>
+      </div>
+    </section>
+
+    <!-- ROI -->
+    <section>
+      <div class="wrap">
+        <span class="eyebrow">A conta que importa</span>
+        <h2 class="section-title">Ele se paga na primeira rodada.</h2>
+        <p class="lead">A matemática é simples e honesta:</p>
+
+        <div class="card roi-card" style="margin-top:22px">
+          <p style="margin:0 0 4px; font-weight:700; color:var(--ink-soft)">Quando a mesa pede mais rápido, ela pede <b>mais</b>. Se cada mesa consome só</p>
+          <div class="big-number">+1 rodada</div>
+          <p style="margin:8px 0 0; font-weight:700; color:var(--ink-soft)">por noite por causa da agilidade, o Klink já se pagou várias vezes.</p>
+          <div class="roi-row">
+            <div class="roi-box"><div class="v">~R$ 15–30</div><div class="l">o que essa rodada extra rende</div></div>
+            <div class="roi-box"><div class="v">R$ 3,97</div><div class="l">o que o Klink cobra pela mesa</div></div>
+          </div>
+        </div>
+
+        <p style="margin-top:22px; text-align:center; color:var(--ink-soft); font-weight:600;">E na Copa, em vez de <b>contratar 2 garçons extras</b> (que custam caro e somem depois), sua equipe atual dá conta de muito mais mesas — pagando só pelas que abrirem.</p>
+      </div>
+    </section>
+
+    <!-- PREÇO -->
+    <section class="price">
+      <div class="wrap">
+        <span class="eyebrow">Risco zero pra testar</span>
+        <h2 class="section-title">Você quase não tem o que perder.</h2>
+        <div class="price-card">
+          <div class="price-line"><span class="tag">Ativação (única)</span><span class="val">R$ 147</span></div>
+          <div class="price-line"><span class="tag">Por mesa aberta no Klink</span><span class="val">R$ 3,97</span></div>
+          <p class="free">Sem mensalidade. <b>Mesa que não usar o Klink, não custa nada.</b></p>
+        </div>
+        <p style="margin-top:20px; color:rgba(255,255,255,.8); font-weight:600;">Bar parado numa terça? Custo zero. Você só paga quando o Klink trabalha por você.</p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta turf">
+      <div class="wrap">
+        <img class="mascote reveal" src="img/klink-mascote.png" alt="Klink" />
+        <span class="pill pill-gold">⚽ A Copa não espera</span>
+        <h2 class="section-title" style="margin-top:14px">Bora deixar seu bar<br />pronto pro apito inicial?</h2>
+        <p class="lead" style="max-width:34ch; margin:12px auto 22px">A gente instala, imprime os QRs das suas mesas e você já sai pedindo com um Klink. 🛎️</p>
+        <a class="btn btn-ink" href="#" id="cta-wpp">Quero testar no meu bar</a>
+        <p style="margin-top:26px;"><span class="klink-logo" style="font-size:1.4rem">kl<span class="kdot">ı</span>nk</span></p>
+        <p style="color:var(--silver-3); font-size:.85rem;">O Garçom Invisível · klinkai.com.br</p>
+      </div>
+    </section>
+  </body>
+</html>

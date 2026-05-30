@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kit de Vendas Klink 🛎️</title>
+    <link rel="icon" href="img/favicon-64.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/klink-kit.css" />
+    <style>
+      .hub-hero {
+        text-align: center;
+        padding: 54px 0 26px;
+        background:
+          radial-gradient(120% 80% at 50% 0%, rgba(73, 181, 72, 0.10), transparent 60%),
+          var(--paper);
+      }
+      .hub-hero img { width: 130px; margin: 0 auto 14px; }
+      .hub-hero h1 { font-size: clamp(2rem, 8vw, 3rem); }
+      .hub-hero p { color: var(--ink-soft); font-weight: 600; max-width: 40ch; margin: 10px auto 0; }
+      .cards { display: grid; gap: 18px; margin: 8px 0 28px; }
+      .pick {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+      }
+      .pick .tag {
+        position: absolute; top: 16px; right: 16px;
+      }
+      .pick h2 { font-size: 1.5rem; margin-bottom: 6px; }
+      .pick p { color: var(--ink-soft); font-weight: 600; margin-bottom: 16px; }
+      .pick .go { font-family: "Fredoka", sans-serif; font-weight: 600; color: var(--green-deep); }
+      .how { font-size: 0.92rem; color: var(--ink-soft); }
+      .how strong { color: var(--ink); }
+      footer { text-align: center; padding: 30px 0 50px; color: var(--silver-3); font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <header class="hub-hero">
+      <img class="mascote reveal" src="img/klink-mascote.png" alt="Mascote Klink" />
+      <div class="wrap">
+        <span class="pill pill-gold reveal" style="animation-delay:.05s">⚽ PRONTO PRA COPA</span>
+        <h1 class="reveal" style="animation-delay:.1s; margin-top:16px">Kit de Vendas <span class="klink-logo" style="font-size:1em">kl<span class="kdot">ı</span>nk</span></h1>
+        <p class="reveal" style="animation-delay:.15s">Tudo que você precisa pra apresentar o Klink e fechar bares e restaurantes. 🛎️</p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="cards">
+        <a class="card pick reveal turf" style="animation-delay:.2s" href="apresentacao.html">
+          <span class="pill pill-green tag">MOSTRE AO DONO</span>
+          <span class="eyebrow">📲 Peça 1</span>
+          <h2>A Apresentação</h2>
+          <p>A história do Klink, contada pra convencer. É isso que você mostra na telinha, na mesa do bar, pro dono. Bonita, rápida e direta.</p>
+          <span class="go">Abrir apresentação →</span>
+        </a>
+
+        <a class="card pick reveal" style="animation-delay:.28s" href="guia-do-vendedor.html">
+          <span class="pill tag">SÓ VOCÊ 🤫</span>
+          <span class="eyebrow">🎓 Peça 2</span>
+          <h2>O Guia do Vendedor</h2>
+          <p>Seu treinamento secreto: como o Klink funciona, a matemática que fecha a venda, o que falar, e a resposta pronta pra toda dúvida do dono.</p>
+          <span class="go">Estudar o guia →</span>
+        </a>
+      </div>
+
+      <div class="card-soft how reveal" style="animation-delay:.34s">
+        <strong>Como usar (em 1 minuto):</strong>
+        <ol style="margin:10px 0 0; padding-left:18px;">
+          <li><strong>Antes de sair:</strong> leia o <em>Guia do Vendedor</em> até dominar. Você precisa responder qualquer dúvida sem gaguejar.</li>
+          <li><strong>No bar:</strong> peça 2 minutos com o dono e abra a <em>Apresentação</em> no celular. Deixa ela contar a história.</li>
+          <li><strong>Fechou o interesse?</strong> Pega o WhatsApp dele e manda pro João. O resto a gente cuida.</li>
+        </ol>
+      </div>
+    </main>
+
+    <footer>
+      <span class="klink-logo" style="font-size:1.1rem">kl<span class="kdot">ı</span>nk</span> · O Garçom Invisível · klinkai.com.br
+    </footer>
+  </body>
+</html>
