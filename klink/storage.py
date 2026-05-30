@@ -298,6 +298,30 @@ class Database:
         with self.connect() as conn:
             conn.execute(sql, tuple(params))
 
+    def update_restaurant(
+        self,
+        restaurante_id: str,
+        *,
+        nome: str | None = None,
+        telefone_whatsapp: str | None = None,
+    ) -> None:
+        """Atualiza dados editáveis do restaurante (nome e WhatsApp do bot)."""
+        sets: list[str] = []
+        params: list[Any] = []
+        if nome is not None:
+            sets.append("nome = ?")
+            params.append(nome)
+        if telefone_whatsapp is not None:
+            sets.append("telefone_whatsapp = ?")
+            params.append(telefone_whatsapp)
+        if not sets:
+            return
+        params.append(restaurante_id)
+        self.execute(
+            f"update restaurantes set {', '.join(sets)} where id = ?",
+            params,
+        )
+
     def message_exists(self, message_id: str) -> bool:
         row = self.fetchone(
             "select id from mensagens_whatsapp where message_id = ?",

@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Klink - QR Codes das mesas</title>
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon.ico') }}" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+      .qr-shell {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px clamp(14px, 3vw, 32px) 60px;
+      }
+      .qr-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin: 6px 0 18px;
+      }
+      .qr-head h1 {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+      }
+      .qr-head p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-weight: 600;
+        line-height: 1.5;
+        max-width: 56ch;
+      }
+      .qr-toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn-print,
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 8px 22px;
+        font-weight: 900;
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        box-shadow: 4px 4px 0 var(--ink);
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
+      }
+      .btn-print {
+        color: #fff;
+        background: var(--brand-green);
+      }
+      .btn-back {
+        color: var(--ink);
+        background: var(--panel);
+      }
+      .btn-print:hover,
+      .btn-back:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+      }
+      .qr-warn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        background: var(--warn);
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+      .qr-warn a {
+        color: var(--ink);
+        font-weight: 900;
+      }
+      .print-banner {
+        display: none;
+      }
+      .qr-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+      }
+      .qr-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.16);
+        overflow: hidden;
+      }
+      .qr-card-top {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px 10px;
+        border-bottom: 2px dashed var(--line);
+      }
+      .qr-card-top img {
+        height: 26px;
+        width: auto;
+      }
+      .qr-card-top .klink-logo {
+        font-size: 1.15rem;
+      }
+      .qr-mesa {
+        margin: 14px 0 2px;
+        font-family: "Fredoka", sans-serif;
+        font-weight: 700;
+        font-size: 2.1rem;
+        line-height: 1;
+        color: var(--brand-ink);
+      }
+      .qr-mesa small {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 2px;
+      }
+      .qr-box {
+        margin: 10px auto 12px;
+        padding: 12px;
+        background: #fff;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        line-height: 0;
+      }
+      .qr-box img,
+      .qr-box canvas {
+        display: block;
+      }
+      .qr-instruction {
+        padding: 0 16px 4px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.35;
+      }
+      .qr-foot {
+        width: 100%;
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: var(--brand-green);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.86rem;
+        letter-spacing: 0.01em;
+      }
+      @media print {
+        @page {
+          margin: 12mm;
+        }
+        body {
+          background: #fff;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .qr-shell {
+          padding: 0;
+          max-width: none;
+        }
+        .print-banner {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 10mm;
+        }
+        .print-banner img {
+          height: 34px;
+        }
+        .print-banner .klink-logo {
+          font-size: 1.5rem;
+        }
+        .print-banner strong {
+          font-size: 1.1rem;
+          margin-left: 6px;
+        }
+        .qr-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10mm;
+        }
+        .qr-card {
+          break-inside: avoid;
+          box-shadow: none;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar no-print">
+      <div class="brand-lockup">
+        <img
+          class="brand-mascote"
+          src="{{ url_for('static', filename='brand/klink-mascote.png') }}"
+          alt="Klink"
+          width="50"
+          height="50"
+        />
+        <div>
+          <span class="klink-logo klink-logo--sm" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+          <h1>QR codes das mesas</h1>
+        </div>
+      </div>
+      <div class="qr-toolbar">
+        <a class="btn-back" href="/config">← Configurações</a>
+        <button type="button" class="btn-print" onclick="window.print()">
+          Imprimir
+        </button>
+      </div>
+    </header>
+
+    <main class="qr-shell">
+      <!-- Cabeçalho que aparece só na impressão -->
+      <div class="print-banner">
+        <img src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="" aria-hidden="true" />
+        <span class="klink-logo" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+        <strong>{{ restaurant.nome }}</strong>
+      </div>
+
+      <div class="qr-head no-print">
+        <div>
+          <p class="eyebrow">{{ restaurant.nome }}</p>
+          <h1>Imprima e cole nas mesas</h1>
+          <p>Cada mesa tem um QR único. O cliente aponta a câmera, o WhatsApp abre já com o número da mesa e ele pede por áudio ou texto.</p>
+        </div>
+      </div>
+
+      {% if not bot_phone %}
+      <div class="qr-warn no-print">
+        <span class="status-dot off" aria-hidden="true" style="width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--ink)"></span>
+        <span>
+          Ainda não há um número de WhatsApp configurado — os QRs vão abrir o WhatsApp sem destino.
+          <a href="/config">Configurar agora →</a>
+        </span>
+      </div>
+      {% endif %}
+
+      <section class="qr-grid">
+        {% for t in tables %}
+        <article class="qr-card">
+          <div class="qr-card-top">
+            <img src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="" aria-hidden="true" />
+            <span class="klink-logo" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+          </div>
+          <div class="qr-mesa">
+            <small>mesa</small>
+            {{ t.numero }}
+          </div>
+          <div class="qr-box" data-qr="{{ t.qr_url }}" aria-label="QR code da mesa {{ t.numero }}"></div>
+          <p class="qr-instruction">Aponte a câmera do celular<br />e peça pelo WhatsApp</p>
+          <div class="qr-foot">por áudio ou texto · sem baixar app</div>
+        </article>
+        {% endfor %}
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        function render() {
+          document.querySelectorAll(".qr-box").forEach(function (box) {
+            var url = box.getAttribute("data-qr");
+            if (!url || box.dataset.done) return;
+            box.dataset.done = "1";
+            new QRCode(box, {
+              text: url,
+              width: 220,
+              height: 220,
+              colorDark: "#20242c",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.H,
+            });
+          });
+        }
+        if (typeof QRCode !== "undefined") {
+          render();
+        } else {
+          window.addEventListener("load", render);
+        }
+      })();
+    </script>
+  </body>
+</html>

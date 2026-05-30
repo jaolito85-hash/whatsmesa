@@ -82,6 +82,50 @@ def create_app() -> Flask:
             public_base_url=settings.public_base_url,
         )
 
+    @app.get("/config")
+    def config_page():
+        restaurant = table_sessions.restaurant()
+        return render_template(
+            "config.html",
+            restaurant=restaurant,
+            bot_phone=qr.bot_phone(),
+            whatsapp_connected=settings.has_evolution,
+        )
+
+    @app.post("/api/restaurant")
+    def api_update_restaurant():
+        restaurant = table_sessions.restaurant()
+        payload = request.get_json(silent=True) or request.form
+        nome = (payload.get("nome") or "").strip()
+        telefone_raw = payload.get("telefone_whatsapp")
+        if not nome:
+            return jsonify({"ok": False, "reason": "nome_obrigatorio"}), 400
+        telefone = None
+        if telefone_raw is not None:
+            telefone = "".join(ch for ch in str(telefone_raw) if ch.isdigit())
+        db.update_restaurant(restaurant["id"], nome=nome, telefone_whatsapp=telefone)
+        updated = table_sessions.restaurant()
+        return jsonify({"ok": True, "restaurant": updated, "bot_phone": qr.bot_phone()})
+
+    @app.get("/qrcodes")
+    def qrcodes_page():
+        restaurant = table_sessions.restaurant()
+        tables = []
+        for table in table_sessions.list_tables():
+            tables.append(
+                {
+                    "numero": table["numero"],
+                    "nome": table.get("nome"),
+                    "qr_url": qr.public_qr_url(table["qr_token_atual"]),
+                }
+            )
+        return render_template(
+            "qrcodes.html",
+            restaurant=restaurant,
+            tables=tables,
+            bot_phone=qr.bot_phone(),
+        )
+
     @app.get("/health")
     def health():
         sends_today = db.count_whatsapp_sends_today()

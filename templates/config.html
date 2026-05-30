@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Klink - Configurações</title>
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon.ico') }}" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <style>
+      .cfg-shell {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px clamp(16px, 4vw, 32px) 60px;
+      }
+      .cfg-intro {
+        margin: 8px 0 24px;
+      }
+      .cfg-intro h1 {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+      }
+      .cfg-intro p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-weight: 600;
+        line-height: 1.5;
+      }
+      .cfg-card {
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        background: var(--panel);
+        box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.16);
+        padding: clamp(18px, 3vw, 28px);
+        margin-bottom: 22px;
+      }
+      .cfg-card > h2 {
+        font-size: 1.15rem;
+        margin-bottom: 4px;
+      }
+      .cfg-card > .hint {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+      .field {
+        display: block;
+        margin-bottom: 18px;
+      }
+      .field > .field-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        color: var(--ink);
+      }
+      .field input {
+        font-size: 1.05rem;
+        font-weight: 600;
+        min-height: 50px;
+      }
+      .field .helper {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        line-height: 1.4;
+        text-transform: none;
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 2px dashed var(--line);
+        border-radius: 10px;
+        margin-top: 4px;
+      }
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .status-dot.on {
+        background: var(--brand-green);
+        box-shadow: 0 0 0 3px rgba(73, 181, 72, 0.22);
+      }
+      .status-dot.off {
+        background: var(--warn);
+        box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.3);
+      }
+      .status-row strong {
+        font-weight: 800;
+      }
+      .status-row span {
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      .cfg-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .btn-save {
+        min-height: 52px;
+        padding: 8px 26px;
+        font-size: 1rem;
+        font-weight: 900;
+        color: #fff;
+        background: var(--brand-green);
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        box-shadow: 4px 4px 0 var(--ink);
+        cursor: pointer;
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
+      }
+      .btn-save:hover:not(:disabled) {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+      }
+      .btn-save:active:not(:disabled) {
+        transform: translate(2px, 2px);
+        box-shadow: 0 0 0 var(--ink);
+      }
+      .btn-save:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .save-feedback {
+        font-weight: 800;
+        font-size: 0.95rem;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .save-feedback.show {
+        opacity: 1;
+      }
+      .save-feedback.ok {
+        color: var(--brand-green-deep);
+      }
+      .save-feedback.err {
+        color: var(--tomato);
+      }
+      .qr-cta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fff 0%, #fff 55%, rgba(73, 181, 72, 0.14) 100%);
+        box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.16);
+        padding: clamp(18px, 3vw, 24px);
+      }
+      .qr-cta .qr-cta-text h2 {
+        font-size: 1.15rem;
+      }
+      .qr-cta .qr-cta-text p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.9rem;
+        max-width: 42ch;
+        line-height: 1.45;
+      }
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 50px;
+        padding: 8px 20px;
+        font-weight: 900;
+        color: var(--ink);
+        background: var(--lemon);
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        box-shadow: 4px 4px 0 var(--ink);
+        text-decoration: none;
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
+      }
+      .btn-ghost:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+      }
+      .topbar .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 42px;
+        padding: 8px 16px;
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--panel);
+        color: var(--ink);
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 3px 3px 0 rgba(21, 21, 21, 0.16);
+      }
+      .topbar .back-link:hover {
+        transform: translate(-1px, -1px);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <img
+          class="brand-mascote"
+          src="{{ url_for('static', filename='brand/klink-mascote.png') }}"
+          alt="Klink"
+          width="50"
+          height="50"
+        />
+        <div>
+          <span class="klink-logo klink-logo--sm" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+          <h1>Configurações</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a class="back-link" href="/dashboard">← Voltar ao painel</a>
+      </div>
+    </header>
+
+    <main class="cfg-shell">
+      <div class="cfg-intro">
+        <p class="eyebrow">dados do estabelecimento</p>
+        <h1>Configurações do restaurante</h1>
+        <p>Defina o nome que aparece no painel e o número de WhatsApp que recebe os pedidos. É só preencher e clicar em salvar.</p>
+      </div>
+
+      <form id="cfg-form" class="cfg-card" autocomplete="off">
+        <h2>Identidade</h2>
+        <p class="hint">É assim que o restaurante aparece no painel e nos QR codes das mesas.</p>
+
+        <label class="field">
+          <span class="field-label">Nome do restaurante</span>
+          <input
+            id="nome"
+            name="nome"
+            type="text"
+            value="{{ restaurant.nome }}"
+            placeholder="Ex: Bar do João"
+            maxlength="80"
+            required
+          />
+          <p class="helper">Use o nome real do estabelecimento do cliente.</p>
+        </label>
+
+        <h2 style="margin-top: 22px">WhatsApp do bot</h2>
+        <p class="hint">Número que o cliente abre ao escanear o QR. Use o mesmo número conectado ao Klink, com código do país e DDD.</p>
+
+        <label class="field">
+          <span class="field-label">Número do WhatsApp</span>
+          <input
+            id="telefone"
+            name="telefone_whatsapp"
+            type="tel"
+            inputmode="numeric"
+            value="{{ bot_phone }}"
+            placeholder="Ex: 5511999998888"
+          />
+          <p class="helper">Só números: 55 (Brasil) + DDD + número. Exemplo: 5511999998888.</p>
+        </label>
+
+        <div class="status-row">
+          {% if whatsapp_connected %}
+            <span class="status-dot on" aria-hidden="true"></span>
+            <div>
+              <strong>Bot conectado</strong>
+              <span> — o Klink está pronto para receber mensagens.</span>
+            </div>
+          {% else %}
+            <span class="status-dot off" aria-hidden="true"></span>
+            <div>
+              <strong>Bot ainda não conectado</strong>
+              <span> — a conexão do WhatsApp é feita na configuração técnica do servidor.</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="cfg-actions" style="margin-top: 22px">
+          <button type="submit" class="btn-save" id="save-btn">Salvar alterações</button>
+          <span class="save-feedback" id="save-feedback" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+
+      <section class="qr-cta">
+        <div class="qr-cta-text">
+          <p class="eyebrow">para as mesas</p>
+          <h2>QR codes das mesas</h2>
+          <p>Gere e imprima os QR codes para colar em cada mesa. O cliente aponta a câmera e já começa a pedir.</p>
+        </div>
+        <a class="btn-ghost" href="/qrcodes">
+          <img src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="" aria-hidden="true" width="26" height="26" style="height: 26px; width: auto" />
+          Ver QR codes
+        </a>
+      </section>
+    </main>
+
+    <script>
+      const form = document.getElementById("cfg-form");
+      const btn = document.getElementById("save-btn");
+      const feedback = document.getElementById("save-feedback");
+
+      function flash(msg, kind) {
+        feedback.textContent = msg;
+        feedback.className = "save-feedback show " + kind;
+        if (kind === "ok") {
+          setTimeout(() => feedback.classList.remove("show"), 3500);
+        }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("nome").value.trim();
+        const telefone = document.getElementById("telefone").value;
+        if (!nome) {
+          flash("Digite o nome do restaurante.", "err");
+          return;
+        }
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = "Salvando...";
+        try {
+          const res = await fetch("/api/restaurant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nome, telefone_whatsapp: telefone }),
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            flash("Salvo com sucesso! ✓", "ok");
+            document.getElementById("telefone").value = data.bot_phone || telefone;
+            document.querySelectorAll(".klink-logo + h1, .topbar h1").forEach(() => {});
+          } else {
+            flash("Não foi possível salvar. Confira os dados.", "err");
+          }
+        } catch (err) {
+          flash("Erro de conexão ao salvar.", "err");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      });
+    </script>
+  </body>
+</html>

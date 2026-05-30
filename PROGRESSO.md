@@ -51,12 +51,28 @@ o garçom acompanha pelo computador/celular.
 - [ ] Trocar o ícone do WhatsApp na logo (usar literalmente o logo da Meta = risco de processo).
 - [ ] Pegar API Key + nome da instância da Evolution e botar no Coolify.
 - [ ] Pegar o número de WhatsApp do garçom (chip dedicado de preferência).
-- [ ] Cadastrar o primeiro restaurante de verdade (substituir o "Klink Demo" pelo nome real do estabelecimento).
+- [ ] Cadastrar o primeiro restaurante de verdade (substituir o "Klink Demo" pelo nome real do estabelecimento). → **Já dá pra fazer sozinho** na tela **Configurações** do painel.
 - [ ] Trocar a foto stock do painel pela foto real do estabelecimento.
 
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 29/05/2026 — Tela de Configurações + página de QR codes
+- Agora dá pra **cadastrar o restaurante do cliente sozinho**, sem mexer em banco:
+  no painel tem o atalho **Configurações**, com campos de **Nome do restaurante**
+  e **WhatsApp do bot**. É só preencher e clicar em "Salvar alterações".
+- O número de WhatsApp salvo ali passa a ser o número que **os QR codes abrem** —
+  antes isso dependia de configuração técnica no servidor.
+- Nova página **QR codes das mesas** (atalho no painel): mostra um cartão lindo por
+  mesa, com o QR pronto, o número da mesa e a marca Klink. Tem botão **Imprimir** que
+  gera uma folha organizada (2 por linha, encaixa no A4) pra recortar e colar nas mesas.
+- Se ainda não tiver número configurado, a página avisa em amarelo e leva direto
+  pras Configurações.
+- Detalhe técnico: os QR codes são desenhados no próprio navegador, então não
+  precisei instalar nada novo no servidor (a subida no Coolify continua igual).
+- Conferi tudo abrindo as telas de verdade (inclusive o modo de impressão) e os
+  testes seguem passando: **329 ok**.
 
 ### 29/05/2026 — Logos e identidade visual do Klink no site e no painel
 - Você criou a marca: o **mascote** (campainha de recepção com rostinho e fone de
