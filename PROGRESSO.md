@@ -67,6 +67,13 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 31/05/2026 — Guia de deploy atualizado (pronto pro primeiro cliente)
+- Reescrevi o **`DEPLOY.md`** completo e atualizado: passo a passo do Coolify com
+  subdomínio por cliente, o **webhook com segredo**, validação do garçom ligada,
+  preço correto (setup 147 + 3,97/mesa), smoke test que prova que o webhook está
+  protegido, e o checklist de segurança.
+- Começamos o **primeiro deploy guiado** (ver conversa).
+
 ### 31/05/2026 — Segunda leva de segurança (fechando as brechas restantes)
 - **Senha do painel agora é obrigatória de verdade:** em produção, se esquecer de
   configurar a senha, o sistema **se recusa a ligar** (antes era só um aviso). À prova
