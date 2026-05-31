@@ -338,6 +338,102 @@ class Database:
             params,
         )
 
+    # ----- Cardápio (produtos + apelidos) -----
+
+    def _set_product_aliases(
+        self, conn: sqlite3.Connection, produto_id: str, aliases: Iterable[str]
+    ) -> None:
+        conn.execute("delete from produto_aliases where produto_id = ?", (produto_id,))
+        vistos: set[str] = set()
+        for alias in aliases or []:
+            limpo = (alias or "").strip()
+            chave = limpo.lower()
+            if not limpo or chave in vistos:
+                continue
+            vistos.add(chave)
+            conn.execute(
+                "insert into produto_aliases (id, produto_id, alias) values (?, ?, ?)",
+                (new_id(), produto_id, limpo),
+            )
+
+    def create_product(
+        self,
+        restaurante_id: str,
+        *,
+        nome: str,
+        preco: float,
+        setor: str,
+        categoria: str = "",
+        descricao: str = "",
+        disponivel: bool = True,
+        aliases: Iterable[str] = (),
+    ) -> str:
+        produto_id = new_id()
+        with self.transaction() as conn:
+            conn.execute(
+                """
+                insert into produtos (
+                  id, restaurante_id, nome, descricao, preco, categoria, setor,
+                  ativo, disponivel
+                ) values (?, ?, ?, ?, ?, ?, ?, 1, ?)
+                """,
+                (
+                    produto_id,
+                    restaurante_id,
+                    nome,
+                    descricao,
+                    preco,
+                    categoria or "geral",
+                    setor,
+                    1 if disponivel else 0,
+                ),
+            )
+            self._set_product_aliases(conn, produto_id, aliases)
+        return produto_id
+
+    def update_product(
+        self,
+        produto_id: str,
+        *,
+        nome: str,
+        preco: float,
+        setor: str,
+        categoria: str = "",
+        descricao: str = "",
+        disponivel: bool = True,
+        aliases: Iterable[str] = (),
+    ) -> None:
+        with self.transaction() as conn:
+            conn.execute(
+                """
+                update produtos
+                set nome = ?, descricao = ?, preco = ?, categoria = ?, setor = ?,
+                    disponivel = ?
+                where id = ?
+                """,
+                (
+                    nome,
+                    descricao,
+                    preco,
+                    categoria or "geral",
+                    setor,
+                    1 if disponivel else 0,
+                    produto_id,
+                ),
+            )
+            self._set_product_aliases(conn, produto_id, aliases)
+
+    def deactivate_product(self, produto_id: str) -> None:
+        # Soft delete: some do cardápio sem apagar o histórico de pedidos.
+        self.execute("update produtos set ativo = 0 where id = ?", (produto_id,))
+
+    def product_belongs_to(self, restaurante_id: str, produto_id: str) -> bool:
+        row = self.fetchone(
+            "select id from produtos where id = ? and restaurante_id = ? and ativo = 1",
+            (produto_id, restaurante_id),
+        )
+        return row is not None
+
     def message_exists(self, message_id: str) -> bool:
         row = self.fetchone(
             "select id from mensagens_whatsapp where message_id = ?",

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Klink - Cardápio</title>
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon.ico') }}" sizes="any" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <style>
+      .cd-shell { max-width: 820px; margin: 0 auto; padding: 26px clamp(16px, 4vw, 32px) 80px; }
+      .cd-intro { margin: 8px 0 18px; }
+      .cd-intro h1 { font-size: clamp(1.5rem, 3vw, 2rem); }
+      .cd-intro p { margin: 8px 0 0; color: var(--muted); font-weight: 600; line-height: 1.5; }
+      .cd-tip {
+        border: 2px dashed var(--brand-green); border-radius: 12px; background: #eef7ee;
+        padding: 14px 16px; font-weight: 600; font-size: .92rem; margin: 16px 0 22px; line-height: 1.5;
+      }
+      .cd-tip b { color: var(--brand-green-deep); }
+      .cd-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+      .btn-add {
+        display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 22px;
+        font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 1rem; color: #fff;
+        background: var(--brand-green); border: 2px solid var(--ink); border-radius: 12px;
+        box-shadow: 4px 4px 0 var(--ink); cursor: pointer; transition: transform .08s, box-shadow .08s;
+      }
+      .btn-add:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+      .sector-group { margin-bottom: 24px; }
+      .sector-group > h2 { font-size: 1.15rem; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+      .prod {
+        display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
+        border: 2px solid var(--ink); border-radius: 12px; background: var(--panel);
+        box-shadow: 4px 4px 0 rgba(21,21,21,.13); padding: 14px 16px; margin-bottom: 10px;
+      }
+      .prod.off { opacity: .6; }
+      .prod .nome { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 1.05rem; }
+      .prod .meta { color: var(--muted); font-size: .84rem; font-weight: 600; margin-top: 2px; }
+      .prod .apelidos { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
+      .tagx { font-size: .72rem; font-weight: 700; background: var(--green-soft, #eaf6ea); color: var(--brand-green-deep); border: 1px solid #cfe6cf; border-radius: 999px; padding: 2px 8px; }
+      .prod .preco { font-family: "Fredoka", sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--brand-green-deep); white-space: nowrap; }
+      .prod-actions { display: flex; gap: 8px; margin-top: 8px; }
+      .mini-btn { min-height: 36px; padding: 4px 12px; font-weight: 800; font-size: .82rem; color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; background: #fff; cursor: pointer; }
+      .mini-btn.danger { color: var(--tomato); }
+      .esgotado { font-size: .72rem; font-weight: 800; color: var(--tomato); text-transform: uppercase; }
+      .empty-box { border: 1px dashed var(--line); border-radius: 12px; padding: 24px; text-align: center; color: var(--muted); font-weight: 600; }
+      .back-link { display:inline-flex; align-items:center; gap:6px; min-height:42px; padding:8px 16px; border:2px solid var(--ink); border-radius:999px; background:var(--panel); color:var(--ink); font-weight:800; text-decoration:none; box-shadow:3px 3px 0 rgba(21,21,21,.16); }
+
+      /* Modal */
+      .backdrop { position: fixed; inset: 0; background: rgba(21,21,21,.45); z-index: 60; display: none; }
+      .backdrop.show { display: block; }
+      .modal {
+        position: fixed; z-index: 70; left: 50%; top: 50%; transform: translate(-50%,-50%);
+        width: min(520px, 94vw); max-height: 92vh; overflow-y: auto; display: none;
+        background: var(--paper); border: 2px solid var(--ink); border-radius: 16px;
+        box-shadow: 10px 10px 0 rgba(21,21,21,.22); padding: 22px;
+      }
+      .modal.show { display: block; }
+      .modal h2 { font-size: 1.25rem; margin-bottom: 14px; }
+      .field { display: block; margin-bottom: 14px; }
+      .field > span { display: block; font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; margin-bottom: 5px; }
+      .field input, .field select, .field textarea { width: 100%; min-height: 46px; font-size: 1rem; font-weight: 600; }
+      .field .help { text-transform: none; font-weight: 600; color: var(--muted); font-size: .8rem; margin-top: 5px; }
+      .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .check { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+      .check input { width: auto; min-height: 0; transform: scale(1.3); }
+      .modal-actions { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+      .btn-save { min-height: 50px; padding: 0 24px; font-family:"Fredoka",sans-serif; font-weight: 600; font-size: 1rem; color: #fff; background: var(--brand-green); border: 2px solid var(--ink); border-radius: 10px; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
+      .btn-save:disabled { opacity: .6; cursor: progress; }
+      .btn-cancel { min-height: 50px; padding: 0 18px; font-weight: 800; color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 10px; cursor: pointer; }
+      .form-err { color: var(--tomato); font-weight: 800; font-size: .9rem; min-height: 1.2em; }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <img class="brand-mascote" src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="Klink" width="50" height="50" />
+        <div>
+          <span class="klink-logo klink-logo--sm" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+          <h1>Cardápio</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a class="back-link" href="/dashboard">← Voltar ao painel</a>
+      </div>
+    </header>
+
+    <main class="cd-shell">
+      <div class="cd-intro">
+        <p class="eyebrow">o que o bot sabe vender</p>
+        <h1>Cardápio do restaurante</h1>
+        <p>Cadastre cada produto com preço e setor. O bot só reconhece e vende o que estiver aqui.</p>
+      </div>
+
+      <div class="cd-tip">
+        💡 <b>Os "apelidos" são o segredo.</b> São as formas que o cliente fala o produto.
+        Ex: na cerveja Brahma, coloque apelidos como <i>brahma, breja, gelada, cerveja</i>.
+        Quanto mais apelidos, mais a IA entende o pedido. Separe por vírgula.
+      </div>
+
+      <div class="cd-toolbar">
+        <p class="mini" id="prod-count" style="color:var(--muted); font-weight:700;">Carregando…</p>
+        <button class="btn-add" id="btn-add" type="button">+ Adicionar produto</button>
+      </div>
+
+      <div id="lista"></div>
+    </main>
+
+    <!-- Modal de produto -->
+    <div class="backdrop" id="backdrop"></div>
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Novo produto</h2>
+      <form id="prod-form" autocomplete="off">
+        <input type="hidden" id="prod-id" />
+        <label class="field">
+          <span>Nome do produto</span>
+          <input id="f-nome" type="text" maxlength="80" placeholder="Ex: Brahma 600ml" required />
+        </label>
+        <div class="row2">
+          <label class="field">
+            <span>Preço (R$)</span>
+            <input id="f-preco" type="text" inputmode="decimal" placeholder="Ex: 13,00" required />
+          </label>
+          <label class="field">
+            <span>Vai para</span>
+            <select id="f-setor">
+              <option value="bar">🍺 Bar</option>
+              <option value="cozinha">🍳 Cozinha</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Apelidos (como o cliente fala)</span>
+          <input id="f-aliases" type="text" placeholder="brahma, breja, gelada, cerveja" />
+          <span class="help">Separe por vírgula. É isso que faz a IA reconhecer o pedido.</span>
+        </label>
+        <div class="row2">
+          <label class="field">
+            <span>Categoria (opcional)</span>
+            <input id="f-categoria" type="text" placeholder="cerveja, porção…" />
+          </label>
+          <label class="field">
+            <span>Descrição (opcional)</span>
+            <input id="f-descricao" type="text" placeholder="Garrafa 600ml" />
+          </label>
+        </div>
+        <label class="check field">
+          <input id="f-disponivel" type="checkbox" checked />
+          <span style="text-transform:none; margin:0; font-size:1rem;">Disponível agora (desmarque se acabou)</span>
+        </label>
+        <p class="form-err" id="form-err"></p>
+        <div class="modal-actions">
+          <button type="submit" class="btn-save" id="btn-save">Salvar produto</button>
+          <button type="button" class="btn-cancel" id="btn-cancel">Cancelar</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const SETORES = { bar: "🍺 Bar", cozinha: "🍳 Cozinha" };
+      const $ = (id) => document.getElementById(id);
+      function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+      function brl(v) { return Number(v).toFixed(2).replace(".", ","); }
+
+      async function load() {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        const produtos = data.products || [];
+        $("prod-count").textContent = produtos.length + (produtos.length === 1 ? " produto" : " produtos");
+        const lista = $("lista");
+        if (!produtos.length) {
+          lista.innerHTML = '<div class="empty-box">Nenhum produto ainda. Clique em <b>+ Adicionar produto</b> para começar.</div>';
+          return;
+        }
+        const grupos = { bar: [], cozinha: [] };
+        produtos.forEach((p) => { (grupos[p.setor] || grupos.bar).push(p); });
+        let html = "";
+        for (const setor of ["bar", "cozinha"]) {
+          const itens = grupos[setor];
+          if (!itens.length) continue;
+          html += `<section class="sector-group"><h2>${SETORES[setor]} <span style="color:var(--muted);font-size:.8rem;font-weight:600">(${itens.length})</span></h2>`;
+          itens.forEach((p) => {
+            const apel = (p.aliases || []).map((a) => `<span class="tagx">${esc(a)}</span>`).join("");
+            html += `
+              <article class="prod ${p.disponivel ? "" : "off"}">
+                <div>
+                  <div class="nome">${esc(p.nome)} ${p.disponivel ? "" : '<span class="esgotado">· esgotado</span>'}</div>
+                  <div class="meta">${esc(p.categoria || "")}${p.descricao ? " · " + esc(p.descricao) : ""}</div>
+                  <div class="apelidos">${apel || '<span class="tagx" style="background:#fde9e7;color:#b23b2c;border-color:#f3c7c1">⚠ sem apelidos</span>'}</div>
+                  <div class="prod-actions">
+                    <button class="mini-btn" data-edit='${encodeURIComponent(JSON.stringify(p))}'>Editar</button>
+                    <button class="mini-btn danger" data-del="${p.id}" data-nome="${esc(p.nome)}">Remover</button>
+                  </div>
+                </div>
+                <div class="preco">R$ ${brl(p.preco)}</div>
+              </article>`;
+          });
+          html += `</section>`;
+        }
+        lista.innerHTML = html;
+      }
+
+      // Modal
+      function openModal(p) {
+        $("form-err").textContent = "";
+        $("prod-id").value = p ? p.id : "";
+        $("modal-title").textContent = p ? "Editar produto" : "Novo produto";
+        $("f-nome").value = p ? p.nome : "";
+        $("f-preco").value = p ? brl(p.preco) : "";
+        $("f-setor").value = p ? p.setor : "bar";
+        $("f-aliases").value = p ? (p.aliases || []).join(", ") : "";
+        $("f-categoria").value = p ? (p.categoria || "") : "";
+        $("f-descricao").value = p ? (p.descricao || "") : "";
+        $("f-disponivel").checked = p ? !!p.disponivel : true;
+        $("backdrop").classList.add("show");
+        $("modal").classList.add("show");
+        $("f-nome").focus();
+      }
+      function closeModal() { $("backdrop").classList.remove("show"); $("modal").classList.remove("show"); }
+
+      $("btn-add").onclick = () => openModal(null);
+      $("btn-cancel").onclick = closeModal;
+      $("backdrop").onclick = closeModal;
+
+      $("lista").addEventListener("click", async (e) => {
+        const edit = e.target.closest("[data-edit]");
+        const del = e.target.closest("[data-del]");
+        if (edit) { openModal(JSON.parse(decodeURIComponent(edit.getAttribute("data-edit")))); }
+        if (del) {
+          if (!confirm(`Remover "${del.getAttribute("data-nome")}" do cardápio?`)) return;
+          await fetch(`/api/products/${del.getAttribute("data-del")}/delete`, { method: "POST" });
+          load();
+        }
+      });
+
+      $("prod-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const err = $("form-err"); err.textContent = "";
+        const nome = $("f-nome").value.trim();
+        const preco = $("f-preco").value.trim();
+        if (!nome) { err.textContent = "Digite o nome do produto."; return; }
+        if (!preco) { err.textContent = "Digite o preço."; return; }
+        const aliases = $("f-aliases").value.split(",").map((a) => a.trim()).filter(Boolean);
+        const body = {
+          nome, preco,
+          setor: $("f-setor").value,
+          aliases,
+          categoria: $("f-categoria").value.trim(),
+          descricao: $("f-descricao").value.trim(),
+          disponivel: $("f-disponivel").checked,
+        };
+        const id = $("prod-id").value;
+        const url = id ? `/api/products/${id}` : "/api/products";
+        const btn = $("btn-save"); btn.disabled = true; const original = btn.textContent; btn.textContent = "Salvando…";
+        try {
+          const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          const data = await res.json();
+          if (res.ok && data.ok) { closeModal(); load(); }
+          else { err.textContent = data.message || "Não foi possível salvar."; }
+        } catch (e2) { err.textContent = "Erro de conexão."; }
+        finally { btn.disabled = false; btn.textContent = original; }
+      });
+
+      load();
+    </script>
+  </body>
+</html>

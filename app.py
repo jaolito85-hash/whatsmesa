@@ -126,6 +126,72 @@ def create_app() -> Flask:
         updated = table_sessions.restaurant()
         return jsonify({"ok": True, "restaurant": updated, "bot_phone": qr.bot_phone()})
 
+    @app.get("/cardapio")
+    def cardapio_page():
+        restaurant = table_sessions.restaurant()
+        return render_template(
+            "cardapio.html",
+            restaurant=restaurant,
+            is_demo=restaurant.get("slug") == DEMO_SLUG,
+        )
+
+    def _parse_product_payload():
+        data = request.get_json(silent=True) or {}
+        nome = (data.get("nome") or "").strip()
+        if not nome:
+            return None, ("nome_obrigatorio", "Informe o nome do produto.")
+        try:
+            preco = float(str(data.get("preco")).replace(",", "."))
+        except (TypeError, ValueError):
+            return None, ("preco_invalido", "Preço inválido.")
+        if preco < 0:
+            return None, ("preco_invalido", "O preço não pode ser negativo.")
+        setor = data.get("setor")
+        if setor not in ("bar", "cozinha"):
+            setor = "bar"
+        aliases_raw = data.get("aliases")
+        if isinstance(aliases_raw, str):
+            aliases = aliases_raw.split(",")
+        else:
+            aliases = list(aliases_raw or [])
+        return {
+            "nome": nome,
+            "preco": preco,
+            "setor": setor,
+            "categoria": (data.get("categoria") or "").strip(),
+            "descricao": (data.get("descricao") or "").strip(),
+            "disponivel": bool(data.get("disponivel", True)),
+            "aliases": aliases,
+        }, None
+
+    @app.post("/api/products")
+    def api_create_product():
+        restaurant = table_sessions.restaurant()
+        parsed, err = _parse_product_payload()
+        if err:
+            return jsonify({"ok": False, "reason": err[0], "message": err[1]}), 400
+        pid = db.create_product(restaurant["id"], **parsed)
+        return jsonify({"ok": True, "id": pid})
+
+    @app.post("/api/products/<produto_id>")
+    def api_update_product(produto_id: str):
+        restaurant = table_sessions.restaurant()
+        if not db.product_belongs_to(restaurant["id"], produto_id):
+            return jsonify({"ok": False, "reason": "nao_encontrado"}), 404
+        parsed, err = _parse_product_payload()
+        if err:
+            return jsonify({"ok": False, "reason": err[0], "message": err[1]}), 400
+        db.update_product(produto_id, **parsed)
+        return jsonify({"ok": True})
+
+    @app.post("/api/products/<produto_id>/delete")
+    def api_delete_product(produto_id: str):
+        restaurant = table_sessions.restaurant()
+        if not db.product_belongs_to(restaurant["id"], produto_id):
+            return jsonify({"ok": False, "reason": "nao_encontrado"}), 404
+        db.deactivate_product(produto_id)
+        return jsonify({"ok": True})
+
     @app.get("/qrcodes")
     def qrcodes_page():
         restaurant = table_sessions.restaurant()

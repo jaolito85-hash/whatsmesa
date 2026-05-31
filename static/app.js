@@ -78,10 +78,19 @@ function statusLabel(value) {
   return String(value || "").replaceAll("_", " ");
 }
 
+function actionLabel(item, next) {
+  if (item.kind === "request") {
+    if (next === "em_atendimento") return "Atender";
+    if (next === "concluida")
+      return item.tipo === "fechar_conta" ? "Fechar mesa 💰" : "Concluir";
+  }
+  return statusLabel(next);
+}
+
 function ticketHtml(item) {
   const next = item.next_status;
   const actionTarget = item.kind === "item" ? "items" : "requests";
-  const nextLabel = next ? statusLabel(next) : "ok";
+  const nextLabel = next ? actionLabel(item, next) : "ok";
   const bucket = elapsedBucket(item);
   return `
     <article class="ticket" data-status="${item.status}" data-elapsed="${bucket}">

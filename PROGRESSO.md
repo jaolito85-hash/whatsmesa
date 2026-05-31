@@ -67,6 +67,17 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 31/05/2026 — Tela de Cardápio + fechar mesa mais claro
+- **Nova tela de Cardápio** (atalho no painel): o dono cadastra/edita/remove produtos
+  sozinho — nome, preço, setor (Bar/Cozinha) e os **apelidos** (as formas que o cliente
+  fala, ex: "gelada", "breja" → cerveja). É o que o bot usa pra reconhecer os pedidos.
+  Antes o cardápio era fixo no código; agora é self-service.
+- **Fechar mesa mais claro:** no caixa, o botão da conta agora diz **"Fechar mesa 💰"**
+  em vez de "concluída". Ao clicar, a mesa fecha e o **QR continua valendo** pro próximo
+  grupo (não precisa fazer nada com o QR).
+- Cobri com testes (inclusive provando que um produto cadastrado com apelido é
+  reconhecido pela IA no pedido). **367 testes passando.**
+
 ### 31/05/2026 — Guia de deploy atualizado (pronto pro primeiro cliente)
 - Reescrevi o **`DEPLOY.md`** completo e atualizado: passo a passo do Coolify com
   subdomínio por cliente, o **webhook com segredo**, validação do garçom ligada,

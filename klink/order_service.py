@@ -238,6 +238,7 @@ class OrderService:
             columns[sector].append(
                 {
                     "kind": "request",
+                    "tipo": row["tipo"],
                     "id": row["id"],
                     "mesa": row["mesa_numero"],
                     "titulo": row["descricao"],
