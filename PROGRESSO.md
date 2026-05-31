@@ -67,6 +67,17 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 31/05/2026 — Decisão de arquitetura: como atender vários restaurantes
+- Auditei a segurança do site: **nada de senha ou chave de API fica no navegador**
+  (tudo no servidor). O painel fica atrás de senha. ✅
+- Decidimos o caminho pra produção: **"uma instalação por restaurante"** (cada bar tem
+  seu subdomínio, sua senha e seu número de WhatsApp). É seguro, já funciona hoje e não
+  exige reescrever nada — perfeito pro piloto e pra Copa.
+- O **multi-tenant de verdade** (uma URL só, cada bar logando com sua senha) fica pra
+  quando tivermos ~20–30 clientes — é um projeto à parte, arriscado de apressar.
+- Escrevi tudo no novo **`ARQUITETURA.md`**: passo a passo pra subir cada cliente,
+  domínios/DNS (incl. `app.klinkai.com.br`), checklist de segurança e o plano do futuro.
+
 ### 31/05/2026 — QR das mesas agora é permanente (não quebra mais)
 - **O problema:** o QR colado na mesa parava de funcionar depois que a conta fechava,
   porque o sistema trocava o "código interno" dele. No bar real, o segundo grupo veria
