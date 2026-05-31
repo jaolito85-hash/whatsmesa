@@ -21,6 +21,9 @@ services:
       KLINK_ADMIN_TOKEN: ""
       KLINK_DASHBOARD_USER: admin
       KLINK_DASHBOARD_PASSWORD: ""
+      # Garcom valida cada mesa no painel antes de liberar pedidos.
+      # Protege o QR permanente contra abertura por quem nao esta no local.
+      KLINK_REQUIRE_TABLE_VALIDATION: "true"
     volumes:
       - klink_data:/data
 

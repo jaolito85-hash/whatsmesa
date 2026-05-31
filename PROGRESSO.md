@@ -46,15 +46,15 @@ o garçom acompanha pelo computador/celular.
 
 ## O que falta antes do primeiro cliente pagante
 
-- [ ] 🚨 **CRÍTICO antes de colar QR em mesa de verdade:** hoje, quando a conta de uma
-  mesa fecha, o sistema troca o "código interno" do QR. Na prática, isso faz o **QR
-  colado parar de funcionar para o próximo grupo** (ele veria "QR inválido"). Precisamos
-  ajustar pra que o QR da mesa seja **permanente** (a segurança fica por conta da
-  validação do garçom, que vamos deixar ligada no piloto). **Eu (Claude) não mexi nisso
-  sozinho** porque envolve a parte de cobrança/segurança — quero seu OK antes. É rápido
-  de corrigir. Enquanto não corrigir, o material de vendas pode circular, mas **não cole
-  QRs num bar real ainda.**
-- [ ] Ligar a **validação do garçom** no piloto (`KLINK_REQUIRE_TABLE_VALIDATION=true`).
+- [x] ✅ **QR permanente — RESOLVIDO (31/05/2026).** Agora cada mesa tem um "endereço
+  fixo" que nunca muda, então o **QR impresso e colado continua funcionando para sempre**
+  (inclusive depois da conta fechar e a mesa reabrir). A proteção interna do link
+  dinâmico foi mantida intacta — não removi nenhuma segurança. **Pode colar QR em mesa
+  de verdade.**
+- [x] ✅ **Validação do garçom ligada por padrão (31/05/2026).** Já deixei
+  `KLINK_REQUIRE_TABLE_VALIDATION=true` no docker-compose e no .env.example. É o que
+  blinda o QR permanente (mesa só abre depois que o garçom confirma no painel). Confira
+  se está ligada também no Coolify.
 - [ ] Definir nome final (Klink ou outro). Verificar marca registrada no INPI classes 9 (software) e 43 (restaurante).
 - [ ] Comprar `klink.app` adicional (~US$ 8) pra travar a marca.
 - [ ] Trocar o ícone do WhatsApp na logo (usar literalmente o logo da Meta = risco de processo).
@@ -66,6 +66,19 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 31/05/2026 — QR das mesas agora é permanente (não quebra mais)
+- **O problema:** o QR colado na mesa parava de funcionar depois que a conta fechava,
+  porque o sistema trocava o "código interno" dele. No bar real, o segundo grupo veria
+  "QR inválido". Inviabilizava colar QR fixo na mesa.
+- **A solução (sem remover segurança):** dei a cada mesa um **endereço fixo** (que nunca
+  muda) pro QR impresso usar. O link dinâmico interno continua trocando como antes — não
+  tirei nenhuma proteção. Agora o QR colado vale **para sempre**, mesmo abrindo e
+  fechando a mesa a noite toda.
+- **Blindagem:** deixei a **validação do garçom ligada por padrão** (mesa só abre depois
+  que alguém confirma no painel). É isso que protege o QR permanente.
+- Testado de ponta a ponta: o link redireciona certo antes e depois de fechar a mesa.
+  **343 testes passando** (incluindo 5 novos só pra esse caso).
 
 ### 30/05/2026 — Kit de Vendas pro tio apresentar (HTML bonitão)
 - Criei o **Kit de Vendas Klink** na pasta `material-vendas/` — 3 páginas web lindas,

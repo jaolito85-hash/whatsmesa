@@ -42,7 +42,16 @@ class QRService:
         return f"{self.settings.public_base_url.rstrip('/')}/qr/{token}"
 
     def resolve_redirect(self, token: str) -> str | None:
+        # Aceita dois tipos de "chave" no link /qr/<chave>:
+        #  1) o token rotativo (qr_token_atual) — usado por links dinâmicos, muda a
+        #     cada fechamento de mesa por segurança;
+        #  2) o id PERMANENTE da mesa — usado pelo QR impresso e colado na mesa, que
+        #     nunca muda. Assim o QR físico continua funcionando para sempre, inclusive
+        #     depois que a conta fecha e o token rotativo é trocado.
+        # A segurança da abertura fica por conta da validação do garçom no painel.
         table = self.table_sessions.table_by_token(token)
+        if not table:
+            table = self.table_sessions.table_by_id(token)
         if not table:
             return None
         return self.whatsapp_link_for_table(int(table["numero"]))

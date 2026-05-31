@@ -119,7 +119,9 @@ def create_app() -> Flask:
                 {
                     "numero": table["numero"],
                     "nome": table.get("nome"),
-                    "qr_url": qr.public_qr_url(table["qr_token_atual"]),
+                    # Usa o id PERMANENTE da mesa (não o token rotativo): o QR impresso
+                    # precisa continuar valendo depois que a mesa fecha e reabre.
+                    "qr_url": qr.public_qr_url(table["id"]),
                 }
             )
         return render_template(
@@ -199,7 +201,7 @@ def create_app() -> Flask:
     def api_tables():
         tables = []
         for table in table_sessions.list_tables():
-            table["qr_url"] = qr.public_qr_url(table["qr_token_atual"])
+            table["qr_url"] = qr.public_qr_url(table["id"])
             table["whatsapp_url"] = qr.whatsapp_link_for_table(table["numero"])
             tables.append(table)
         return jsonify({"tables": tables})

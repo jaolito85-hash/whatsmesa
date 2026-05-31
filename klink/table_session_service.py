@@ -58,6 +58,13 @@ class TableSessionService:
             (token,),
         )
 
+    def table_by_id(self, mesa_id: str) -> dict[str, Any] | None:
+        # Identificador PERMANENTE da mesa, usado pelo QR impresso (que nunca muda).
+        return self.db.fetchone(
+            "select * from mesas where id = ? and ativa = 1",
+            (mesa_id,),
+        )
+
     def active_session_for_whatsapp(self, remote_jid: str) -> dict[str, Any] | None:
         self._expire_idle_sessions()
         placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
