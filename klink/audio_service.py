@@ -1,10 +1,46 @@
 from __future__ import annotations
 
+import ipaddress
+import socket
 import tempfile
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 from .config import Settings
+
+
+def _ensure_public_url(url: str) -> None:
+    """Anti-SSRF: recusa baixar de URLs que apontem para a rede interna.
+
+    O `audio_url` vem do payload do webhook. Mesmo com o webhook protegido, esta é
+    uma barreira extra contra um payload malicioso pedir um fetch para
+    169.254.169.254 (metadados de cloud), localhost ou IPs privados.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("URL de audio invalida (esquema nao permitido).")
+    host = parsed.hostname or ""
+    if not host:
+        raise ValueError("URL de audio sem host.")
+    ips: set[ipaddress._BaseAddress] = set()
+    try:
+        ips.add(ipaddress.ip_address(host))  # host ja e um IP literal
+    except ValueError:
+        try:
+            for info in socket.getaddrinfo(host, None):
+                ips.add(ipaddress.ip_address(info[4][0]))
+        except OSError:
+            return  # nao resolveu: deixa o urlopen falhar naturalmente
+    for ip in ips:
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+        ):
+            raise ValueError("URL de audio aponta para endereco interno (bloqueado).")
 
 
 SUPPORTED_AUDIO_SUFFIXES = {
@@ -64,6 +100,7 @@ class AudioService:
             accepted = ", ".join(sorted(SUPPORTED_AUDIO_SUFFIXES))
             raise ValueError(f"Formato de audio nao suportado ({suffix}). Use {accepted}.")
 
+        _ensure_public_url(audio_url)
         with urllib.request.urlopen(audio_url, timeout=30) as response:
             content = response.read()
         return self._transcribe_bytes(content, suffix, duration_seconds)

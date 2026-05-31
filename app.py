@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import os
 
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
 
@@ -22,9 +23,19 @@ def create_app() -> Flask:
     app = Flask(__name__)
     settings = get_settings()
     if not settings.dev_mode and not settings.dashboard_password:
+        # Sem senha de painel e fora de dev = painel aberto a qualquer um. Em produção
+        # abortamos o boot (à prova de esquecimento); sob testes (pytest) apenas avisamos.
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            app.logger.warning("KLINK_DASHBOARD_PASSWORD ausente (painel sem senha).")
+        else:
+            raise RuntimeError(
+                "KLINK_DASHBOARD_PASSWORD obrigatória em produção: sem ela o painel fica "
+                "aberto. Configure a senha (ou ligue KLINK_DEV_MODE=1 em desenvolvimento)."
+            )
+    if settings.dev_mode:
         app.logger.warning(
-            "ATENCAO: KLINK_DASHBOARD_PASSWORD nao configurada. O painel esta SEM "
-            "senha (aberto a qualquer um). Configure a senha antes de usar em producao."
+            "KLINK_DEV_MODE ligado: rotas /admin/* sem token e /api/demo/message ativa. "
+            "NUNCA use em produção."
         )
     db = Database(settings.database_path)
     db.init_schema()

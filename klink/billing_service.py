@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Iterable
@@ -222,39 +223,50 @@ class BillingService:
 
         fatura_id = new_id()
         now = utc_now()
-        with self.db.transaction() as conn:
-            conn.execute(
-                """
-                insert into faturas (
-                  id, billing_account_id, periodo_ano_mes, qtd_pedidos,
-                  valor_pedidos, valor_setup, valor_total, moeda, status, gerada_em
-                ) values (?, ?, ?, ?, ?, ?, ?, ?, 'aberta', ?)
-                """,
-                (
-                    fatura_id,
-                    account["id"],
-                    periodo,
-                    qtd_pedidos,
-                    valor_pedidos,
-                    valor_setup,
-                    valor_total,
-                    account["moeda"],
-                    now,
-                ),
-            )
-            for event in events:
+        try:
+            with self.db.transaction() as conn:
                 conn.execute(
                     """
-                    update billing_events
-                    set status_cobranca = 'faturado', fatura_id = ?
-                    where id = ?
+                    insert into faturas (
+                      id, billing_account_id, periodo_ano_mes, qtd_pedidos,
+                      valor_pedidos, valor_setup, valor_total, moeda, status, gerada_em
+                    ) values (?, ?, ?, ?, ?, ?, ?, ?, 'aberta', ?)
                     """,
-                    (fatura_id, event["id"]),
+                    (
+                        fatura_id,
+                        account["id"],
+                        periodo,
+                        qtd_pedidos,
+                        valor_pedidos,
+                        valor_setup,
+                        valor_total,
+                        account["moeda"],
+                        now,
+                    ),
                 )
+                for event in events:
+                    conn.execute(
+                        """
+                        update billing_events
+                        set status_cobranca = 'faturado', fatura_id = ?
+                        where id = ?
+                        """,
+                        (fatura_id, event["id"]),
+                    )
+        except sqlite3.IntegrityError:
+            # Corrida: outra chamada criou a fatura do mesmo periodo (unique
+            # billing_account_id + periodo_ano_mes). Idempotente: retorna a existente.
+            return self.db.fetchone(
+                "select * from faturas where billing_account_id = ? and periodo_ano_mes = ?",
+                (account["id"], periodo),
+            )
 
         return self.db.fetchone("select * from faturas where id = ?", (fatura_id,))
 
     def mark_invoice_paid(self, fatura_id: str) -> dict[str, Any]:
+        fatura = self.db.fetchone("select * from faturas where id = ?", (fatura_id,))
+        if not fatura or fatura["status"] == "paga":
+            return fatura  # idempotente: fatura inexistente ou já paga
         now = utc_now()
         with self.db.transaction() as conn:
             conn.execute(

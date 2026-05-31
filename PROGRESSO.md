@@ -67,6 +67,21 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 31/05/2026 — Segunda leva de segurança (fechando as brechas restantes)
+- **Senha do painel agora é obrigatória de verdade:** em produção, se esquecer de
+  configurar a senha, o sistema **se recusa a ligar** (antes era só um aviso). À prova
+  de esquecimento.
+- **Mesa rejeitada não gera mais cobrança "fantasma":** o garçom só consegue recusar uma
+  mesa que ainda está *aguardando confirmação* (não uma que já foi aberta e cobrada).
+- **Faturas à prova de clique duplo:** gerar ou marcar como paga duas vezes não quebra
+  nem cobra de novo.
+- **Barreira anti-invasão no áudio:** o sistema se recusa a baixar áudio de endereços
+  internos suspeitos (proteção extra além do webhook).
+- **Aviso forte** se o "modo de desenvolvimento" ficar ligado por engano em produção.
+- Tudo coberto por **mais 10 testes** — total agora **361 passando**. Atualizei o
+  `SEGURANCA.md`: a lista de "antes do 2º cliente" está zerada; só restam itens de
+  maturidade (LGPD/retenção de dados) pra quando escalar.
+
 ### 31/05/2026 — Auditoria de segurança + webhook blindado
 - Rodei uma auditoria de segurança completa antes de ligar pra valer. Achei **3 buracos
   críticos** e **corrigi todos**:

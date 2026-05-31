@@ -200,7 +200,10 @@ class TableSessionService:
 
     def reject_session(self, session_id: str) -> None:
         session = self.db.fetchone("select * from sessoes_mesa where id = ?", (session_id,))
-        if not session or session["status"] not in ("sessao_pendente", "sessao_ativa"):
+        # Só recusa sessão PENDENTE (ainda não validada/cobrada). Uma sessão já ativa foi
+        # cobrada (R$/mesa); encerrá-la é via close_session, não reject — assim evitamos
+        # cobrança "órfã" de uma mesa que o garçom rejeitou por engano.
+        if not session or session["status"] != "sessao_pendente":
             return
         now = utc_now()
         new_token = new_id()

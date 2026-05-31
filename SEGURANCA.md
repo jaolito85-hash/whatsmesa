@@ -12,9 +12,14 @@
 | **C-3** | `/webhook` sem validação de origem → qualquer um podia forjar pedidos e gerar cobrança falsa | Segredo de webhook (`KLINK_WEBHOOK_SECRET`). Se configurado, o `/webhook` só aceita com o segredo no path (`/webhook/evolution/<segredo>`), na query (`?token=`) ou no header `X-Webhook-Token`. |
 | **C-2** | `/api/demo/message` público com efeitos reais (abrir mesa, cobrar) | Bloqueado fora de `KLINK_DEV_MODE` (retorna 403 em produção). |
 | **C-1** | `debug=True` no `app.run` (risco de RCE se rodado direto) | Trocado para `debug=False`. |
-| **A-1** | App sobe sem senha de painel = painel aberto | Aviso forte no boot quando falta `KLINK_DASHBOARD_PASSWORD` (e não é dev). *(Trava de boot completa exige refatorar testes de auth — ver pendências.)* |
+| **A-1** | App sobe sem senha de painel = painel aberto | **Trava de boot em produção**: sem `KLINK_DASHBOARD_PASSWORD` e fora de dev, o app se recusa a subir (sob testes, só avisa). |
+| **M-3** | `reject_session` rejeitava sessão já ativa → cobrança órfã | Reject só vale para sessão **pendente**. Encerrar ativa é via `close_session`. |
+| **A-4** | `generate_invoice` quebrava (500) em chamada concorrente | Idempotente: trata corrida e retorna a fatura existente. |
+| **M-2** | `mark_invoice_paid` re-carimbava fatura já paga | Idempotente: se já paga, retorna sem alterar. |
+| **B-3** | `audio_url` baixada sem validação (SSRF p/ rede interna) | `_ensure_public_url` bloqueia loopback/privado/link-local/metadata. |
+| **B-2** | `KLINK_DEV_MODE` ligado em produção passava silencioso | Aviso forte no boot quando dev-mode está ativo. |
 
-Cobertos por **8 testes novos** (`tests/test_webhook_security.py`). Suíte: 351 passando.
+Cobertos por **18 testes novos** (`tests/test_webhook_security.py`, `tests/test_seguranca_extra.py`). Suíte: **361 passando**.
 
 ### Confirmado OK na auditoria
 - **Nenhum segredo no front** (`static/`, `templates/`): o `app.js` só chama `/api/` same-origin.
@@ -23,18 +28,14 @@ Cobertos por **8 testes novos** (`tests/test_webhook_security.py`). Suíte: 351 
 
 ---
 
-## 🔧 Pendências priorizadas (próxima rodada)
+## 🔧 Pendências restantes (boa prática / quando escalar)
 
-**Antes do 2º cliente / primeira fatura real:**
-- **A-1 (trava dura):** impedir o app de subir sem senha em produção (hoje é só aviso). Requer ajustar os testes de auth que usam senha vazia.
-- **M-3:** `reject_session` aceita rejeitar sessão **já ativa** (que pode ter gerado cobrança) → cobrança órfã. Decidir: ou bloquear (só rejeitar pendente) ou estornar o evento.
-- **A-4 / M-2:** tornar `generate_invoice` e `mark_invoice_paid` idempotentes (evitar erro 500 / re-update em chamadas repetidas).
-- **B-3 (SSRF):** validar o domínio de `audio_url` antes de baixar (hoje mitigado pelo webhook protegido, mas vale a barreira extra).
-
-**Boa prática / LGPD (quando escalar):**
-- **M-4 / A-3:** números de WhatsApp e payloads brutos ficam em texto no banco (`mensagens_whatsapp.payload_bruto`, `cliente_whatsapp`). Definir retenção (ex.: 90 dias) e limpeza.
-- **M-1:** `/health` é público e expõe métricas operacionais. Aceitável no piloto; restringir por IP/token ao escalar.
-- **B-2:** avisar/abortar se `KLINK_DEV_MODE` estiver ligado em produção.
+Nada que bloqueie os primeiros clientes — itens de maturidade para quando houver volume:
+- **M-4 / A-3 (LGPD):** números de WhatsApp e payloads brutos ficam em texto no banco
+  (`mensagens_whatsapp.payload_bruto`, `cliente_whatsapp`). Definir retenção (ex.: 90
+  dias) e rotina de limpeza/anonimização.
+- **M-1:** `/health` é público e expõe métricas operacionais. Aceitável no piloto;
+  restringir por IP/token ao escalar.
 
 ---
 
