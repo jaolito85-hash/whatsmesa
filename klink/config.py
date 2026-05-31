@@ -36,6 +36,7 @@ class Settings:
     admin_token: str
     dashboard_user: str
     dashboard_password: str
+    webhook_secret: str = ""
     max_audio_seconds: int = 35
     evolution_daily_limit: int = 200
     require_table_validation: bool = False
@@ -98,6 +99,7 @@ def get_settings() -> Settings:
         admin_token=os.getenv("KLINK_ADMIN_TOKEN", ""),
         dashboard_user=os.getenv("KLINK_DASHBOARD_USER", "admin"),
         dashboard_password=os.getenv("KLINK_DASHBOARD_PASSWORD", ""),
+        webhook_secret=os.getenv("KLINK_WEBHOOK_SECRET", ""),
         evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
         require_table_validation=_bool_env("KLINK_REQUIRE_TABLE_VALIDATION", False),
         session_idle_ttl_hours=_int_env("KLINK_SESSION_IDLE_TTL_HOURS", 6),

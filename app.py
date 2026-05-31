@@ -21,6 +21,11 @@ from klink.whatsapp_adapter import WhatsAppAdapter
 def create_app() -> Flask:
     app = Flask(__name__)
     settings = get_settings()
+    if not settings.dev_mode and not settings.dashboard_password:
+        app.logger.warning(
+            "ATENCAO: KLINK_DASHBOARD_PASSWORD nao configurada. O painel esta SEM "
+            "senha (aberto a qualquer um). Configure a senha antes de usar em producao."
+        )
     db = Database(settings.database_path)
     db.init_schema()
     db.migrate_legacy_data()
@@ -300,14 +305,38 @@ def create_app() -> Flask:
 
     @app.post("/api/demo/message")
     def demo_message():
+        # Simulador de mensagens: tem os mesmos efeitos de negocio de uma mensagem
+        # real (abre mesa, gera cobranca). So pode existir em desenvolvimento.
+        if not settings.dev_mode:
+            abort(403)
         payload = request.get_json(force=True)
         inbound = whatsapp.normalize_evolution_payload(payload)
         result = process_inbound(inbound)
         return jsonify(result)
 
+    def _webhook_authorized(token_from_path: str | None) -> bool:
+        # Se KLINK_WEBHOOK_SECRET estiver configurado, exige o segredo (no path, na
+        # query ?token=, ou no header X-Webhook-Token) para aceitar o webhook. Isso
+        # impede que terceiros forjem mensagens (pedidos/cobrancas falsas). Sem segredo
+        # configurado, mantem o comportamento aberto (apenas para dev/testes).
+        secret = settings.webhook_secret
+        if not secret:
+            return True
+        provided = (
+            token_from_path
+            or request.args.get("token")
+            or request.headers.get("X-Webhook-Token")
+            or ""
+        )
+        return bool(provided) and hmac.compare_digest(provided, secret)
+
     @app.post("/webhook")
     @app.post("/webhook/evolution")
-    def webhook_evolution():
+    @app.post("/webhook/<webhook_token>")
+    @app.post("/webhook/evolution/<webhook_token>")
+    def webhook_evolution(webhook_token: str | None = None):
+        if not _webhook_authorized(webhook_token):
+            abort(403)
         payload = request.get_json(force=True)
         inbound = whatsapp.normalize_evolution_payload(payload)
         result = process_inbound(inbound)
@@ -410,5 +439,5 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
 

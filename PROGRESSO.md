@@ -67,6 +67,26 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 31/05/2026 — Auditoria de segurança + webhook blindado
+- Rodei uma auditoria de segurança completa antes de ligar pra valer. Achei **3 buracos
+  críticos** e **corrigi todos**:
+  1. **O webhook estava aberto** — qualquer um na internet podia forjar pedidos e gerar
+     cobrança falsa no bar. Agora ele exige um **segredo** (`KLINK_WEBHOOK_SECRET`) pra
+     aceitar mensagem. Sem o segredo certo, ignora. 🛡️
+  2. O "simulador de mensagens" (usado só em teste) ficava acessível — **bloqueei em
+     produção**.
+  3. Desliguei um modo de debug perigoso e botei um **aviso forte** se alguém esquecer
+     de configurar a senha do painel.
+- Confirmei o que já estava bom: **nada de senha/chave vaza pro navegador** e a
+  **cobrança não duplica**.
+- O resto dos achados (menores) ficou anotado em ordem de prioridade no novo
+  **`SEGURANCA.md`**.
+- **Sobre trocar a API do WhatsApp:** por enquanto seguimos com a **Evolution** (barata e
+  rápida) com o webhook já blindado. **Antes de escalar pra muitos bares**, vale migrar
+  pra **API oficial da Meta** (não corre risco de o número ser banido). Detalhes no
+  `SEGURANCA.md`.
+- **351 testes passando** (8 novos só de segurança).
+
 ### 31/05/2026 — Decisão de arquitetura: como atender vários restaurantes
 - Auditei a segurança do site: **nada de senha ou chave de API fica no navegador**
   (tudo no servidor). O painel fica atrás de senha. ✅
