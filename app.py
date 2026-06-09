@@ -203,6 +203,7 @@ def create_app() -> Flask:
                     ), 400
             else:
                 equipe = "".join(ch for ch in equipe if ch.isdigit())
+        was_demo = restaurant.get("slug") == DEMO_SLUG
         db.update_restaurant(
             restaurant["id"],
             nome=nome,
@@ -210,6 +211,11 @@ def create_app() -> Flask:
             whatsapp_equipe=equipe,
         )
         updated = table_sessions.restaurant()
+        # Onboarding de cliente REAL (saiu do estado demo): a trava dos R$ 147
+        # passa a valer — a conta volta para 'aguardando_setup' até o Pix cair
+        # e o /admin/billing/setup-paid registrar o pagamento de verdade.
+        if was_demo and updated.get("slug") != DEMO_SLUG:
+            billing.require_setup_if_unpaid(restaurant["id"])
         return jsonify({"ok": True, "restaurant": updated, "bot_phone": qr.bot_phone()})
 
     @app.get("/cardapio")

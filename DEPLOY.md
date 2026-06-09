@@ -104,8 +104,15 @@ curl -X POST https://<cliente>.klinkai.com.br/webhook/evolution/<KLINK_WEBHOOK_S
 
 ## Passo 8 — Cadastrar o restaurante e imprimir os QRs
 1. Acesse `https://<cliente>.klinkai.com.br/dashboard` (login: admin + senha).
-2. **Configurações** → nome do restaurante + número do WhatsApp → **Salvar**.
-3. **QR codes** → **Imprimir** → recorte e cole nas mesas.
+2. **Configurações** → nome do restaurante + número do WhatsApp + **WhatsApp da
+   equipe** (celular da cozinha ou grupo) → **Salvar**.
+3. **QR codes** → "Meu salão tem N mesas" → **Imprimir** → recorte e cole nas mesas.
+
+> ⚠️ **Trava do setup:** ao salvar o nome real (sair do modo demo), a conta volta
+> para *aguardando setup* e o bot responde "Estamos ajustando algo aqui" até você
+> rodar o `setup-paid` do Passo 9. É proposital: cliente real só usa depois que os
+> R$ 147 caírem. Por isso, **faça o Passo 9 antes do teste do item 4.**
+
 4. Teste: mande `Mesa 1` do WhatsApp para o número do bot; valide a mesa no painel.
 
 ## Passo 9 — Cobrança (setup R$ 147 + fatura mensal)

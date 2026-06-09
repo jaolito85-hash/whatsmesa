@@ -17,6 +17,20 @@ ACCOUNT_STATUSES = ("aguardando_setup", "ativo", "suspenso", "cancelado")
 _CENTS = Decimal("0.01")
 
 
+def _billing_timezone():
+    # O "mês" da fatura vira à meia-noite de Brasília, não às 21h (que era a
+    # virada do mês em UTC) — evita mesa de fim de mês cair na fatura errada.
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo("America/Sao_Paulo")
+    except Exception:  # pragma: no cover - sem tzdata instalado
+        return timezone.utc
+
+
+BILLING_TZ = _billing_timezone()
+
+
 def money_round(value: Any) -> float:
     # Arredonda um valor monetario para 2 casas (centavos), meio-para-cima.
     # Evita exibir/gravar restos de ponto flutuante (ex.: 396.9999999999994).
@@ -31,7 +45,7 @@ def money_sum(values: Iterable[Any]) -> float:
 
 
 def current_period() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m")
+    return datetime.now(BILLING_TZ).strftime("%Y-%m")
 
 
 class BillingService:
@@ -101,6 +115,37 @@ class BillingService:
                     now,
                 ),
             )
+        return self.account_for_restaurant(restaurante_id)
+
+    def require_setup_if_unpaid(self, restaurante_id: str) -> dict[str, Any]:
+        """Volta a conta para 'aguardando_setup' se os R$ 147 nunca foram
+        registrados de verdade (nenhum evento 'setup' no histórico).
+
+        A conta da demonstração nasce 'ativa' para o teste funcionar de
+        primeira. Quando o restaurante deixa de ser demo (ganha nome real no
+        onboarding), esta trava entra: o bot só atende depois do
+        /admin/billing/setup-paid — que registra o evento e entra na fatura.
+        Cliente que já pagou (evento existe) não é afetado por renomes futuros.
+        """
+        account = self.account_for_restaurant(restaurante_id)
+        setup_event = self.db.fetchone(
+            """
+            select id from billing_events
+            where billing_account_id = ? and tipo = 'setup'
+            limit 1
+            """,
+            (account["id"],),
+        )
+        if setup_event:
+            return account
+        self.db.execute(
+            """
+            update billing_accounts
+            set status = 'aguardando_setup', setup_fee_paid_em = null
+            where id = ?
+            """,
+            (account["id"],),
+        )
         return self.account_for_restaurant(restaurante_id)
 
     def suspend(self, restaurante_id: str) -> dict[str, Any]:
@@ -219,12 +264,16 @@ class BillingService:
         if existing:
             return existing
 
+        # "<= periodo" (e não "="): varre também eventos PENDENTES de meses
+        # anteriores — ex.: mesa aberta depois que a fatura daquele mês já
+        # tinha sido gerada. Sem isso, esses eventos ficavam 'pendente' para
+        # sempre e nunca eram cobrados.
         events = self.db.fetchall(
             """
             select id, tipo, valor
             from billing_events
             where billing_account_id = ?
-              and periodo_ano_mes = ?
+              and periodo_ano_mes <= ?
               and status_cobranca = 'pendente'
             """,
             (account["id"], periodo),

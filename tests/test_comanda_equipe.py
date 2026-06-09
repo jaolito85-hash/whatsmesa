@@ -103,6 +103,7 @@ class ComandaEquipeE2ETest(unittest.TestCase):
         "KLINK_DASHBOARD_PASSWORD",
         "KLINK_WEBHOOK_SECRET",
         "KLINK_DEV_MODE",
+        "KLINK_ADMIN_TOKEN",
         "EVOLUTION_API_URL",
         "EVOLUTION_API_KEY",
         "EVOLUTION_INSTANCE",
@@ -119,6 +120,7 @@ class ComandaEquipeE2ETest(unittest.TestCase):
             "KLINK_DASHBOARD_PASSWORD": "",
             "KLINK_WEBHOOK_SECRET": None,
             "KLINK_DEV_MODE": None,
+            "KLINK_ADMIN_TOKEN": "token-teste",
             "EVOLUTION_API_URL": "http://evolution.local",
             "EVOLUTION_API_KEY": "chave-teste",
             "EVOLUTION_INSTANCE": "instancia-teste",
@@ -135,6 +137,16 @@ class ComandaEquipeE2ETest(unittest.TestCase):
 
         importlib.reload(app_module)
         self.client = app_module.app.test_client()
+
+    def _configurar_e_ativar(self, payload: dict):
+        # Fluxo real de onboarding: cadastrar o nome tira o restaurante do modo
+        # demo e trava a conta em 'aguardando_setup'; o setup-paid reativa.
+        self.client.post("/api/restaurant", json=payload)
+        self.client.post(
+            "/admin/billing/setup-paid",
+            json={},
+            headers={"X-Admin-Token": "token-teste"},
+        )
 
     def tearDown(self):
         for key, value in self._prev_env.items():
@@ -158,9 +170,8 @@ class ComandaEquipeE2ETest(unittest.TestCase):
         )
 
     def test_pedido_confirmado_chega_no_whatsapp_da_equipe(self):
-        self.client.post(
-            "/api/restaurant",
-            json={"nome": "Bar do Zé", "whatsapp_equipe": "55 11 98888-7777"},
+        self._configurar_e_ativar(
+            {"nome": "Bar do Zé", "whatsapp_equipe": "55 11 98888-7777"}
         )
 
         sends: list[dict] = []
@@ -197,9 +208,8 @@ class ComandaEquipeE2ETest(unittest.TestCase):
             self.assertEqual(send["number"], "5511900000030@s.whatsapp.net")
 
     def test_falha_no_envio_da_comanda_nao_quebra_resposta_ao_cliente(self):
-        self.client.post(
-            "/api/restaurant",
-            json={"nome": "Bar do Zé", "whatsapp_equipe": "5511988887777"},
+        self._configurar_e_ativar(
+            {"nome": "Bar do Zé", "whatsapp_equipe": "5511988887777"}
         )
 
         def fake_urlopen(request, timeout=None):
@@ -230,6 +240,11 @@ class ComandaEquipeE2ETest(unittest.TestCase):
         client.post(
             "/api/restaurant",
             json={"nome": "Bar do Zé", "whatsapp_equipe": "5511988887777"},
+        )
+        client.post(
+            "/admin/billing/setup-paid",
+            json={},
+            headers={"X-Admin-Token": "token-teste"},
         )
 
         sends: list[dict] = []
