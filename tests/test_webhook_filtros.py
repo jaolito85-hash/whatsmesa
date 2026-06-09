@@ -130,6 +130,22 @@ class WebhookFiltrosTest(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.get_json()["action"], "group_ignored")
 
+    def test_lista_de_transmissao_e_descartada(self):
+        r = self.client.post(
+            "/webhook",
+            json=_payload(remote_jid="123456789@broadcast"),
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["action"], "group_ignored")
+
+    def test_canal_newsletter_e_descartado(self):
+        r = self.client.post(
+            "/webhook",
+            json=_payload(remote_jid="120363166555@newsletter"),
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["action"], "group_ignored")
+
 
 if __name__ == "__main__":
     unittest.main()

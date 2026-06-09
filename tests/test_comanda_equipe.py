@@ -216,6 +216,51 @@ class ComandaEquipeE2ETest(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.get_json()["action"], "order_confirmed")
 
+    def test_simulador_do_painel_nao_dispara_comanda_real(self):
+        # O /api/demo/message (dev) simula o cliente, mas NÃO pode enviar
+        # WhatsApp de verdade — nem comanda pra equipe, nem resposta.
+        os.environ["KLINK_DEV_MODE"] = "1"
+        from klink import config as config_module
+
+        importlib.reload(config_module)
+        import app as app_module
+
+        importlib.reload(app_module)
+        client = app_module.app.test_client()
+        client.post(
+            "/api/restaurant",
+            json={"nome": "Bar do Zé", "whatsapp_equipe": "5511988887777"},
+        )
+
+        sends: list[dict] = []
+
+        def fake_urlopen(request, timeout=None):
+            sends.append(json.loads(request.data.decode("utf-8")))
+            return _FakeResponse()
+
+        def demo(text, message_id):
+            return client.post(
+                "/api/demo/message",
+                json={"remote_jid": "5511900000031", "text": text, "message_id": message_id},
+            )
+
+        with mock.patch("klink.whatsapp_adapter.urllib.request.urlopen", fake_urlopen):
+            demo("Mesa 5", "msg-demo-1")
+            demo("uma corona", "msg-demo-2")
+            r = demo("1", "msg-demo-3")
+
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(sends, [], "simulador não deveria enviar WhatsApp real")
+
+    def test_whatsapp_equipe_invalido_e_rejeitado(self):
+        for invalido in ("@g.us", "abc@def.com", "http://x.com/a@g.us", "123@gus"):
+            r = self.client.post(
+                "/api/restaurant",
+                json={"nome": "Bar do Zé", "whatsapp_equipe": invalido},
+            )
+            self.assertEqual(r.status_code, 400, f"{invalido!r} deveria ser rejeitado")
+            self.assertEqual(r.get_json()["reason"], "whatsapp_equipe_invalido")
+
     def test_api_restaurant_preserva_id_de_grupo(self):
         self.client.post(
             "/api/restaurant",

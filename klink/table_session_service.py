@@ -248,17 +248,29 @@ class TableSessionService:
                 (new_token, session["mesa_id"]),
             )
 
-    def has_active_sessions(self, mesa_id: str) -> bool:
+    def deactivate_table(self, mesa_id: str) -> bool:
+        """Tira a mesa do salão (soft delete), só se não houver comanda aberta.
+
+        A checagem e o update acontecem num único SQL: entre um "if" separado e
+        o update, o webhook (outra thread) poderia abrir sessão na mesa — e a
+        mesa sumiria do painel com cliente pedindo nela. Devolve False quando a
+        mesa está em uso (ou não existe ativa).
+        """
         placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
-        row = self.db.fetchone(
-            f"""
-            select id from sessoes_mesa
-            where mesa_id = ? and status in ({placeholders})
-            limit 1
-            """,
-            (mesa_id, *ACTIVE_SESSION_STATUSES),
-        )
-        return row is not None
+        with self.db.transaction() as conn:
+            cursor = conn.execute(
+                f"""
+                update mesas
+                set ativa = 0, status = 'mesa_livre'
+                where id = ? and ativa = 1
+                  and not exists (
+                    select 1 from sessoes_mesa s
+                    where s.mesa_id = mesas.id and s.status in ({placeholders})
+                  )
+                """,
+                (mesa_id, *ACTIVE_SESSION_STATUSES),
+            )
+            return cursor.rowcount > 0
 
     def close_table(self, mesa_id: str) -> int:
         """Fecha TODAS as sessões ativas da mesa e a libera no painel.

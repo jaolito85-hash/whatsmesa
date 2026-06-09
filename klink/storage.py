@@ -372,7 +372,7 @@ class Database:
         com esse número. Reativar mantém o id antigo, então um QR impresso da
         mesa volta a funcionar.
         """
-        nome_final = (nome or "").strip() or f"Mesa {numero}"
+        nome_limpo = (nome or "").strip()
         existing = self.fetchone(
             "select id, ativa from mesas where restaurante_id = ? and unidade_id = ? and numero = ?",
             (restaurante_id, unidade_id, numero),
@@ -380,36 +380,45 @@ class Database:
         if existing and existing["ativa"]:
             return None
         if existing:
+            # Reativação preserva o nome antigo ("Varanda 3") a menos que um nome
+            # novo tenha sido informado explicitamente.
             self.execute(
                 """
                 update mesas
-                set ativa = 1, nome = ?, status = 'mesa_livre', qr_token_atual = ?
+                set ativa = 1, nome = coalesce(nullif(?, ''), nome),
+                    status = 'mesa_livre', qr_token_atual = ?
                 where id = ?
                 """,
-                (nome_final, new_id(), existing["id"]),
+                (nome_limpo, new_id(), existing["id"]),
             )
             return existing["id"]
         mesa_id = new_id()
-        self.execute(
-            """
-            insert into mesas (
-              id, restaurante_id, unidade_id, numero, nome,
-              status, qr_token_atual, ativa
-            ) values (?, ?, ?, ?, ?, 'mesa_livre', ?, 1)
-            """,
-            (mesa_id, restaurante_id, unidade_id, numero, nome_final, new_id()),
-        )
+        try:
+            self.execute(
+                """
+                insert into mesas (
+                  id, restaurante_id, unidade_id, numero, nome,
+                  status, qr_token_atual, ativa
+                ) values (?, ?, ?, ?, ?, 'mesa_livre', ?, 1)
+                """,
+                (
+                    mesa_id,
+                    restaurante_id,
+                    unidade_id,
+                    numero,
+                    nome_limpo or f"Mesa {numero}",
+                    new_id(),
+                ),
+            )
+        except sqlite3.IntegrityError:
+            # Corrida (duplo clique): outra requisição criou a mesma mesa entre o
+            # select e o insert. A constraint unique protege; tratamos como
+            # "já existe" em vez de estourar 500.
+            return None
         return mesa_id
 
     def rename_table(self, mesa_id: str, nome: str) -> None:
         self.execute("update mesas set nome = ? where id = ?", (nome.strip(), mesa_id))
-
-    def deactivate_table(self, mesa_id: str) -> None:
-        # Soft delete: a mesa sai do salão sem apagar o histórico de pedidos.
-        self.execute(
-            "update mesas set ativa = 0, status = 'mesa_livre' where id = ?",
-            (mesa_id,),
-        )
 
     # ----- Cardápio (produtos + apelidos) -----
 

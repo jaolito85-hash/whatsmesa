@@ -129,6 +129,16 @@ class CadastroMesasTest(unittest.TestCase):
         qr = self.client.get(f"/qr/{mesa['id']}")
         self.assertEqual(qr.status_code, 302)
 
+    def test_reativar_em_lote_preserva_nome_customizado(self):
+        # Dono renomeou a mesa, removeu temporariamente e recriou em lote:
+        # o nome ("Varanda") não pode voltar como "Mesa 9".
+        mesa = next(t for t in self._tables() if t["numero"] == 9)
+        self.client.post(f"/api/tables/{mesa['id']}/rename", json={"nome": "Varanda"})
+        self.client.post(f"/api/tables/{mesa['id']}/deactivate")
+        self.client.post("/api/tables", json={"ate_numero": 12})
+        reativada = next(t for t in self._tables() if t["numero"] == 9)
+        self.assertEqual(reativada["nome"], "Varanda")
+
     def test_mesa_removida_nao_abre_pelo_chat(self):
         mesa = next(t for t in self._tables() if t["numero"] == 10)
         self.client.post(f"/api/tables/{mesa['id']}/deactivate")

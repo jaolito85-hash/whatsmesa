@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hmac
 import os
+import re
 
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
 
@@ -169,9 +170,19 @@ def create_app() -> Flask:
         equipe = None
         if equipe_raw is not None:
             equipe = str(equipe_raw).strip()
-            # Grupo do WhatsApp tem id no formato 1234...@g.us — preserva como
-            # veio; número comum fica só com dígitos.
-            if "@" not in equipe:
+            # Grupo do WhatsApp tem id no formato 1234...@g.us — só esse formato
+            # passa com "@"; número comum fica só com dígitos. Qualquer outra
+            # coisa é rejeitada para não virar destino de envio inválido.
+            if "@" in equipe:
+                if not re.fullmatch(r"\d+@g\.us", equipe):
+                    return jsonify(
+                        {
+                            "ok": False,
+                            "reason": "whatsapp_equipe_invalido",
+                            "message": "Use só números (5511...) ou o id de um grupo (...@g.us).",
+                        }
+                    ), 400
+            else:
                 equipe = "".join(ch for ch in equipe if ch.isdigit())
         db.update_restaurant(
             restaurant["id"],
@@ -415,7 +426,7 @@ def create_app() -> Flask:
         table = table_sessions.table_by_id(mesa_id)
         if not table:
             return jsonify({"ok": False, "reason": "nao_encontrada"}), 404
-        if table_sessions.has_active_sessions(mesa_id):
+        if not table_sessions.deactivate_table(mesa_id):
             return jsonify(
                 {
                     "ok": False,
@@ -423,7 +434,6 @@ def create_app() -> Flask:
                     "message": "Essa mesa tem comanda aberta. Feche a mesa antes de removê-la.",
                 }
             ), 409
-        db.deactivate_table(mesa_id)
         return jsonify({"ok": True})
 
     @app.post("/api/tables/<mesa_id>/close")
@@ -500,15 +510,18 @@ def create_app() -> Flask:
         handle = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         handle.close()
         tmp_path = Path(handle.name)
-        source = sqlite3_module.connect(settings.database_path)
-        target = sqlite3_module.connect(tmp_path)
         try:
-            source.backup(target)
+            source = sqlite3_module.connect(settings.database_path)
+            target = sqlite3_module.connect(tmp_path)
+            try:
+                source.backup(target)
+            finally:
+                target.close()
+                source.close()
+            data = tmp_path.read_bytes()
         finally:
-            target.close()
-            source.close()
-        data = tmp_path.read_bytes()
-        tmp_path.unlink(missing_ok=True)
+            # Mesmo se algo falhar, a cópia temporária do banco não fica pra trás.
+            tmp_path.unlink(missing_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         return Response(
             data,
@@ -606,6 +619,9 @@ def create_app() -> Flask:
         payload = request.get_json(force=True)
         inbound = whatsapp.normalize_evolution_payload(payload)
         result = process_inbound(inbound)
+        # A comanda pra equipe sai SÓ do webhook real — o simulador do painel
+        # (/api/demo/message) não deve disparar WhatsApp de verdade.
+        notify_team(result)
         if result.get("reply") and inbound.remote_jid:
             try:
                 send_result = whatsapp.send_message(inbound.remote_jid, result["reply"])
@@ -646,10 +662,12 @@ def create_app() -> Flask:
             return {"reply": "", "action": "event_ignored"}
         if not inbound.remote_jid:
             return {"reply": "Mensagem sem numero de origem.", "action": "invalid_sender"}
-        # Grupos e listas de transmissão não são mesa de cliente. Sem este filtro,
-        # qualquer conversa num grupo (ex.: o grupo da cozinha) viraria "cliente"
-        # e o bot responderia no meio da equipe.
-        if inbound.remote_jid.endswith("@g.us") or inbound.remote_jid.startswith("status@"):
+        # Grupos, listas de transmissão e canais não são mesa de cliente. Sem este
+        # filtro, qualquer conversa num grupo (ex.: o grupo da cozinha) viraria
+        # "cliente" e o bot responderia no meio da equipe.
+        if inbound.remote_jid.endswith(
+            ("@g.us", "@broadcast", "@newsletter")
+        ) or inbound.remote_jid.startswith("status@"):
             return {"reply": "", "action": "group_ignored"}
 
         if db.message_exists(inbound.message_id):
@@ -709,7 +727,6 @@ def create_app() -> Flask:
             mesa_id=session.get("mesa_id"),
             sessao_mesa_id=session.get("id"),
         )
-        notify_team(result)
         return result
 
     def notify_team(result: dict) -> None:
