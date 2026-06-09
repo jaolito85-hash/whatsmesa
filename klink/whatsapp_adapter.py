@@ -20,6 +20,14 @@ class InboundMessage:
     audio_mimetype: str | None
     duration_seconds: int | None
     payload: dict[str, Any]
+    # Mensagem enviada pelo PRÓPRIO bot (key.fromMe). Precisa ser descartada no
+    # webhook: sem isso, a resposta do bot volta como se fosse o cliente falando
+    # e o bot responde a si mesmo em loop infinito — rajada de mensagens que o
+    # WhatsApp pune com banimento do número.
+    from_me: bool = False
+    # Nome do evento Evolution normalizado (ex.: "messages.upsert"). Vazio quando
+    # o payload não traz o campo (simulador/testes).
+    event: str = ""
 
 
 class WhatsAppAdapter:
@@ -52,6 +60,8 @@ class WhatsAppAdapter:
         has_audio = bool(audio_url or audio_base64 or audio.get("mediaKey"))
         tipo = "audio" if has_audio and not text else "texto"
 
+        event = str(payload.get("event") or "").strip().lower().replace("_", ".")
+
         return InboundMessage(
             message_id=key.get("id") or data.get("message_id") or payload.get("message_id") or uuid4().hex,
             remote_jid=key.get("remoteJid") or data.get("remote_jid") or payload.get("remote_jid") or "",
@@ -62,6 +72,8 @@ class WhatsAppAdapter:
             audio_mimetype=audio_mimetype,
             duration_seconds=int(duration) if duration else None,
             payload=payload,
+            from_me=bool(key.get("fromMe")),
+            event=event,
         )
 
     def send_message(self, remote_jid: str, text: str) -> dict[str, Any]:

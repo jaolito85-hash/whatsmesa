@@ -447,8 +447,21 @@ def create_app() -> Flask:
         return jsonify({"ok": True, "action": result.get("action")})
 
     def process_inbound(inbound):
+        # Mensagem enviada pelo próprio bot ecoada de volta pela Evolution: descartar
+        # SEMPRE, senão o bot responde a si mesmo em loop infinito (= banimento).
+        if inbound.from_me:
+            return {"reply": "", "action": "from_me_ignored"}
+        # Evento que não é mensagem recebida (ex.: connection.update, qrcode.updated):
+        # não há o que responder. Payload sem campo "event" (simulador/testes) passa.
+        if inbound.event and inbound.event != "messages.upsert":
+            return {"reply": "", "action": "event_ignored"}
         if not inbound.remote_jid:
             return {"reply": "Mensagem sem numero de origem.", "action": "invalid_sender"}
+        # Grupos e listas de transmissão não são mesa de cliente. Sem este filtro,
+        # qualquer conversa num grupo (ex.: o grupo da cozinha) viraria "cliente"
+        # e o bot responderia no meio da equipe.
+        if inbound.remote_jid.endswith("@g.us") or inbound.remote_jid.startswith("status@"):
+            return {"reply": "", "action": "group_ignored"}
 
         if db.message_exists(inbound.message_id):
             return {"reply": "", "action": "duplicate_ignored"}
