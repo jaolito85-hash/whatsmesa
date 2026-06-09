@@ -193,6 +193,7 @@ create table if not exists billing_events (
   tipo text not null,
   pedido_id text references pedidos(id) on delete set null,
   sessao_mesa_id text references sessoes_mesa(id) on delete set null,
+  mesa_giro text,
   valor real not null,
   moeda text not null default 'BRL',
   periodo_ano_mes text not null,
@@ -277,6 +278,10 @@ class Database:
         cols_events = {row[1] for row in conn.execute("pragma table_info(billing_events)").fetchall()}
         if "sessao_mesa_id" not in cols_events:
             conn.execute("alter table billing_events add column sessao_mesa_id text references sessoes_mesa(id) on delete set null")
+        if "mesa_giro" not in cols_events:
+            # Identificador do "giro" da mesa (mesa_id:token). Garante UMA cobrança
+            # por ocupação física da mesa, mesmo com vários celulares pedindo nela.
+            conn.execute("alter table billing_events add column mesa_giro text")
         
         # Criar indices que dependem das colunas migradas
         try:
@@ -291,6 +296,11 @@ class Database:
             
         try:
             conn.execute("create unique index if not exists billing_events_sessao_unq on billing_events(sessao_mesa_id) where sessao_mesa_id is not null and tipo = 'mesa_aberta'")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("create unique index if not exists billing_events_giro_unq on billing_events(mesa_giro) where mesa_giro is not null and tipo = 'mesa_aberta'")
         except sqlite3.OperationalError:
             pass
 

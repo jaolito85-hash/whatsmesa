@@ -148,6 +148,7 @@ class TableSessionService:
             self.billing.record_session_billing(
                 restaurante_id=table["restaurante_id"],
                 sessao_id=session_id,
+                mesa_id=table["id"],
             )
 
         return self.active_session_for_whatsapp(remote_jid)
@@ -186,6 +187,7 @@ class TableSessionService:
             self.billing.record_session_billing(
                 restaurante_id=session["restaurante_id"],
                 sessao_id=session_id,
+                mesa_id=session["mesa_id"],
             )
 
         return self.db.fetchone(
@@ -207,15 +209,27 @@ class TableSessionService:
             return
         now = utc_now()
         new_token = new_id()
+        placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
         with self.db.transaction() as conn:
             conn.execute(
                 "update sessoes_mesa set status = 'sessao_recusada', fechada_em = ? where id = ?",
                 (now, session_id),
             )
-            conn.execute(
-                "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
-                (new_token, session["mesa_id"]),
-            )
+            # Recusar um celular não pode liberar a mesa se outra sessão (de
+            # outro celular) continua ativa nela.
+            remaining = conn.execute(
+                f"""
+                select 1 from sessoes_mesa
+                where mesa_id = ? and id != ? and status in ({placeholders})
+                limit 1
+                """,
+                (session["mesa_id"], session_id, *ACTIVE_SESSION_STATUSES),
+            ).fetchone()
+            if not remaining:
+                conn.execute(
+                    "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
+                    (new_token, session["mesa_id"]),
+                )
 
     def list_tables(self) -> list[dict[str, Any]]:
         return self.db.fetchall(
@@ -238,15 +252,28 @@ class TableSessionService:
             return
         now = utc_now()
         new_token = new_id()
+        placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
         with self.db.transaction() as conn:
             conn.execute(
                 "update sessoes_mesa set status = 'sessao_fechada', fechada_em = ? where id = ?",
                 (now, session_id),
             )
-            conn.execute(
-                "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
-                (new_token, session["mesa_id"]),
-            )
+            # A mesa só fica livre (e o token do giro só rotaciona) quando a
+            # ÚLTIMA sessão dela fecha. Antes, o primeiro amigo que fechava a
+            # conta marcava a mesa como livre com os outros ainda pedindo nela.
+            remaining = conn.execute(
+                f"""
+                select 1 from sessoes_mesa
+                where mesa_id = ? and id != ? and status in ({placeholders})
+                limit 1
+                """,
+                (session["mesa_id"], session_id, *ACTIVE_SESSION_STATUSES),
+            ).fetchone()
+            if not remaining:
+                conn.execute(
+                    "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
+                    (new_token, session["mesa_id"]),
+                )
 
     def deactivate_table(self, mesa_id: str) -> bool:
         """Tira a mesa do salão (soft delete), só se não houver comanda aberta.

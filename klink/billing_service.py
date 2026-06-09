@@ -126,30 +126,43 @@ class BillingService:
         *,
         restaurante_id: str,
         sessao_id: str,
+        mesa_id: str | None = None,
     ) -> dict[str, Any] | None:
         account = self.account_for_restaurant(restaurante_id)
         if account["status"] != "ativo":
             return None
 
+        # mesa_giro identifica a OCUPAÇÃO FÍSICA da mesa: o qr_token_atual da mesa
+        # rotaciona quando ela fecha, então (mesa_id:token) vale do primeiro celular
+        # que abre até o fechamento. Vários celulares na mesma mesa caem no MESMO
+        # giro => UMA cobrança de R$ 3,97 — exatamente o "por mesa aberta" prometido
+        # na venda (antes, 4 amigos escaneando o QR viravam 4 cobranças).
+        mesa_giro = None
+        if mesa_id:
+            mesa = self.db.fetchone(
+                "select qr_token_atual from mesas where id = ?", (mesa_id,)
+            )
+            if mesa:
+                mesa_giro = f"{mesa_id}:{mesa['qr_token_atual']}"
+
         event_id = new_id()
-        # INSERT OR IGNORE + indice unico parcial (billing_events_sessao_unq, em
-        # sessao_mesa_id where tipo='mesa_aberta') tornam esta operacao atomica e
-        # idempotente: se dois processos/workers tentarem cobrar a MESMA sessao ao
-        # mesmo tempo (ex.: webhook da Evolution entregando a mensagem em duplicata),
-        # apenas um INSERT vence e o outro e ignorado em silencio, sem IntegrityError.
-        # Substitui o antigo check-then-insert, que tinha janela de race => cobranca dupla.
+        # INSERT OR IGNORE + indices unicos parciais (sessao_mesa_id e mesa_giro,
+        # where tipo='mesa_aberta') tornam esta operacao atomica e idempotente:
+        # mensagem duplicada da Evolution OU segundo celular na mesma mesa = o
+        # INSERT e ignorado em silencio, sem IntegrityError e sem cobranca dupla.
         with self.db.transaction() as conn:
             cursor = conn.execute(
                 """
                 insert or ignore into billing_events (
-                   id, billing_account_id, tipo, sessao_mesa_id, valor, moeda,
-                   periodo_ano_mes, status_cobranca, criado_em
-                ) values (?, ?, 'mesa_aberta', ?, ?, ?, ?, 'pendente', ?)
+                   id, billing_account_id, tipo, sessao_mesa_id, mesa_giro, valor,
+                   moeda, periodo_ano_mes, status_cobranca, criado_em
+                ) values (?, ?, 'mesa_aberta', ?, ?, ?, ?, ?, 'pendente', ?)
                 """,
                 (
                     event_id,
                     account["id"],
                     sessao_id,
+                    mesa_giro,
                     account["preco_por_pedido"],
                     account["moeda"],
                     current_period(),
@@ -159,7 +172,8 @@ class BillingService:
             inserted = cursor.rowcount > 0
 
         if not inserted:
-            # Ja existia cobranca para esta sessao: idempotente, nada a cobrar.
+            # Ja existia cobranca para esta sessao ou para este giro da mesa:
+            # idempotente, nada a cobrar.
             return None
         return self.db.fetchone("select * from billing_events where id = ?", (event_id,))
 
