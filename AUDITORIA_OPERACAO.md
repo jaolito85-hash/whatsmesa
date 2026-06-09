@@ -270,12 +270,15 @@ tiver 10+ clientes pedindo.
 6. ✅ ~~Backup que funciona + cópia diária fora da VPS + testar restauração 1 vez~~ **FEITO em 09/06/2026** (falta só você rodar o teste de restauração 1 vez, ver DEPLOY.md).
 
 **Semana seguinte (antes do primeiro cliente pagante):**
-7. Cobrança por mesa física (não por celular) — ou, no mínimo, avisar o preço real.
-8. Total da conta no ticket do caixa + extrato pro cliente no WhatsApp.
-9. Detecção de WhatsApp desconectado + aviso no seu celular + selo honesto no painel.
-10. Monitor de uptime gratuito no `/health` de cada cliente.
-11. Proteção geral de erros (responder "chama um atendente" em vez de silêncio).
-12. Conta de cliente real nasce "aguardando setup" (trava dos R$ 147 de verdade).
+7. ✅ ~~Cobrança por mesa física (não por celular)~~ **FEITO em 09/06/2026** (cobrança por "giro" da mesa).
+8. ✅ ~~Total da conta no ticket do caixa + extrato pro cliente no WhatsApp~~ **FEITO em 09/06/2026.**
+9. ✅ ~~Detecção de WhatsApp desconectado + aviso no seu celular + selo honesto no painel~~ **FEITO em 09/06/2026.**
+10. ✅ ~~Monitor de uptime gratuito no `/health` de cada cliente~~ **FEITO em 09/06/2026** (gancho pronto; criar os monitores é passo seu — ver PRONTO_PARA_PRODUCAO.md).
+11. ✅ ~~Proteção geral de erros (responder "chama um atendente" em vez de silêncio)~~ **FEITO em 09/06/2026.**
+12. ✅ ~~Conta de cliente real nasce "aguardando setup" (trava dos R$ 147 de verdade)~~ **FEITO em 09/06/2026.**
+
+> **Status geral:** os 12 itens das duas primeiras ondas estão prontos. O que você
+> precisa fazer para ligar em produção está em **`PRONTO_PARA_PRODUCAO.md`**.
 
 **Antes de escalar (10+ clientes):**
 13. Migrar para a API oficial da Meta (elimina risco de ban).

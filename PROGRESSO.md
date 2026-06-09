@@ -67,6 +67,32 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 09/06/2026 — Segunda leva: as 8 correções estruturais (todas prontas!)
+A continuação da auditoria, com as mudanças mais profundas:
+1. **Cobrança por mesa física, não por celular** 🏆 — 4 amigos escaneando o QR da
+   mesma mesa agora é UMA cobrança de R$ 3,97 (antes eram 4 — fatura até 4x maior
+   que o prometido). E a mesa só libera quando a última comanda fecha.
+2. **Troca de mesa só explícita** — "a mesa 8 tá livre?" não fecha mais a conta da
+   mesa 5 em silêncio.
+3. **Conta com total** — o caixa vê o valor no ticket e o cliente recebe o extrato
+   itemizado no WhatsApp.
+4. **WhatsApp caído agora grita** — selo honesto na config, banner vermelho no
+   painel e alerta no /health para monitor gratuito avisar o celular do fundador.
+5. **Webhook blindado** — erro inesperado responde "chama um atendente" em vez de
+   silêncio, e mensagem não se perde mais para sempre.
+6. **Trava real dos R$ 147** — cliente real só usa depois do setup pago (e as mesas
+   de teste da demo viram cortesia, fora da fatura). Fatura sem buracos e mês
+   virando no fuso de Brasília.
+7. **Painel vivo** — bip de campainha em comanda nova, tarja "SEM CONEXÃO" quando o
+   wi-fi cai, e botão pro garçom destravar rascunho de cliente que não respondeu "1".
+8. **Bot melhor** — responde o cardápio com preços (3 idiomas), teto anti-trote de
+   30 unidades por item, e texto honesto pós-confirmação.
+- Tudo passou por **nova revisão dupla** (segurança + caça-bugs): 3 bugs achados e
+  corrigidos na hora (o pior: a primeira fatura cobraria os testes da demo).
+- **458 testes passando** (eram 367 de manhã). 17 commits no dia.
+- **➡️ O passo a passo do que falta fazer (deploy, monitores, backup) está no novo
+  `PRONTO_PARA_PRODUCAO.md`.**
+
 ### 09/06/2026 — As 6 correções urgentes da auditoria (todas prontas!)
 Implementei os 6 itens do "antes de QUALQUER venda" do plano da auditoria:
 1. **Filtro anti-loop no WhatsApp** — o bot não responde mais a si mesmo (era o
