@@ -111,6 +111,23 @@ def create_app() -> Flask:
 
     PUBLIC_PATHS = ("/", "/health", "/webhook", "/qr/", "/static/")
 
+    def whatsapp_status() -> dict:
+        """Situação REAL do WhatsApp, três estados honestos:
+
+        - configured: as variáveis da Evolution estão preenchidas;
+        - state: último estado reportado pela Evolution (open/connecting/close)
+          ou "desconhecido" se o evento CONNECTION_UPDATE nunca chegou;
+        - connected: True só quando o estado reportado é "open".
+        """
+        estado = db.get_estado("whatsapp_connection_state")
+        state = (estado or {}).get("valor") or "desconhecido"
+        return {
+            "configured": settings.has_evolution,
+            "state": state,
+            "state_at": (estado or {}).get("atualizado_em"),
+            "connected": settings.has_evolution and state == "open",
+        }
+
     @app.before_request
     def enforce_dashboard_auth():
         if not settings.dashboard_auth_enabled:
@@ -154,7 +171,7 @@ def create_app() -> Flask:
             restaurant=restaurant,
             is_demo=restaurant.get("slug") == DEMO_SLUG,
             bot_phone=qr.bot_phone(),
-            whatsapp_connected=settings.has_evolution,
+            whatsapp=whatsapp_status(),
         )
 
     @app.post("/api/restaurant")
@@ -289,12 +306,24 @@ def create_app() -> Flask:
         sends_today = db.count_whatsapp_sends_today()
         limit = settings.evolution_daily_limit or 0
         usage_pct = round((sends_today / limit) * 100, 1) if limit > 0 else None
+        wa = whatsapp_status()
+        # "alerts" é o gancho para monitor externo (UptimeRobot etc.): basta
+        # vigiar a palavra-chave "whatsapp_desconectado" no corpo da resposta.
+        alerts = []
+        if wa["configured"] and wa["state"] in ("close", "connecting"):
+            alerts.append("whatsapp_desconectado")
+        if usage_pct is not None and usage_pct >= 70:
+            alerts.append("limite_diario_de_envios_alto")
         return jsonify(
             {
                 "ok": True,
                 "service": "klink",
+                "alerts": alerts,
                 "whatsapp": {
-                    "configured": settings.has_evolution,
+                    "configured": wa["configured"],
+                    "connection_state": wa["state"],
+                    "connection_state_at": wa["state_at"],
+                    "connected": wa["connected"],
                     "sends_today": sends_today,
                     "daily_limit": limit,
                     "usage_pct": usage_pct,
@@ -311,7 +340,9 @@ def create_app() -> Flask:
 
     @app.get("/api/dashboard")
     def api_dashboard():
-        return jsonify(orders.dashboard())
+        data = orders.dashboard()
+        data["whatsapp"] = whatsapp_status()
+        return jsonify(data)
 
     @app.get("/api/sessions/pending")
     def api_pending_sessions():
@@ -658,8 +689,17 @@ def create_app() -> Flask:
         # SEMPRE, senão o bot responde a si mesmo em loop infinito (= banimento).
         if inbound.from_me:
             return {"reply": "", "action": "from_me_ignored"}
-        # Evento que não é mensagem recebida (ex.: connection.update, qrcode.updated):
-        # não há o que responder. Payload sem campo "event" (simulador/testes) passa.
+        # A Evolution avisa quando a conexão do número muda (open/connecting/close).
+        # Guardamos o estado REAL: é o que deixa o selo da config e o banner do
+        # painel honestos — antes, número banido continuava com selo verde.
+        if inbound.event == "connection.update":
+            data = inbound.payload.get("data") or {}
+            state = str(data.get("state") or data.get("status") or "").strip().lower()
+            if state:
+                db.set_estado("whatsapp_connection_state", state)
+            return {"reply": "", "action": "connection_state_recorded"}
+        # Evento que não é mensagem recebida (ex.: qrcode.updated): não há o que
+        # responder. Payload sem campo "event" (simulador/testes) passa.
         if inbound.event and inbound.event != "messages.upsert":
             return {"reply": "", "action": "event_ignored"}
         if not inbound.remote_jid:

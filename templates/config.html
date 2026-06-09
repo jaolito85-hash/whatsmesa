@@ -275,17 +275,29 @@
         </label>
 
         <div class="status-row">
-          {% if whatsapp_connected %}
-            <span class="status-dot on" aria-hidden="true"></span>
-            <div>
-              <strong>Bot conectado</strong>
-              <span> — o Klink está pronto para receber mensagens.</span>
-            </div>
-          {% else %}
+          {% if not whatsapp.configured %}
             <span class="status-dot off" aria-hidden="true"></span>
             <div>
               <strong>Bot ainda não conectado</strong>
               <span> — a conexão do WhatsApp é feita na configuração técnica do servidor.</span>
+            </div>
+          {% elif whatsapp.connected %}
+            <span class="status-dot on" aria-hidden="true"></span>
+            <div>
+              <strong>Bot conectado</strong>
+              <span> — o WhatsApp confirmou a conexão{% if whatsapp.state_at %} ({{ whatsapp.state_at[:16].replace("T", " ") }} UTC){% endif %}.</span>
+            </div>
+          {% elif whatsapp.state in ("close", "connecting") %}
+            <span class="status-dot off" aria-hidden="true" style="background: var(--tomato)"></span>
+            <div>
+              <strong>⚠️ WhatsApp DESCONECTADO</strong>
+              <span> — os clientes não conseguem pedir. Reconecte a instância na Evolution (leia o QR de pareamento de novo).</span>
+            </div>
+          {% else %}
+            <span class="status-dot off" aria-hidden="true"></span>
+            <div>
+              <strong>Configurado — estado real desconhecido</strong>
+              <span> — assine o evento CONNECTION_UPDATE no webhook da Evolution para este selo refletir a conexão de verdade.</span>
             </div>
           {% endif %}
         </div>

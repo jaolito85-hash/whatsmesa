@@ -74,9 +74,14 @@ automática deixa nome/preço corretos sozinha.
 ## Passo 6 — Conectar a Evolution (webhook COM o segredo)
 Na instância da Evolution, configure o webhook **incluindo o segredo no final da URL**:
 - **URL:** `https://<cliente>.klinkai.com.br/webhook/evolution/<KLINK_WEBHOOK_SECRET>`
-- **Eventos:** `MESSAGES_UPSERT` (ou equivalente).
+- **Eventos:** `MESSAGES_UPSERT` **e** `CONNECTION_UPDATE`.
 
 Sem o segredo certo na URL, o webhook é **rejeitado** (proteção contra pedidos forjados).
+
+> O `CONNECTION_UPDATE` é o que deixa o selo "Bot conectado" do painel **honesto**:
+> se o número cair (banimento, QR expirado), o painel mostra um banner vermelho e o
+> `/health` passa a listar `whatsapp_desconectado` em `alerts`. Sem esse evento, o
+> selo mostra "estado real desconhecido".
 
 ## Passo 7 — Smoke test
 ```bash
@@ -171,6 +176,18 @@ curl -fsS https://<cliente>.klinkai.com.br/admin/backup \
 # 3. Inicie o app e confira o painel (cardápio, mesas e faturas no lugar)
 ```
 > Backup que nunca foi restaurado em teste não é backup — é esperança.
+
+## 📟 Monitoramento (saiba ANTES do dono ligar furioso)
+O pior cenário é o WhatsApp cair às 21h de sexta e ninguém saber. Configure um monitor
+gratuito (UptimeRobot, Better Stack etc.) por cliente — leva 5 minutos:
+
+1. **Monitor de uptime:** tipo HTTP(s), URL `https://<cliente>.klinkai.com.br/health`,
+   intervalo de 1–5 min. Cai o servidor → alerta no seu celular/e-mail.
+2. **Monitor de WhatsApp caído:** tipo "Keyword", mesma URL, palavra-chave
+   **`whatsapp_desconectado`**, alertar **quando a palavra EXISTIR**. O `/health`
+   só inclui essa palavra em `alerts` quando a Evolution reportou queda da conexão.
+3. (Opcional) Palavra-chave `limite_diario_de_envios_alto` — avisa quando os envios
+   do dia passarem de 70% do limite (`EVOLUTION_DAILY_LIMIT`).
 
 ## Problemas comuns
 - **App não sobe / erro no log sobre senha:** falta `KLINK_DASHBOARD_PASSWORD`. Configure.

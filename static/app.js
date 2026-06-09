@@ -150,6 +150,12 @@ function renderDashboard(data) {
       : `<div class="empty">Nenhum rascunho esperando confirmação.</div>`;
   }
 
+  const wa = data.whatsapp;
+  const waBanner = document.getElementById("whatsapp-banner");
+  if (waBanner && wa) {
+    waBanner.hidden = !(wa.configured && (wa.state === "close" || wa.state === "connecting"));
+  }
+
   state.lastCount = total;
 }
 

@@ -91,8 +91,15 @@ class WebhookFiltrosTest(unittest.TestCase):
         self.assertNotEqual(r.get_json()["action"], "from_me_ignored")
 
     # ---- eventos que não são mensagem recebida ----
-    def test_evento_de_conexao_e_descartado(self):
+    def test_evento_de_conexao_vira_registro_de_estado(self):
+        # connection.update não é descartado: ele alimenta o selo honesto de
+        # conexão (ver test_conexao_whatsapp.py). Mas nunca vira resposta.
         r = self.client.post("/webhook", json=_payload(event="connection.update"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["action"], "connection_state_recorded")
+
+    def test_evento_de_presenca_e_descartado(self):
+        r = self.client.post("/webhook", json=_payload(event="presence.update"))
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.get_json()["action"], "event_ignored")
 

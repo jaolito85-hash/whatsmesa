@@ -213,6 +213,12 @@ create index if not exists mensagens_remote_jid_idx on mensagens_whatsapp(remote
 create index if not exists billing_events_account_periodo_idx on billing_events(billing_account_id, periodo_ano_mes, status_cobranca);
 create index if not exists faturas_account_periodo_idx on faturas(billing_account_id, periodo_ano_mes);
 
+create table if not exists app_estado (
+  chave text primary key,
+  valor text not null,
+  atualizado_em text not null
+);
+
 create table if not exists whatsapp_send_log (
   id text primary key,
   restaurante_id text,
@@ -596,6 +602,21 @@ class Database:
             (today,),
         )
         return int(row["total"]) if row else 0
+
+    def set_estado(self, chave: str, valor: str) -> None:
+        # Estado operacional do app (ex.: última situação da conexão do WhatsApp
+        # reportada pela Evolution). Chave-valor simples, sobrevive a restart.
+        self.execute(
+            """
+            insert into app_estado (chave, valor, atualizado_em) values (?, ?, ?)
+            on conflict(chave) do update
+            set valor = excluded.valor, atualizado_em = excluded.atualizado_em
+            """,
+            (chave, valor, utc_now()),
+        )
+
+    def get_estado(self, chave: str) -> dict[str, Any] | None:
+        return self.fetchone("select * from app_estado where chave = ?", (chave,))
 
     def last_inbound_message_at(self) -> str | None:
         row = self.fetchone(
