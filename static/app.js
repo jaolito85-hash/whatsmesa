@@ -212,6 +212,47 @@ async function rejectSession(sessionId) {
   await refreshDashboard();
 }
 
+function tablePillHtml(table) {
+  const occupied = (table.sessoes_abertas || 0) > 0 || table.status !== "mesa_livre";
+  return `
+    <div class="table-pill" data-table-status="${table.status}">
+      <a href="/qr/${table.id}" target="_blank" title="Abrir QR da mesa ${table.numero}">
+        <strong>${table.numero}</strong>
+      </a>
+      <span>${statusLabel(table.status)}</span>
+      ${
+        occupied
+          ? `<button class="secondary table-close" data-close-table="${table.id}" data-mesa="${table.numero}">fechar mesa</button>`
+          : ""
+      }
+    </div>
+  `;
+}
+
+async function refreshTables() {
+  try {
+    const response = await fetch("/api/tables");
+    if (!response.ok) return;
+    const data = await response.json();
+    const grid = document.getElementById("table-grid");
+    if (!grid) return;
+    grid.innerHTML = (data.tables || []).map(tablePillHtml).join("");
+  } catch (error) {
+    console.error("Falha ao carregar mesas", error);
+  }
+}
+
+async function closeTable(mesaId, mesaNumero) {
+  const ok = confirm(
+    `Fechar a mesa ${mesaNumero}? Todas as comandas abertas dela serão encerradas.`,
+  );
+  if (!ok) return;
+  const response = await fetch(`/api/tables/${mesaId}/close`, { method: "POST" });
+  if (!response.ok) throw new Error("Falha ao fechar a mesa");
+  await refreshTables();
+  await refreshDashboard();
+}
+
 async function updateStatus(kind, id, status) {
   const response = await fetch(`/api/${kind}/${id}/status`, {
     method: "POST",
@@ -389,6 +430,13 @@ document.addEventListener("click", (event) => {
     rejectSession(reject.dataset.reject).catch((error) => alert(error.message));
     return;
   }
+  const closeBtn = event.target.closest("[data-close-table]");
+  if (closeBtn) {
+    closeTable(closeBtn.dataset.closeTable, closeBtn.dataset.mesa).catch((error) =>
+      alert(error.message),
+    );
+    return;
+  }
 });
 
 document.getElementById("demo-form")?.addEventListener("submit", async (event) => {
@@ -425,7 +473,9 @@ document.addEventListener("keydown", (event) => {
 renderDashboard(window.__INITIAL_DASHBOARD__ || {});
 refreshBilling();
 refreshPendingValidation();
+refreshTables();
 setInterval(refreshDashboard, 4000);
 setInterval(refreshPendingValidation, 5000);
+setInterval(refreshTables, 5000);
 setInterval(refreshBilling, 30000);
 

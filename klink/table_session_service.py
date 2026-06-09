@@ -247,6 +247,31 @@ class TableSessionService:
                 (new_token, session["mesa_id"]),
             )
 
+    def close_table(self, mesa_id: str) -> int:
+        """Fecha TODAS as sessões ativas da mesa e a libera no painel.
+
+        Botão manual do painel: cobre o caso mais comum no Brasil — o cliente
+        paga no caixa e vai embora sem mandar "fecha a conta" no WhatsApp.
+        Devolve quantas sessões foram fechadas.
+        """
+        placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
+        rows = self.db.fetchall(
+            f"""
+            select id from sessoes_mesa
+            where mesa_id = ? and status in ({placeholders})
+            """,
+            (mesa_id, *ACTIVE_SESSION_STATUSES),
+        )
+        for row in rows:
+            self.close_session(row["id"])
+        if not rows:
+            # Mesa marcada como ocupada sem nenhuma sessão ativa (estado herdado,
+            # ex.: seed antigo): só libera o status no painel.
+            self.db.execute(
+                "update mesas set status = 'mesa_livre' where id = ?", (mesa_id,)
+            )
+        return len(rows)
+
     def request_account_close(self, session_id: str) -> None:
         session = self.db.fetchone("select * from sessoes_mesa where id = ?", (session_id,))
         if not session:

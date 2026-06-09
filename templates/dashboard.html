@@ -144,8 +144,8 @@
 
         <section class="tables" aria-labelledby="tables-title">
           <p class="eyebrow">mesas</p>
-          <h2 id="tables-title">QRs do piloto</h2>
-          <div class="table-grid">
+          <h2 id="tables-title">Mesas do salão</h2>
+          <div class="table-grid" id="table-grid">
             {% for table in tables %}
               <a href="/qr/{{ table.id }}" target="_blank" class="table-pill">
                 <strong>{{ table.numero }}</strong>

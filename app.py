@@ -279,6 +279,15 @@ def create_app() -> Flask:
         table_sessions.reject_session(session_id)
         return jsonify({"ok": True})
 
+    @app.post("/api/tables/<mesa_id>/close")
+    def api_close_table(mesa_id: str):
+        # Fecha a mesa manualmente pelo painel (todas as sessões ativas dela).
+        table = table_sessions.table_by_id(mesa_id)
+        if not table:
+            return jsonify({"ok": False, "reason": "nao_encontrada"}), 404
+        closed = table_sessions.close_table(mesa_id)
+        return jsonify({"ok": True, "sessoes_fechadas": closed})
+
     @app.get("/api/tables")
     def api_tables():
         tables = []

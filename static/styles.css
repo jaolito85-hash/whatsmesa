@@ -562,6 +562,29 @@ pre {
   font-size: 0.72rem;
 }
 
+.table-pill a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.table-pill .table-close {
+  min-height: 26px;
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--muted);
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.table-pill .table-close:hover {
+  color: var(--tomato);
+  border-color: var(--tomato);
+  box-shadow: none;
+  transform: none;
+}
+
 .ops-board {
   min-width: 0;
 }
