@@ -8,8 +8,10 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# sqlite3 (CLI) é usado pela tarefa agendada de backup do DEPLOY.md — sem ele
+# instalado, o backup falharia em silêncio todo dia.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

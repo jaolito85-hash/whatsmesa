@@ -104,17 +104,23 @@ curl -X POST https://<cliente>.klinkai.com.br/webhook/evolution/<KLINK_WEBHOOK_S
 4. Teste: mande `Mesa 1` do WhatsApp para o número do bot; valide a mesa no painel.
 
 ## Passo 9 — Cobrança (setup R$ 147 + fatura mensal)
+> ⚠️ As rotas `/admin/*` ficam atrás de DUAS travas: a senha do painel (Basic Auth,
+> `-u admin:<senha>`) **e** o token de admin (`X-Admin-Token`). Sem o `-u`, o
+> servidor responde 401 mesmo com o token certo.
 ```bash
 # Liberar a conta após o cliente pagar o setup (R$ 147)
 curl -X POST https://<cliente>.klinkai.com.br/admin/billing/setup-paid \
+  -u admin:<KLINK_DASHBOARD_PASSWORD> \
   -H "X-Admin-Token: <KLINK_ADMIN_TOKEN>"
 
 # No 1º dia do mês seguinte: gerar a fatura (mesas abertas x R$ 3,97)
 curl -X POST https://<cliente>.klinkai.com.br/admin/billing/generate-invoice \
+  -u admin:<KLINK_DASHBOARD_PASSWORD> \
   -H "X-Admin-Token: <KLINK_ADMIN_TOKEN>"
 
 # Após receber o Pix, marcar a fatura como paga (use o id retornado acima)
 curl -X POST https://<cliente>.klinkai.com.br/admin/billing/invoice/<FATURA_ID>/paid \
+  -u admin:<KLINK_DASHBOARD_PASSWORD> \
   -H "X-Admin-Token: <KLINK_ADMIN_TOKEN>"
 ```
 
@@ -129,15 +135,42 @@ curl -X POST https://<cliente>.klinkai.com.br/admin/billing/invoice/<FATURA_ID>/
 - [ ] Volume `/data` montado · HTTPS ativo
 - [ ] Smoke test passou (webhook sem segredo = 403)
 
-## 💾 Backup do banco (Coolify → Scheduled Tasks)
-- **Frequency:** `0 4 * * *` (todo dia 04:00 UTC)
+## 💾 Backup do banco
+
+### 1. Backup diário dentro da VPS (Coolify → Scheduled Tasks)
+- **Frequency:** `0 4 * * *` (todo dia 04:00 UTC = 01:00 de Brasília)
 - **Command:**
   ```bash
   sqlite3 /data/klink.db ".backup '/data/backup-$(date +%F).db'" \
     && find /data -name 'backup-*.db' -mtime +14 -delete
   ```
-> O volume `/data` é isolado por container — para sobreviver à morte da VPS, envie os
-> backups para fora (R2/S3 via `rclone` ou `curl -T`).
+- ✅ O programa `sqlite3` já vem instalado na imagem (Dockerfile). Depois de criar a
+  tarefa, **rode-a uma vez pelo botão do Coolify e confira na aba de execuções que o
+  arquivo `backup-<data>.db` apareceu** — tarefa agendada sem teste é tarefa quebrada.
+
+### 2. Cópia FORA da VPS (obrigatório antes do go-live)
+O backup acima morre junto com a VPS. Para ter uma cópia fora, use a rota de download
+(atrás da senha do painel + token de admin):
+```bash
+# Baixa o banco inteiro, pronto para restaurar (rode do SEU computador):
+curl -fsS https://<cliente>.klinkai.com.br/admin/backup \
+  -u admin:<KLINK_DASHBOARD_PASSWORD> \
+  -H "X-Admin-Token: <KLINK_ADMIN_TOKEN>" \
+  -o klink-backup-$(date +%F).db
+```
+- Agende no seu computador (Agendador de Tarefas do Windows) ou num serviço grátis
+  (GitHub Actions com cron) — 1x por dia é suficiente no começo.
+- Alternativa robusta ao escalar: `rclone` na VPS enviando `/data/backup-*.db` para
+  Cloudflare R2 ou Backblaze B2 (custam centavos por mês).
+
+### 3. Teste de restauração (faça UMA vez antes do primeiro cliente)
+```bash
+# Restaurar = colocar o arquivo no lugar do banco e reiniciar o app:
+# 1. Pare o app no Coolify
+# 2. Copie o backup para /data/klink.db (substituindo o atual)
+# 3. Inicie o app e confira o painel (cardápio, mesas e faturas no lugar)
+```
+> Backup que nunca foi restaurado em teste não é backup — é esperança.
 
 ## Problemas comuns
 - **App não sobe / erro no log sobre senha:** falta `KLINK_DASHBOARD_PASSWORD`. Configure.

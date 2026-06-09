@@ -485,6 +485,39 @@ def create_app() -> Flask:
         if not hmac.compare_digest(provided, expected):
             abort(401)
 
+    @app.get("/admin/backup")
+    def admin_backup():
+        # Baixa uma cópia consistente do banco (snapshot via API de backup do
+        # SQLite, segura mesmo com o app escrevendo em WAL). Dá ao fundador um
+        # backup fora da VPS em 10 segundos: curl com o token > arquivo .db.
+        # Restaurar = colocar o arquivo de volta em /data/klink.db.
+        require_admin()
+        import sqlite3 as sqlite3_module
+        import tempfile
+        from datetime import datetime, timezone
+        from pathlib import Path
+
+        handle = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        handle.close()
+        tmp_path = Path(handle.name)
+        source = sqlite3_module.connect(settings.database_path)
+        target = sqlite3_module.connect(tmp_path)
+        try:
+            source.backup(target)
+        finally:
+            target.close()
+            source.close()
+        data = tmp_path.read_bytes()
+        tmp_path.unlink(missing_ok=True)
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        return Response(
+            data,
+            mimetype="application/octet-stream",
+            headers={
+                "Content-Disposition": f'attachment; filename="klink-backup-{stamp}.db"'
+            },
+        )
+
     @app.get("/api/billing/usage")
     def api_billing_usage():
         restaurant = table_sessions.restaurant()
