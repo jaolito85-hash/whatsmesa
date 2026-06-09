@@ -199,8 +199,10 @@ def create_app() -> Flask:
         for table in table_sessions.list_tables():
             tables.append(
                 {
+                    "id": table["id"],
                     "numero": table["numero"],
                     "nome": table.get("nome"),
+                    "sessoes_abertas": table.get("sessoes_abertas", 0),
                     # Usa o id PERMANENTE da mesa (não o token rotativo): o QR impresso
                     # precisa continuar valendo depois que a mesa fecha e reabre.
                     "qr_url": qr.public_qr_url(table["id"]),
@@ -277,6 +279,95 @@ def create_app() -> Flask:
     @app.post("/api/sessions/<session_id>/reject")
     def api_reject_session(session_id: str):
         table_sessions.reject_session(session_id)
+        return jsonify({"ok": True})
+
+    @app.post("/api/tables")
+    def api_create_tables():
+        # Cadastro de mesas: ou em lote ({"ate_numero": 40} cria as que faltam
+        # de 1 a 40), ou avulsa ({"numero": 101, "nome": "Varanda 1"}).
+        restaurant = table_sessions.restaurant()
+        unidade = db.primary_unit_for(restaurant["id"])
+        if not unidade:
+            return jsonify({"ok": False, "reason": "sem_unidade"}), 400
+        payload = request.get_json(silent=True) or {}
+
+        def _parse_num(value):
+            try:
+                return int(str(value).strip())
+            except (TypeError, ValueError):
+                return None
+
+        ate = _parse_num(payload.get("ate_numero"))
+        if ate is not None:
+            if not 1 <= ate <= 300:
+                return jsonify(
+                    {
+                        "ok": False,
+                        "reason": "numero_invalido",
+                        "message": "Informe um total entre 1 e 300 mesas.",
+                    }
+                ), 400
+            criadas = []
+            for numero in range(1, ate + 1):
+                mesa_id = db.create_table(restaurant["id"], unidade["id"], numero=numero)
+                if mesa_id:
+                    criadas.append(numero)
+            return jsonify({"ok": True, "criadas": criadas, "total": ate})
+
+        numero = _parse_num(payload.get("numero"))
+        # O chat só entende mesas de 1 a 999 (o parser lê até 3 dígitos).
+        if numero is None or not 1 <= numero <= 999:
+            return jsonify(
+                {
+                    "ok": False,
+                    "reason": "numero_invalido",
+                    "message": "O número da mesa deve ser de 1 a 999.",
+                }
+            ), 400
+        mesa_id = db.create_table(
+            restaurant["id"],
+            unidade["id"],
+            numero=numero,
+            nome=str(payload.get("nome") or ""),
+        )
+        if not mesa_id:
+            return jsonify(
+                {
+                    "ok": False,
+                    "reason": "ja_existe",
+                    "message": f"A mesa {numero} já existe no salão.",
+                }
+            ), 400
+        return jsonify({"ok": True, "id": mesa_id, "numero": numero})
+
+    @app.post("/api/tables/<mesa_id>/rename")
+    def api_rename_table(mesa_id: str):
+        table = table_sessions.table_by_id(mesa_id)
+        if not table:
+            return jsonify({"ok": False, "reason": "nao_encontrada"}), 404
+        payload = request.get_json(silent=True) or {}
+        nome = str(payload.get("nome") or "").strip()
+        if not nome:
+            return jsonify(
+                {"ok": False, "reason": "nome_obrigatorio", "message": "Informe o nome da mesa."}
+            ), 400
+        db.rename_table(mesa_id, nome)
+        return jsonify({"ok": True})
+
+    @app.post("/api/tables/<mesa_id>/deactivate")
+    def api_deactivate_table(mesa_id: str):
+        table = table_sessions.table_by_id(mesa_id)
+        if not table:
+            return jsonify({"ok": False, "reason": "nao_encontrada"}), 404
+        if table_sessions.has_active_sessions(mesa_id):
+            return jsonify(
+                {
+                    "ok": False,
+                    "reason": "mesa_em_uso",
+                    "message": "Essa mesa tem comanda aberta. Feche a mesa antes de removê-la.",
+                }
+            ), 409
+        db.deactivate_table(mesa_id)
         return jsonify({"ok": True})
 
     @app.post("/api/tables/<mesa_id>/close")

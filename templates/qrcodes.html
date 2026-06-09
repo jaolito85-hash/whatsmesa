@@ -84,6 +84,78 @@
         color: var(--ink);
         font-weight: 900;
       }
+      .mesa-manage {
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        background: var(--panel);
+        padding: 16px 18px;
+        margin-bottom: 24px;
+      }
+      .mesa-manage h2 {
+        margin: 2px 0 6px;
+        font-size: 1.15rem;
+      }
+      .mesa-manage p {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-weight: 600;
+        line-height: 1.45;
+      }
+      .mesa-manage-forms {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .mesa-manage form {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .mesa-manage label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--muted);
+      }
+      .mesa-manage input {
+        min-height: 38px;
+        padding: 6px 10px;
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        background: #fff;
+      }
+      .mesa-manage input[type="number"] {
+        width: 90px;
+      }
+      .qr-card-tools {
+        display: flex;
+        gap: 6px;
+        margin: 2px 0 10px;
+      }
+      .qr-card-tools button {
+        min-height: 28px;
+        padding: 2px 10px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--muted);
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+      .qr-card-tools button:hover {
+        color: var(--tomato);
+        border-color: var(--tomato);
+        box-shadow: none;
+        transform: none;
+      }
+      .qr-card .qr-nome {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
       .print-banner {
         display: none;
       }
@@ -259,6 +331,36 @@
       </div>
       {% endif %}
 
+      <section class="mesa-manage no-print" aria-labelledby="mesa-manage-title">
+        <p class="eyebrow">salão</p>
+        <h2 id="mesa-manage-title">Gerenciar mesas</h2>
+        <p>
+          Diga quantas mesas o salão tem e o Klink cria as que faltam, já com QR.
+          Dá para adicionar uma mesa avulsa (ex.: 101 da varanda), renomear ou remover
+          pelo botão em cada cartão.
+        </p>
+        <div class="mesa-manage-forms">
+          <form id="mesa-batch-form">
+            <label>
+              Meu salão tem
+              <input type="number" name="ate_numero" min="1" max="300" value="{{ tables|length or 12 }}" required />
+            </label>
+            <button type="submit">Criar mesas que faltam</button>
+          </form>
+          <form id="mesa-single-form">
+            <label>
+              Número
+              <input type="number" name="numero" min="1" max="999" placeholder="101" required />
+            </label>
+            <label>
+              Nome (opcional)
+              <input type="text" name="nome" placeholder="Varanda 1" />
+            </label>
+            <button type="submit" class="btn-secondary">Adicionar mesa avulsa</button>
+          </form>
+        </div>
+      </section>
+
       <section class="qr-grid">
         {% for t in tables %}
         <article class="qr-card">
@@ -269,6 +371,13 @@
           <div class="qr-mesa">
             <small>mesa</small>
             {{ t.numero }}
+          </div>
+          {% if t.nome and t.nome != "Mesa " ~ t.numero %}
+          <p class="qr-nome">{{ t.nome }}</p>
+          {% endif %}
+          <div class="qr-card-tools no-print">
+            <button type="button" data-rename-mesa="{{ t.id }}" data-nome="{{ t.nome }}">renomear</button>
+            <button type="button" data-remove-mesa="{{ t.id }}" data-numero="{{ t.numero }}">remover</button>
           </div>
           <div class="qr-box" data-qr="{{ t.qr_url }}" aria-label="QR code da mesa {{ t.numero }}"></div>
           <p class="qr-instruction">Aponte a câmera do celular<br />e peça pelo WhatsApp</p>
@@ -300,6 +409,78 @@
         } else {
           window.addEventListener("load", render);
         }
+
+        async function postJson(url, body) {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body || {}),
+          });
+          const data = await response.json().catch(function () {
+            return {};
+          });
+          if (!response.ok || data.ok === false) {
+            throw new Error(data.message || "Não consegui completar a operação.");
+          }
+          return data;
+        }
+
+        document.getElementById("mesa-batch-form").addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const total = Number(new FormData(event.currentTarget).get("ate_numero"));
+          try {
+            const data = await postJson("/api/tables", { ate_numero: total });
+            if (!data.criadas.length) {
+              alert("Todas as mesas de 1 a " + total + " já existem.");
+              return;
+            }
+            location.reload();
+          } catch (error) {
+            alert(error.message);
+          }
+        });
+
+        document.getElementById("mesa-single-form").addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          try {
+            await postJson("/api/tables", {
+              numero: Number(form.get("numero")),
+              nome: form.get("nome") || "",
+            });
+            location.reload();
+          } catch (error) {
+            alert(error.message);
+          }
+        });
+
+        document.addEventListener("click", async function (event) {
+          const rename = event.target.closest("[data-rename-mesa]");
+          if (rename) {
+            const nome = prompt("Novo nome da mesa (ex.: Varanda 3):", rename.dataset.nome || "");
+            if (!nome) return;
+            try {
+              await postJson("/api/tables/" + rename.dataset.renameMesa + "/rename", { nome: nome });
+              location.reload();
+            } catch (error) {
+              alert(error.message);
+            }
+            return;
+          }
+          const remove = event.target.closest("[data-remove-mesa]");
+          if (remove) {
+            const ok = confirm(
+              "Remover a mesa " + remove.dataset.numero + " do salão? O QR impresso dela deixa de funcionar.",
+            );
+            if (!ok) return;
+            try {
+              await postJson("/api/tables/" + remove.dataset.removeMesa + "/deactivate");
+              location.reload();
+            } catch (error) {
+              alert(error.message);
+            }
+          }
+        });
       })();
     </script>
   </body>

@@ -338,6 +338,67 @@ class Database:
             params,
         )
 
+    # ----- Mesas (cadastro do salão) -----
+
+    def primary_unit_for(self, restaurante_id: str) -> dict[str, Any] | None:
+        return self.fetchone(
+            "select * from unidades where restaurante_id = ? and ativo = 1 limit 1",
+            (restaurante_id,),
+        )
+
+    def create_table(
+        self,
+        restaurante_id: str,
+        unidade_id: str,
+        *,
+        numero: int,
+        nome: str = "",
+    ) -> str | None:
+        """Cria a mesa (ou reativa uma desativada com o mesmo número).
+
+        Devolve o id da mesa criada/reativada, ou None se já existe mesa ATIVA
+        com esse número. Reativar mantém o id antigo, então um QR impresso da
+        mesa volta a funcionar.
+        """
+        nome_final = (nome or "").strip() or f"Mesa {numero}"
+        existing = self.fetchone(
+            "select id, ativa from mesas where restaurante_id = ? and unidade_id = ? and numero = ?",
+            (restaurante_id, unidade_id, numero),
+        )
+        if existing and existing["ativa"]:
+            return None
+        if existing:
+            self.execute(
+                """
+                update mesas
+                set ativa = 1, nome = ?, status = 'mesa_livre', qr_token_atual = ?
+                where id = ?
+                """,
+                (nome_final, new_id(), existing["id"]),
+            )
+            return existing["id"]
+        mesa_id = new_id()
+        self.execute(
+            """
+            insert into mesas (
+              id, restaurante_id, unidade_id, numero, nome,
+              status, qr_token_atual, ativa
+            ) values (?, ?, ?, ?, ?, 'mesa_livre', ?, 1)
+            """,
+            (mesa_id, restaurante_id, unidade_id, numero, nome_final, new_id()),
+        )
+        return mesa_id
+
+    def rename_table(self, mesa_id: str, nome: str) -> None:
+        self.execute("update mesas set nome = ? where id = ?", (nome.strip(), mesa_id))
+
+    def deactivate_table(self, mesa_id: str) -> None:
+        # Soft delete: a mesa sai do salão sem apagar o histórico de pedidos.
+        self.execute(
+            "update mesas set ativa = 0, status = 'mesa_livre' where id = ?",
+            (mesa_id,),
+        )
+
     # ----- Cardápio (produtos + apelidos) -----
 
     def _set_product_aliases(

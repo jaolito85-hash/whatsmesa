@@ -224,6 +224,7 @@ class TableSessionService:
             from mesas m
             left join sessoes_mesa s on s.mesa_id = m.id
               and s.status in ('sessao_pendente', 'sessao_ativa', 'conta_solicitada')
+            where m.ativa = 1
             group by m.id
             order by m.numero
             """
@@ -246,6 +247,18 @@ class TableSessionService:
                 "update mesas set status = 'mesa_livre', qr_token_atual = ? where id = ?",
                 (new_token, session["mesa_id"]),
             )
+
+    def has_active_sessions(self, mesa_id: str) -> bool:
+        placeholders = ",".join("?" for _ in ACTIVE_SESSION_STATUSES)
+        row = self.db.fetchone(
+            f"""
+            select id from sessoes_mesa
+            where mesa_id = ? and status in ({placeholders})
+            limit 1
+            """,
+            (mesa_id, *ACTIVE_SESSION_STATUSES),
+        )
+        return row is not None
 
     def close_table(self, mesa_id: str) -> int:
         """Fecha TODAS as sessões ativas da mesa e a libera no painel.
