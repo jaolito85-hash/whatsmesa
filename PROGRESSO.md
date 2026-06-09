@@ -1,7 +1,7 @@
 # Progresso — Klink
 
 > Diário de bordo do projeto, em linguagem simples. Atualizado a cada mudança.
-> Última atualização: **29/05/2026**
+> Última atualização: **09/06/2026**
 
 ---
 
@@ -66,6 +66,45 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 09/06/2026 — As 6 correções urgentes da auditoria (todas prontas!)
+Implementei os 6 itens do "antes de QUALQUER venda" do plano da auditoria:
+1. **Filtro anti-loop no WhatsApp** — o bot não responde mais a si mesmo (era o
+   maior risco de banimento do número). Também ignora grupos e eventos de sistema.
+2. **Tempo limite na OpenAI** — um engasgo da IA não congela mais o app inteiro:
+   em 10 segundos o bot cai no atalho por palavra-chave e responde mesmo assim.
+3. **Botão "fechar mesa" no painel** — para o caso mais comum: cliente paga no
+   caixa e vai embora sem avisar o bot. A grade de mesas agora atualiza sozinha.
+4. **Cadastro de mesas** — acabou a prisão das 12 mesas da demo: "meu salão tem
+   40 mesas" cria tudo em lote, com QR na hora; dá pra renomear e remover.
+5. **Comanda no WhatsApp da cozinha** 🏆 — a resposta da venda sem tablet: novo
+   campo nas Configurações; pedido confirmado chega formatado (itens, "sem
+   cebola", total) no celular da cozinha, que apita sozinho. Pedido de conta e
+   chamados também avisam a equipe.
+6. **Backup de verdade** — o comando do manual não funcionava (programa não
+   instalado); corrigi a imagem, criei a rota segura `/admin/backup` para baixar
+   o banco de fora da VPS, e o DEPLOY.md agora tem backup em 3 passos com teste
+   de restauração. De quebra: os comandos `/admin/*` do manual estavam sem a
+   senha do painel e falhariam em produção — corrigido.
+- **43 testes novos — 410 passando** (eram 367). Tudo commitado em 6 commits.
+
+### 09/06/2026 — Auditoria de operação completa (visão de dono de restaurante)
+- Rodei uma auditoria profunda com 44 agentes de análise, cada falha grave checada
+  por um segundo agente cético. Resultado: **38 falhas graves confirmadas** +
+  15 pontos novos. Relatório completo em **`AUDITORIA_OPERACAO.md`**.
+- **Os 3 mais perigosos:** (1) se o WhatsApp cair, ninguém fica sabendo — o selo
+  "Bot conectado" do painel mente; (2) o bot pode responder a si mesmo e entrar em
+  loop infinito (= banimento do número) — conserto de 5 linhas; (3) a cobrança é por
+  **celular**, não por mesa — 4 amigos escaneando o QR = 4 × R$ 3,97 numa mesa só,
+  fatura até 4x maior que o prometido.
+- **Resposta da venda sem tablet:** mandar a comanda por WhatsApp para um celular
+  velho na cozinha — a infraestrutura já existe no código, falta ~1 dia de trabalho.
+  Vira argumento de venda: "o pedido cai no celular que você já tem".
+- **Outras descobertas importantes:** não existe cadastro de mesas (preso às 12 da
+  demo), o backup documentado não funciona (programa não instalado no container),
+  não existe botão de fechar mesa manual, e o caixa nunca vê o total da conta.
+- O plano de ação priorizado (o que fazer antes de vender) está na seção 8 do
+  relatório. **Nada foi alterado no código ainda** — só análise.
 
 ### 31/05/2026 — Tela de Cardápio + fechar mesa mais claro
 - **Nova tela de Cardápio** (atalho no painel): o dono cadastra/edita/remove produtos
