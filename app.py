@@ -19,6 +19,49 @@ from klink.table_session_service import TableSessionService
 from klink.whatsapp_adapter import WhatsAppAdapter
 
 
+def _format_brl(value: float) -> str:
+    return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def team_message_for(result: dict) -> str | None:
+    """Monta a mensagem de WhatsApp para a equipe (cozinha/garçom/caixa).
+
+    É o caminho "sem tablet": o pedido confirmado vira uma comanda de texto no
+    celular da cozinha — que já apita sozinho — em vez de existir só no painel.
+    Devolve None quando a ação não interessa à equipe.
+    """
+    action = result.get("action")
+    session = result.get("session") or {}
+    mesa = session.get("mesa_numero")
+    if mesa is None:
+        return None
+
+    if action == "order_confirmed" and result.get("order"):
+        order = result["order"]
+        lines = [f"🍽️ MESA {mesa} — pedido confirmado"]
+        total = 0.0
+        for item in order.get("items", []):
+            if item.get("status") == "cancelado":
+                continue
+            line = f"{item['quantidade']}x {item['nome_snapshot']}"
+            observacoes = (item.get("observacoes") or "").strip()
+            if observacoes:
+                line += f" ({observacoes})"
+            lines.append(line)
+            total += item["quantidade"] * float(item["preco_unitario_snapshot"])
+        lines.append(f"Total parcial: R$ {_format_brl(total)}")
+        return "\n".join(lines)
+
+    if action == "account_requested":
+        return f"💰 MESA {mesa} pediu a conta."
+
+    if action in ("service_requested", "human_called") and result.get("request"):
+        descricao = (result["request"].get("descricao") or "").strip()
+        return f"🙋 {descricao}" if descricao else f"🙋 MESA {mesa} chamou atendimento."
+
+    return None
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     settings = get_settings()
@@ -117,12 +160,25 @@ def create_app() -> Flask:
         payload = request.get_json(silent=True) or request.form
         nome = (payload.get("nome") or "").strip()
         telefone_raw = payload.get("telefone_whatsapp")
+        equipe_raw = payload.get("whatsapp_equipe")
         if not nome:
             return jsonify({"ok": False, "reason": "nome_obrigatorio"}), 400
         telefone = None
         if telefone_raw is not None:
             telefone = "".join(ch for ch in str(telefone_raw) if ch.isdigit())
-        db.update_restaurant(restaurant["id"], nome=nome, telefone_whatsapp=telefone)
+        equipe = None
+        if equipe_raw is not None:
+            equipe = str(equipe_raw).strip()
+            # Grupo do WhatsApp tem id no formato 1234...@g.us — preserva como
+            # veio; número comum fica só com dígitos.
+            if "@" not in equipe:
+                equipe = "".join(ch for ch in equipe if ch.isdigit())
+        db.update_restaurant(
+            restaurant["id"],
+            nome=nome,
+            telefone_whatsapp=telefone,
+            whatsapp_equipe=equipe,
+        )
         updated = table_sessions.restaurant()
         return jsonify({"ok": True, "restaurant": updated, "bot_phone": qr.bot_phone()})
 
@@ -620,7 +676,38 @@ def create_app() -> Flask:
             mesa_id=session.get("mesa_id"),
             sessao_mesa_id=session.get("id"),
         )
+        notify_team(result)
         return result
+
+    def notify_team(result: dict) -> None:
+        # Envia a comanda para o WhatsApp da equipe (campo das Configurações).
+        # Falha aqui NUNCA pode derrubar a resposta ao cliente: só registra o erro.
+        text = team_message_for(result)
+        if not text or not settings.has_evolution:
+            return
+        try:
+            restaurant = table_sessions.restaurant()
+        except Exception:
+            return
+        team_jid = (restaurant.get("whatsapp_equipe") or "").strip()
+        if not team_jid:
+            return
+        try:
+            send_result = whatsapp.send_message(team_jid, text)
+            if send_result.get("sent"):
+                db.record_whatsapp_send(
+                    remote_jid=team_jid,
+                    sucesso=True,
+                    restaurante_id=restaurant["id"],
+                )
+        except Exception as exc:
+            db.record_whatsapp_send(
+                remote_jid=team_jid,
+                sucesso=False,
+                erro=str(exc),
+                restaurante_id=restaurant["id"],
+            )
+            app.logger.exception("Falha ao enviar comanda para a equipe: %s", exc)
 
     return app
 

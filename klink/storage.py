@@ -36,6 +36,7 @@ create table if not exists restaurantes (
   nome text not null,
   slug text not null unique,
   telefone_whatsapp text,
+  whatsapp_equipe text,
   timezone text not null default 'America/Sao_Paulo',
   ativo integer not null default 1,
   criado_em text not null
@@ -242,6 +243,13 @@ class Database:
             self._apply_migrations(conn)
 
     def _apply_migrations(self, conn: sqlite3.Connection) -> None:
+        # restaurantes
+        cols_rest = {row[1] for row in conn.execute("pragma table_info(restaurantes)").fetchall()}
+        if "whatsapp_equipe" not in cols_rest:
+            # WhatsApp da equipe (cozinha/garçom): para onde a comanda é enviada
+            # quando o cliente confirma um pedido. Pode ser número ou grupo.
+            conn.execute("alter table restaurantes add column whatsapp_equipe text")
+
         # sessoes_mesa
         cols_sessao = {row[1] for row in conn.execute("pragma table_info(sessoes_mesa)").fetchall()}
         if "ultima_atividade_em" not in cols_sessao:
@@ -317,8 +325,9 @@ class Database:
         *,
         nome: str | None = None,
         telefone_whatsapp: str | None = None,
+        whatsapp_equipe: str | None = None,
     ) -> None:
-        """Atualiza dados editáveis do restaurante (nome e WhatsApp do bot)."""
+        """Atualiza dados editáveis do restaurante (nome e WhatsApps)."""
         sets: list[str] = []
         params: list[Any] = []
         if nome is not None:
@@ -330,6 +339,9 @@ class Database:
         if telefone_whatsapp is not None:
             sets.append("telefone_whatsapp = ?")
             params.append(telefone_whatsapp)
+        if whatsapp_equipe is not None:
+            sets.append("whatsapp_equipe = ?")
+            params.append(whatsapp_equipe)
         if not sets:
             return
         params.append(restaurante_id)

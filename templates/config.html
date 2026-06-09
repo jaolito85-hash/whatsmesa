@@ -290,6 +290,29 @@
           {% endif %}
         </div>
 
+        <h2 style="margin-top: 22px">WhatsApp da equipe (cozinha/garçom)</h2>
+        <p class="hint">
+          Quando o cliente confirma um pedido, a comanda chega pronta neste WhatsApp —
+          serve um celular velho pendurado na cozinha. O WhatsApp apita sozinho:
+          ninguém precisa ficar olhando o painel.
+        </p>
+
+        <label class="field">
+          <span class="field-label">Número (ou grupo) da equipe</span>
+          <input
+            id="whatsapp-equipe"
+            name="whatsapp_equipe"
+            type="text"
+            value="{{ restaurant.whatsapp_equipe or '' }}"
+            placeholder="Ex: 5511988887777"
+          />
+          <p class="helper">
+            Só números: 55 + DDD + número. Dica: crie um grupo "Cozinha" com o celular
+            da cozinha e os garçons — todo mundo vê o pedido na hora. Deixe vazio para
+            não enviar.
+          </p>
+        </label>
+
         <div class="cfg-actions" style="margin-top: 22px">
           <button type="submit" class="btn-save" id="save-btn">Salvar alterações</button>
           <span class="save-feedback" id="save-feedback" role="status" aria-live="polite"></span>
@@ -326,6 +349,7 @@
         e.preventDefault();
         const nome = document.getElementById("nome").value.trim();
         const telefone = document.getElementById("telefone").value;
+        const whatsappEquipe = document.getElementById("whatsapp-equipe").value;
         if (!nome) {
           flash("Digite o nome do restaurante.", "err");
           return;
@@ -337,7 +361,11 @@
           const res = await fetch("/api/restaurant", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nome, telefone_whatsapp: telefone }),
+            body: JSON.stringify({
+              nome,
+              telefone_whatsapp: telefone,
+              whatsapp_equipe: whatsappEquipe,
+            }),
           });
           const data = await res.json();
           if (res.ok && data.ok) {
