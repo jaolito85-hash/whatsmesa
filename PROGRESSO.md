@@ -86,7 +86,12 @@ Implementei os 6 itens do "antes de QUALQUER venda" do plano da auditoria:
    o banco de fora da VPS, e o DEPLOY.md agora tem backup em 3 passos com teste
    de restauração. De quebra: os comandos `/admin/*` do manual estavam sem a
    senha do painel e falhariam em produção — corrigido.
-- **43 testes novos — 410 passando** (eram 367). Tudo commitado em 6 commits.
+- Depois de pronto, passei tudo por **duas revisões independentes** (segurança +
+  caça-bugs): nada crítico; os 7 achados menores foram corrigidos na hora (validação
+  do WhatsApp da equipe, filtro de transmissões/canais, simulador sem WhatsApp real,
+  e proteções contra cliques duplos e corridas no cadastro de mesas).
+- **48 testes novos — 415 passando** (eram 367). Veredito da revisão de segurança:
+  **pode ir para produção**.
 
 ### 09/06/2026 — Auditoria de operação completa (visão de dono de restaurante)
 - Rodei uma auditoria profunda com 44 agentes de análise, cada falha grave checada
