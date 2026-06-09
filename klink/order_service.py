@@ -104,6 +104,9 @@ class OrderService:
         created["items"] = self.items_for_order(order_id)
         return created
 
+    def get_order(self, order_id: str) -> dict[str, Any] | None:
+        return self.db.fetchone("select * from pedidos where id = ?", (order_id,))
+
     def confirm_order(self, order_id: str) -> dict[str, Any]:
         now = utc_now()
         with self.db.transaction() as conn:

@@ -1,7 +1,43 @@
 const state = {
   lastCount: 0,
   billing: null,
+  failedRefreshes: 0,
 };
+
+// ---- Som de comanda nova (cozinha barulhenta não fica olhando tela) ----
+// O navegador só libera áudio depois de um toque na página; o primeiro
+// clique em qualquer lugar "destrava" o sino.
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      audioCtx = null;
+    }
+  }
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+function beepNewTicket() {
+  if (!audioCtx || audioCtx.state !== "running") return;
+  [0, 0.25].forEach((delay) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    const t = audioCtx.currentTime + delay;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.6, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    osc.start(t);
+    osc.stop(t + 0.24);
+  });
+}
 
 const sectorLabels = {
   bar: "Bar",
@@ -122,8 +158,21 @@ function pendingHtml(order) {
     <article class="pending-chip">
       <strong>Mesa ${order.mesa_numero}</strong>
       <p>${escapeHtml(items || order.texto_original)}</p>
+      <div class="actions">
+        <button data-confirm-order="${order.id}" data-mesa="${order.mesa_numero}">Enviar pra cozinha ✓</button>
+      </div>
     </article>
   `;
+}
+
+async function confirmDraft(orderId, mesaNumero) {
+  const ok = confirm(
+    `Confirmar o pedido da mesa ${mesaNumero} pelo cliente e enviar para a cozinha?`,
+  );
+  if (!ok) return;
+  const response = await fetch(`/api/orders/${orderId}/confirm`, { method: "POST" });
+  if (!response.ok) throw new Error("Falha ao confirmar o pedido");
+  await refreshDashboard();
 }
 
 function renderDashboard(data) {
@@ -156,13 +205,30 @@ function renderDashboard(data) {
     waBanner.hidden = !(wa.configured && (wa.state === "close" || wa.state === "connecting"));
   }
 
+  if (total > state.lastCount && state.lastCount > 0) {
+    beepNewTicket();
+  }
   state.lastCount = total;
 }
 
 async function refreshDashboard() {
-  const response = await fetch("/api/dashboard");
-  const data = await response.json();
-  renderDashboard(data);
+  try {
+    const response = await fetch("/api/dashboard");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    state.failedRefreshes = 0;
+    const offline = document.getElementById("offline-banner");
+    if (offline) offline.hidden = true;
+    renderDashboard(data);
+  } catch (error) {
+    // Wi-fi do salão caiu: a tela congela mostrando dados velhos. Sem a tarja,
+    // a equipe acha que está tranquilo enquanto chovem pedidos no servidor.
+    state.failedRefreshes += 1;
+    if (state.failedRefreshes >= 2) {
+      const offline = document.getElementById("offline-banner");
+      if (offline) offline.hidden = false;
+    }
+  }
 }
 
 function pendingValidationHtml(session) {
@@ -419,6 +485,14 @@ function closeBillingDrawer() {
 }
 
 document.addEventListener("click", (event) => {
+  ensureAudio();
+  const confirmBtn = event.target.closest("[data-confirm-order]");
+  if (confirmBtn) {
+    confirmDraft(confirmBtn.dataset.confirmOrder, confirmBtn.dataset.mesa).catch((error) =>
+      alert(error.message),
+    );
+    return;
+  }
   const update = event.target.closest("[data-update]");
   if (update) {
     updateStatus(update.dataset.update, update.dataset.id, update.dataset.status).catch((error) => {

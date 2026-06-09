@@ -498,6 +498,28 @@ def create_app() -> Flask:
         restaurant = table_sessions.restaurant()
         return jsonify({"products": menu.products_for_restaurant(restaurant["id"])})
 
+    @app.post("/api/orders/<order_id>/confirm")
+    def api_confirm_order(order_id: str):
+        # Destrava o rascunho que o cliente esqueceu de confirmar com "1": o
+        # garçom confere na mesa e envia pra cozinha pelo painel. Antes, esse
+        # pedido morria em rascunho e a comida nunca saía.
+        order = orders.get_order(order_id)
+        if not order:
+            return jsonify({"ok": False, "reason": "nao_encontrado"}), 404
+        if order["status"] != "aguardando_confirmacao_cliente":
+            # Clique duplo ou pedido já confirmado: idempotente, sem comanda dupla.
+            return jsonify({"ok": True, "reason": "ja_confirmado"})
+        confirmed = orders.confirm_order(order_id)
+        mesa = db.fetchone("select numero from mesas where id = ?", (confirmed["mesa_id"],))
+        notify_team(
+            {
+                "action": "order_confirmed",
+                "session": {"mesa_numero": mesa["numero"] if mesa else None},
+                "order": confirmed,
+            }
+        )
+        return jsonify({"ok": True, "order": {"id": confirmed["id"], "status": confirmed["status"]}})
+
     @app.post("/api/items/<item_id>/status")
     def api_update_item(item_id: str):
         payload = request.get_json(silent=True) or request.form
