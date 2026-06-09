@@ -264,7 +264,14 @@ class RestaurantAgent:
                 "language": language,
             }
 
-        activated = self.table_sessions.activate_from_message(remote_jid, text)
+        # Troca de mesa só com mensagem EXPLÍCITA de abertura ("Mesa 7", como o
+        # QR manda) ou no primeiro contato. Antes, citar "mesa 8" no meio de uma
+        # frase ("a mesa 8 tá livre pros meus amigos?") fechava a conta atual em
+        # silêncio, liberava a mesa no painel e gerava nova cobrança.
+        existing = self.table_sessions.active_session_for_whatsapp(remote_jid)
+        activated = None
+        if self._is_table_intro(text) or not existing:
+            activated = self.table_sessions.activate_from_message(remote_jid, text)
         if activated and self._is_table_intro(text):
             if activated.get("status") == "sessao_pendente":
                 return {
