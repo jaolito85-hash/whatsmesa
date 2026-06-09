@@ -137,14 +137,27 @@ class AudioService:
         except ImportError as exc:
             raise RuntimeError("Pacote openai nao instalado.") from exc
 
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as handle:
-            handle.write(content)
-            handle.flush()
-            client = OpenAI(api_key=self.settings.openai_api_key)
-            with open(handle.name, "rb") as audio_file:
+        # delete=False + unlink manual: o Windows não deixa reabrir um arquivo
+        # temporário ainda aberto (em Linux funciona; assim funciona nos dois).
+        tmp_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as handle:
+                handle.write(content)
+                tmp_path = Path(handle.name)
+            # timeout limitado + sem retry: melhor responder rápido "manda por
+            # texto" do que segurar uma thread do gunicorn por minutos.
+            client = OpenAI(
+                api_key=self.settings.openai_api_key,
+                timeout=self.settings.openai_transcription_timeout_seconds,
+                max_retries=0,
+            )
+            with open(tmp_path, "rb") as audio_file:
                 transcript = client.audio.transcriptions.create(
                     model=self.settings.openai_transcription_model,
                     file=audio_file,
                     response_format="text",
                 )
+        finally:
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
         return str(transcript).strip()

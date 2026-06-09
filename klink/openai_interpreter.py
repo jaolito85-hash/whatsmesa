@@ -66,7 +66,13 @@ class OpenAIInterpreter:
             + f"\n\nMensagem: {message}"
         )
 
-        client = OpenAI(api_key=self.settings.openai_api_key)
+        # timeout curto + sem retry: se a OpenAI engasgar, caímos em segundos no
+        # atalho por palavra-chave (fallback do agente) em vez de segurar a thread.
+        client = OpenAI(
+            api_key=self.settings.openai_api_key,
+            timeout=self.settings.openai_timeout_seconds,
+            max_retries=0,
+        )
         try:
             response = client.responses.create(
                 model=self.settings.openai_model,

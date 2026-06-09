@@ -39,6 +39,11 @@ class Settings:
     webhook_secret: str = ""
     max_audio_seconds: int = 35
     evolution_daily_limit: int = 200
+    # Tempo máximo (segundos) de espera pela OpenAI. Sem limite, o SDK espera até
+    # 600s e cada mensagem presa ocupa uma das 8 threads do gunicorn — 8 mensagens
+    # presas congelam o app inteiro (painel incluso) na hora do rush.
+    openai_timeout_seconds: int = 10
+    openai_transcription_timeout_seconds: int = 20
     require_table_validation: bool = False
     session_idle_ttl_hours: int = 6
     # Modo de desenvolvimento explicito. Quando True, as rotas /admin/* podem
@@ -101,6 +106,8 @@ def get_settings() -> Settings:
         dashboard_password=os.getenv("KLINK_DASHBOARD_PASSWORD", ""),
         webhook_secret=os.getenv("KLINK_WEBHOOK_SECRET", ""),
         evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
+        openai_timeout_seconds=_int_env("KLINK_OPENAI_TIMEOUT", 10),
+        openai_transcription_timeout_seconds=_int_env("KLINK_OPENAI_TRANSCRIPTION_TIMEOUT", 20),
         require_table_validation=_bool_env("KLINK_REQUIRE_TABLE_VALIDATION", False),
         session_idle_ttl_hours=_int_env("KLINK_SESSION_IDLE_TTL_HOURS", 6),
         dev_mode=_bool_env("KLINK_DEV_MODE", False),
