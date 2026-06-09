@@ -8,7 +8,7 @@ from .menu_service import MenuService
 from .openai_interpreter import OpenAIInterpreter
 from .order_service import OrderService
 from .table_session_service import TableSessionService
-from .text_utils import normalize_text
+from .text_utils import format_brl, normalize_text
 
 
 CONFIRM_WORDS = {
@@ -165,6 +165,16 @@ MESSAGES = {
         "pt": "Já pedi o fechamento da Mesa {table}. Um atendente vai levar a conta.",
         "en": "I asked to close Table {table}. A staff member will bring the bill.",
         "es": "Ya pedi cerrar la cuenta de la Mesa {table}. Un atendente llevara la cuenta.",
+    },
+    "account_header": {
+        "pt": "Conta da Mesa {table}:",
+        "en": "Bill for Table {table}:",
+        "es": "Cuenta de la Mesa {table}:",
+    },
+    "account_total": {
+        "pt": "Total: R$ {total}",
+        "en": "Total: R$ {total}",
+        "es": "Total: R$ {total}",
     },
     "service_requested": {
         "pt": "Combinado. Chamei o atendimento da Mesa {table}.",
@@ -349,24 +359,7 @@ class RestaurantAgent:
             }
 
         if self._is_account_request(normalized):
-            self.table_sessions.request_account_close(session["id"])
-            request = self.orders.create_service_request(
-                session=session,
-                tipo="fechar_conta",
-                descricao=f"Fechar conta da Mesa {session['mesa_numero']}",
-                setor="caixa",
-            )
-            return {
-                "reply": self._message(
-                    "account_requested",
-                    language,
-                    table=session["mesa_numero"],
-                ),
-                "session": session,
-                "request": request,
-                "action": "account_requested",
-                "language": language,
-            }
+            return self._request_account(session, language)
 
         service_type = self._service_type(normalized)
         if service_type:
@@ -495,24 +488,7 @@ class RestaurantAgent:
                 }
             return None
         if intent == "close_account":
-            self.table_sessions.request_account_close(session["id"])
-            request = self.orders.create_service_request(
-                session=session,
-                tipo="fechar_conta",
-                descricao=f"Fechar conta da Mesa {session['mesa_numero']}",
-                setor="caixa",
-            )
-            return {
-                "reply": self._message(
-                    "account_requested",
-                    language,
-                    table=session["mesa_numero"],
-                ),
-                "session": session,
-                "request": request,
-                "action": "account_requested",
-                "language": language,
-            }
+            return self._request_account(session, language)
         if intent == "service":
             description = result.get("service_description") or text
             request = self.orders.create_service_request(
@@ -585,6 +561,40 @@ class RestaurantAgent:
             "session": session,
             "order": draft,
             "action": "order_draft_created",
+            "language": language,
+        }
+
+    def _request_account(self, session: dict[str, Any], language: str) -> dict[str, Any]:
+        """Fecha a conta com extrato: o cliente recebe os itens + total no
+        WhatsApp e o caixa recebe o ticket já com o valor — antes o caixa tinha
+        que somar a comanda de cabeça."""
+        self.table_sessions.request_account_close(session["id"])
+        mesa = session["mesa_numero"]
+        summary = self.orders.session_summary(session["id"])
+        descricao = f"Fechar conta da Mesa {mesa}"
+        if summary["items"]:
+            descricao += f" — Total R$ {format_brl(summary['total'])}"
+        request = self.orders.create_service_request(
+            session=session,
+            tipo="fechar_conta",
+            descricao=descricao,
+            setor="caixa",
+        )
+        reply = self._message("account_requested", language, table=mesa)
+        if summary["items"]:
+            lines = [self._message("account_header", language, table=mesa)]
+            for item in summary["items"]:
+                nome = self._display_name(str(item["nome"]), language)
+                lines.append(
+                    f"{item['quantidade']}x {nome} — R$ {format_brl(item['subtotal'])}"
+                )
+            lines.append(self._message("account_total", language, total=format_brl(summary["total"])))
+            reply = "\n".join(lines) + "\n" + reply
+        return {
+            "reply": reply,
+            "session": session,
+            "request": request,
+            "action": "account_requested",
             "language": language,
         }
 

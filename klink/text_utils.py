@@ -17,3 +17,8 @@ def normalize_text(value: str) -> str:
 def compact_text(value: str) -> str:
     return normalize_text(value).replace(" ", "")
 
+
+def format_brl(value: float) -> str:
+    """Formata 121.0 -> '121,00' e 1234.5 -> '1.234,50' (padrão brasileiro)."""
+    return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+

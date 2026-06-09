@@ -20,8 +20,7 @@ from klink.table_session_service import TableSessionService
 from klink.whatsapp_adapter import WhatsAppAdapter
 
 
-def _format_brl(value: float) -> str:
-    return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+from klink.text_utils import format_brl as _format_brl
 
 
 def team_message_for(result: dict) -> str | None:
@@ -54,7 +53,10 @@ def team_message_for(result: dict) -> str | None:
         return "\n".join(lines)
 
     if action == "account_requested":
-        return f"💰 MESA {mesa} pediu a conta."
+        # A descrição do ticket já vem com o total ("Fechar conta da Mesa 12 —
+        # Total R$ 121,00"): a equipe vê o valor sem abrir o painel.
+        descricao = ((result.get("request") or {}).get("descricao") or "").strip()
+        return f"💰 {descricao}" if descricao else f"💰 MESA {mesa} pediu a conta."
 
     if action in ("service_requested", "human_called") and result.get("request"):
         descricao = (result["request"].get("descricao") or "").strip()

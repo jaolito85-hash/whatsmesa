@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
+from .billing_service import money_round, money_sum
 from .storage import Database, new_id, utc_now
 
 
@@ -193,6 +194,40 @@ class OrderService:
             texto_original="Repetir rodada anterior",
             origem="whatsapp",
         )
+
+    def session_summary(self, session_id: str) -> dict[str, Any]:
+        """Extrato da sessão: itens confirmados (não cancelados) e o total a pagar.
+
+        É a "conta da mesa" que o caixa nunca via: o sistema anota cada item com
+        preço a noite inteira e na hora H precisa entregar a soma pronta.
+        """
+        rows = self.db.fetchall(
+            """
+            select i.nome_snapshot as nome, sum(i.quantidade) as quantidade,
+                   i.preco_unitario_snapshot as preco
+            from pedido_itens i
+            join pedidos p on p.id = i.pedido_id
+            where p.sessao_mesa_id = ?
+              and p.status in ('enviado_setor', 'em_preparo', 'pronto', 'entregue')
+              and i.status != 'cancelado'
+            group by i.nome_snapshot, i.preco_unitario_snapshot
+            order by i.nome_snapshot
+            """,
+            (session_id,),
+        )
+        items = []
+        for row in rows:
+            quantidade = int(row["quantidade"])
+            preco = float(row["preco"])
+            items.append(
+                {
+                    "nome": row["nome"],
+                    "quantidade": quantidade,
+                    "preco": preco,
+                    "subtotal": money_round(quantidade * preco),
+                }
+            )
+        return {"items": items, "total": money_sum(item["subtotal"] for item in items)}
 
     def dashboard(self) -> dict[str, Any]:
         item_rows = self.db.fetchall(
