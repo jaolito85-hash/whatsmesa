@@ -552,9 +552,15 @@ class Database:
         mesa_id: str | None = None,
         sessao_mesa_id: str | None = None,
         processada: bool = False,
-    ) -> None:
+    ) -> bool:
+        """Grava a mensagem. Devolve False se o message_id já existia.
+
+        O retorno é o portão anti-duplicata do webhook: 'insert or ignore' com
+        índice único é atômico — duas entregas simultâneas da mesma mensagem
+        nunca processam duas vezes (o antigo check-then-insert tinha janela).
+        """
         with self.transaction() as conn:
-            conn.execute(
+            cursor = conn.execute(
                 """
                 insert or ignore into mensagens_whatsapp (
                   id, restaurante_id, message_id, remote_jid, mesa_id,
@@ -577,6 +583,7 @@ class Database:
                     utc_now(),
                 ),
             )
+        return cursor.rowcount > 0
 
     def record_whatsapp_send(
         self,

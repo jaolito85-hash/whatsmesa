@@ -712,11 +712,12 @@ def create_app() -> Flask:
         ) or inbound.remote_jid.startswith("status@"):
             return {"reply": "", "action": "group_ignored"}
 
-        if db.message_exists(inbound.message_id):
-            return {"reply": "", "action": "duplicate_ignored"}
-
         text = inbound.text
         if inbound.tipo == "audio":
+            # Atalho barato: reentrega de áudio já visto não paga transcrição
+            # de novo. O portão anti-duplicata de verdade é o insert abaixo.
+            if db.message_exists(inbound.message_id):
+                return {"reply": "", "action": "duplicate_ignored"}
             app.logger.info(
                 "audio inbound: id=%s url=%s mimetype=%s base64=%s data_keys=%s msg_keys=%s audio_keys=%s",
                 inbound.message_id,
@@ -753,7 +754,7 @@ def create_app() -> Flask:
                     "action": "audio_failed",
                 }
 
-        db.record_message(
+        inserted = db.record_message(
             message_id=inbound.message_id,
             remote_jid=inbound.remote_jid,
             tipo=inbound.tipo,
@@ -761,7 +762,35 @@ def create_app() -> Flask:
             audio_url=inbound.audio_url,
             payload=inbound.payload,
         )
-        result = agent.handle_message(remote_jid=inbound.remote_jid, text=text, origem="whatsapp")
+        if not inserted:
+            # A mesma mensagem já entrou por outra entrega do webhook.
+            return {"reply": "", "action": "duplicate_ignored"}
+
+        try:
+            result = agent.handle_message(
+                remote_jid=inbound.remote_jid, text=text, origem="whatsapp"
+            )
+        except Exception as exc:
+            # Falar algo errado é melhor que falar nada: sem esta proteção, um
+            # bug inesperado virava HTTP 500, o cliente ficava no vácuo e a
+            # mensagem era descartada como "duplicada" em toda reentrega.
+            app.logger.exception(
+                "Erro inesperado ao processar mensagem %s: %s", inbound.message_id, exc
+            )
+            db.mark_message_processed(
+                inbound.message_id,
+                restaurante_id=None,
+                mesa_id=None,
+                sessao_mesa_id=None,
+            )
+            return {
+                "reply": (
+                    "Tive um problema aqui agora. Pode chamar um atendente, por favor? "
+                    "(If you need help, please call the staff.)"
+                ),
+                "action": "internal_error",
+            }
+
         session = result.get("session") or {}
         db.mark_message_processed(
             inbound.message_id,

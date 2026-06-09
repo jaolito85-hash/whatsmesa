@@ -62,6 +62,13 @@ class WhatsAppAdapter:
 
         event = str(payload.get("event") or "").strip().lower().replace("_", ".")
 
+        # Duração pode vir como string suja de payloads malformados; não pode
+        # estourar aqui (estouraria como HTTP 500 antes de qualquer proteção).
+        try:
+            duration_seconds = int(duration) if duration else None
+        except (TypeError, ValueError):
+            duration_seconds = None
+
         return InboundMessage(
             message_id=key.get("id") or data.get("message_id") or payload.get("message_id") or uuid4().hex,
             remote_jid=key.get("remoteJid") or data.get("remote_jid") or payload.get("remote_jid") or "",
@@ -70,7 +77,7 @@ class WhatsAppAdapter:
             audio_url=audio_url,
             audio_base64=audio_base64,
             audio_mimetype=audio_mimetype,
-            duration_seconds=int(duration) if duration else None,
+            duration_seconds=duration_seconds,
             payload=payload,
             from_me=bool(key.get("fromMe")),
             event=event,
