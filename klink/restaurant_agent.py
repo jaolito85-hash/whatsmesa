@@ -11,6 +11,12 @@ from .table_session_service import TableSessionService
 from .text_utils import format_brl, normalize_text
 
 
+# Teto por item: acima disso o bot não manda direto pra cozinha — chama um
+# atendente para confirmar na mesa (pode ser festa grande... ou trote).
+MAX_ITEM_QUANTITY = 30
+
+MENU_WORDS = {"cardapio", "menu", "carta", "menus"}
+
 CONFIRM_WORDS = {
     "1",
     "sim",
@@ -152,9 +158,9 @@ MESSAGES = {
         "es": "No encontre un pedido pendiente. Dime que quieres pedir.",
     },
     "order_confirmed": {
-        "pt": "Pedido confirmado. Já mandei para {sectors}.",
-        "en": "Order confirmed. I sent it to {sectors}.",
-        "es": "Pedido confirmado. Sectores avisados: {sectors}.",
+        "pt": "Pedido confirmado e enviado para {sectors}. Se demorar, é só chamar um atendente.",
+        "en": "Order confirmed and sent to {sectors}. If it takes long, please call the staff.",
+        "es": "Pedido confirmado y enviado a {sectors}. Si tarda, llama al personal.",
     },
     "alter_order": {
         "pt": "Claro. Me diga como quer alterar o pedido.",
@@ -165,6 +171,26 @@ MESSAGES = {
         "pt": "Já pedi o fechamento da Mesa {table}. Um atendente vai levar a conta.",
         "en": "I asked to close Table {table}. A staff member will bring the bill.",
         "es": "Ya pedi cerrar la cuenta de la Mesa {table}. Un atendente llevara la cuenta.",
+    },
+    "menu_header": {
+        "pt": "📋 Nosso cardápio:",
+        "en": "📋 Our menu:",
+        "es": "📋 Nuestra carta:",
+    },
+    "menu_footer": {
+        "pt": "É só me dizer o que você quer, por texto ou áudio. 😉",
+        "en": "Just tell me what you'd like, by text or audio. 😉",
+        "es": "Solo dime lo que quieres, por texto o audio. 😉",
+    },
+    "menu_empty": {
+        "pt": "O cardápio ainda está sendo cadastrado. Chamei um atendente para te ajudar.",
+        "en": "The menu is still being set up. I called staff to help you.",
+        "es": "La carta aun se esta cargando. Llame al personal para ayudarte.",
+    },
+    "quantity_too_big": {
+        "pt": "Pedido grande assim (mais de {max} de um item) eu prefiro confirmar pessoalmente. Chamei um atendente na sua mesa. 👍",
+        "en": "For big orders (more than {max} of one item) I prefer a personal check. I called staff to your table. 👍",
+        "es": "Para pedidos grandes (mas de {max} de un item) prefiero confirmar en persona. Llame al personal a tu mesa. 👍",
     },
     "account_header": {
         "pt": "Conta da Mesa {table}:",
@@ -361,6 +387,14 @@ class RestaurantAgent:
         if self._is_account_request(normalized):
             return self._request_account(session, language)
 
+        if self._is_menu_request(normalized):
+            return {
+                "reply": self._menu_reply(language),
+                "session": session,
+                "action": "menu_sent",
+                "language": language,
+            }
+
         service_type = self._service_type(normalized)
         if service_type:
             description = self._service_description(text, session["mesa_numero"])
@@ -432,6 +466,9 @@ class RestaurantAgent:
                 "language": language,
             }
         if match["items"]:
+            guarded = self._quantity_guard(match["items"], session, text, language)
+            if guarded:
+                return guarded
             draft = self.orders.create_draft_order(
                 session=session,
                 items=match["items"],
@@ -546,6 +583,9 @@ class RestaurantAgent:
                     "language": language,
                 }
             return None
+        guarded = self._quantity_guard(items, session, text, language)
+        if guarded:
+            return guarded
         draft = self.orders.create_draft_order(
             session=session,
             items=items,
@@ -563,6 +603,66 @@ class RestaurantAgent:
             "action": "order_draft_created",
             "language": language,
         }
+
+    def _quantity_guard(
+        self,
+        items: list[dict[str, Any]],
+        session: dict[str, Any],
+        text: str,
+        language: str,
+    ) -> dict[str, Any] | None:
+        """Trava anti-trote: '100 picanhas' não entra direto na fila da cozinha.
+
+        Acima do teto, em vez de mandar pro setor, o bot chama um atendente para
+        confirmar pessoalmente — pode ser uma festa de verdade (o atendente
+        lança) ou um engraçadinho (o atendente ignora)."""
+        biggest = max((int(item.get("quantidade") or 1) for item in items), default=0)
+        if biggest <= MAX_ITEM_QUANTITY:
+            return None
+        request = self.orders.create_service_request(
+            session=session,
+            tipo="outro",
+            descricao=(
+                f"Mesa {session['mesa_numero']}: pedido com quantidade alta "
+                f"({text.strip()[:120]}) — confirmar pessoalmente antes de lançar"
+            ),
+            setor="salao",
+        )
+        return {
+            "reply": self._message("quantity_too_big", language, max=MAX_ITEM_QUANTITY),
+            "session": session,
+            "request": request,
+            "action": "quantity_too_big",
+            "language": language,
+        }
+
+    def _is_menu_request(self, normalized: str) -> bool:
+        return bool(set(normalized.split()) & MENU_WORDS)
+
+    def _menu_reply(self, language: str) -> str:
+        """Responde o cardápio com preços — antes, perguntar 'qual o cardápio?'
+        chamava um atendente (o cliente não tinha preço em lugar nenhum)."""
+        restaurant = self.table_sessions.restaurant()
+        items = [
+            p
+            for p in self.menu.products_for_restaurant(restaurant["id"])
+            if p.get("disponivel")
+        ]
+        if not items:
+            return self._message("menu_empty", language)
+        lines = [self._message("menu_header", language)]
+        by_category: dict[str, list[dict[str, Any]]] = {}
+        for product in items:
+            by_category.setdefault(product.get("categoria") or "geral", []).append(product)
+        for categoria, products in by_category.items():
+            lines.append("")
+            lines.append(f"*{categoria.capitalize()}*")
+            for product in products:
+                nome = self._display_name(str(product["nome"]), language)
+                lines.append(f"• {nome} — R$ {format_brl(float(product['preco']))}")
+        lines.append("")
+        lines.append(self._message("menu_footer", language))
+        return "\n".join(lines)
 
     def _request_account(self, session: dict[str, Any], language: str) -> dict[str, Any]:
         """Fecha a conta com extrato: o cliente recebe os itens + total no

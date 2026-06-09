@@ -136,7 +136,7 @@ class AgentFlowTest(unittest.TestCase):
         confirmed = agent.handle_message(remote_jid=remote, text="si")
         self.assertEqual(confirmed["action"], "order_confirmed")
         self.assertEqual(confirmed["language"], "es")
-        self.assertIn("Sectores avisados", confirmed["reply"])
+        self.assertIn("Pedido confirmado y enviado", confirmed["reply"])
         self.assertEqual(len(orders.dashboard()["columns"]["bar"]), 1)
         self.assertEqual(len(orders.dashboard()["columns"]["cozinha"]), 1)
 

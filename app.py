@@ -83,6 +83,14 @@ def create_app() -> Flask:
             "KLINK_DEV_MODE ligado: rotas /admin/* sem token e /api/demo/message ativa. "
             "NUNCA use em produção."
         )
+    if not settings.dev_mode and not settings.require_table_validation:
+        # Sem a validação, qualquer pessoa que descobrir o número do bot (está
+        # impresso em todas as mesas) abre mesa de casa, manda a cozinha
+        # preparar e gera cobrança — trote vira prejuízo.
+        app.logger.warning(
+            "KLINK_REQUIRE_TABLE_VALIDATION desligada: qualquer um abre mesa sem o "
+            "garçom confirmar. Em produção, configure =true."
+        )
     db = Database(settings.database_path)
     db.init_schema()
     db.migrate_legacy_data()
