@@ -98,6 +98,58 @@ class TravaSetupTest(unittest.TestCase):
         r = self._webhook("Mesa 1", "msg-ts-4")
         self.assertEqual(r.get_json()["action"], "session_activated")
 
+    def test_mesas_da_fase_demo_nao_entram_na_primeira_fatura(self):
+        # O fundador testa com 2 mesas na demo; isso é cortesia, não cobrança.
+        self._webhook("Mesa 1", "msg-ts-5")
+        self.client.post(
+            "/webhook",
+            json={
+                "data": {
+                    "key": {"remoteJid": "5511900000101@s.whatsapp.net", "id": "msg-ts-6"},
+                    "message": {"conversation": "Mesa 2"},
+                }
+            },
+        )
+        # Onboarding do cliente real + setup pago.
+        self.client.post("/api/restaurant", json={"nome": "Boteco Central"})
+        self.client.post(
+            "/admin/billing/setup-paid",
+            json={},
+            headers={"X-Admin-Token": "token-teste"},
+        )
+        # Primeira mesa REAL do cliente.
+        self.client.post(
+            "/webhook",
+            json={
+                "data": {
+                    "key": {"remoteJid": "5511900000102@s.whatsapp.net", "id": "msg-ts-7"},
+                    "message": {"conversation": "Mesa 3"},
+                }
+            },
+        )
+
+        r = self.client.post(
+            "/admin/billing/generate-invoice",
+            json={},
+            headers={"X-Admin-Token": "token-teste"},
+        )
+        fatura = r.get_json()
+
+        # Só a 1 mesa real entra; as 2 da demo ficam de fora. O setup não entra
+        # na fatura mensal porque já foi pago à parte (evento nasce 'pago').
+        self.assertEqual(fatura["qtd_pedidos"], 1)
+        self.assertAlmostEqual(float(fatura["valor_pedidos"]), 3.97)
+        self.assertAlmostEqual(float(fatura["valor_total"]), 3.97)
+
+    def test_fatura_com_periodo_invalido_da_400(self):
+        r = self.client.post(
+            "/admin/billing/generate-invoice",
+            json={"periodo": "2026-1"},
+            headers={"X-Admin-Token": "token-teste"},
+        )
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.get_json()["reason"], "periodo_invalido")
+
 
 class FaturaSemBuracosTest(unittest.TestCase):
     """Eventos pendentes de meses anteriores entram na próxima fatura em vez

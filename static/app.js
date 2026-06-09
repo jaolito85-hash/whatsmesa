@@ -2,6 +2,7 @@ const state = {
   lastCount: 0,
   billing: null,
   failedRefreshes: 0,
+  initialized: false,
 };
 
 // ---- Som de comanda nova (cozinha barulhenta não fica olhando tela) ----
@@ -205,9 +206,13 @@ function renderDashboard(data) {
     waBanner.hidden = !(wa.configured && (wa.state === "close" || wa.state === "connecting"));
   }
 
-  if (total > state.lastCount && state.lastCount > 0) {
+  // O primeiro render (carga da página) só calibra o contador — não apita.
+  // Depois disso, QUALQUER aumento apita, inclusive a primeira comanda do
+  // turno com o painel vazio (0 -> 1).
+  if (state.initialized && total > state.lastCount) {
     beepNewTicket();
   }
+  state.initialized = true;
   state.lastCount = total;
 }
 

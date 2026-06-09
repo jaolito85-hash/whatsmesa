@@ -637,7 +637,10 @@ def create_app() -> Flask:
         payload = request.get_json(silent=True) or {}
         restaurante_id = payload.get("restaurante_id") or table_sessions.restaurant()["id"]
         periodo = payload.get("periodo")
-        return jsonify(billing.generate_invoice(restaurante_id, periodo))
+        try:
+            return jsonify(billing.generate_invoice(restaurante_id, periodo))
+        except ValueError as exc:
+            return jsonify({"ok": False, "reason": "periodo_invalido", "message": str(exc)}), 400
 
     @app.post("/admin/billing/invoice/<fatura_id>/paid")
     def admin_invoice_paid(fatura_id: str):
@@ -731,7 +734,8 @@ def create_app() -> Flask:
         if inbound.event == "connection.update":
             data = inbound.payload.get("data") or {}
             state = str(data.get("state") or data.get("status") or "").strip().lower()
-            if state:
+            # Só estados conhecidos: payload forjado/estranho não polui o selo.
+            if state in ("open", "connecting", "close"):
                 db.set_estado("whatsapp_connection_state", state)
             return {"reply": "", "action": "connection_state_recorded"}
         # Evento que não é mensagem recebida (ex.: qrcode.updated): não há o que

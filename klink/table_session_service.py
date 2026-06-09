@@ -143,12 +143,19 @@ class TableSessionService:
                 ),
             )
             conn.execute("update mesas set status = ? where id = ?", (mesa_status, table["id"]))
+            # Token do giro capturado na MESMA transação da sessão: um "fechar
+            # mesa" simultâneo não consegue rotacionar o token no meio e fazer
+            # o próximo giro sair de graça.
+            giro_token = conn.execute(
+                "select qr_token_atual from mesas where id = ?", (table["id"],)
+            ).fetchone()[0]
 
         if not self.require_validation and self.billing:
             self.billing.record_session_billing(
                 restaurante_id=table["restaurante_id"],
                 sessao_id=session_id,
                 mesa_id=table["id"],
+                mesa_token=giro_token,
             )
 
         return self.active_session_for_whatsapp(remote_jid)
@@ -182,12 +189,16 @@ class TableSessionService:
                 "update mesas set status = 'sessao_ativa' where id = ?",
                 (session["mesa_id"],),
             )
-        
+            giro_token = conn.execute(
+                "select qr_token_atual from mesas where id = ?", (session["mesa_id"],)
+            ).fetchone()[0]
+
         if self.billing:
             self.billing.record_session_billing(
                 restaurante_id=session["restaurante_id"],
                 sessao_id=session_id,
                 mesa_id=session["mesa_id"],
+                mesa_token=giro_token,
             )
 
         return self.db.fetchone(

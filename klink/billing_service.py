@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
@@ -138,14 +139,28 @@ class BillingService:
         )
         if setup_event:
             return account
-        self.db.execute(
-            """
-            update billing_accounts
-            set status = 'aguardando_setup', setup_fee_paid_em = null
-            where id = ?
-            """,
-            (account["id"],),
-        )
+        with self.db.transaction() as conn:
+            conn.execute(
+                """
+                update billing_accounts
+                set status = 'aguardando_setup', setup_fee_paid_em = null
+                where id = ?
+                """,
+                (account["id"],),
+            )
+            # As mesas abertas na FASE DEMO (testes do fundador) não podem
+            # entrar na primeira fatura do cliente — eram cortesia. Sem isto,
+            # a varredura "<= periodo" da fatura cobraria os próprios testes.
+            conn.execute(
+                """
+                update billing_events
+                set status_cobranca = 'cancelado'
+                where billing_account_id = ?
+                  and tipo = 'mesa_aberta'
+                  and status_cobranca = 'pendente'
+                """,
+                (account["id"],),
+            )
         return self.account_for_restaurant(restaurante_id)
 
     def suspend(self, restaurante_id: str) -> dict[str, Any]:
@@ -172,6 +187,7 @@ class BillingService:
         restaurante_id: str,
         sessao_id: str,
         mesa_id: str | None = None,
+        mesa_token: str | None = None,
     ) -> dict[str, Any] | None:
         account = self.account_for_restaurant(restaurante_id)
         if account["status"] != "ativo":
@@ -182,8 +198,13 @@ class BillingService:
         # que abre até o fechamento. Vários celulares na mesma mesa caem no MESMO
         # giro => UMA cobrança de R$ 3,97 — exatamente o "por mesa aberta" prometido
         # na venda (antes, 4 amigos escaneando o QR viravam 4 cobranças).
+        # O chamador deve passar mesa_token capturado NA MESMA transação que criou
+        # a sessão: reler aqui abriria janela para um "fechar mesa" simultâneo
+        # rotacionar o token e o próximo giro sair de graça.
         mesa_giro = None
-        if mesa_id:
+        if mesa_id and mesa_token:
+            mesa_giro = f"{mesa_id}:{mesa_token}"
+        elif mesa_id:
             mesa = self.db.fetchone(
                 "select qr_token_atual from mesas where id = ?", (mesa_id,)
             )
@@ -256,6 +277,10 @@ class BillingService:
     ) -> dict[str, Any]:
         account = self.account_for_restaurant(restaurante_id)
         periodo = periodo or current_period()
+        # Período fora do formato AAAA-MM ("2026-1", "jan/26") quebraria a
+        # comparação por texto e poderia gerar fatura duplicada do mesmo mês.
+        if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", periodo):
+            raise ValueError(f"Periodo invalido: {periodo!r}. Use o formato AAAA-MM.")
 
         existing = self.db.fetchone(
             "select * from faturas where billing_account_id = ? and periodo_ano_mes = ?",
