@@ -2,7 +2,10 @@
 
 > QG do marketing do Klink. Aqui ficam a identidade da marca, as decisões que ainda
 > faltam e todas as copies prontas pra copiar e colar.
-> Última atualização: **30/05/2026**
+> Última atualização: **10/06/2026**
+>
+> 🎯 **Anúncios pagos:** o playbook completo de tráfego pago (campanhas, criativos,
+> copys de anúncio, atendimento de lead e metas) está no **`TRAFEGO_PAGO.md`**.
 
 ---
 

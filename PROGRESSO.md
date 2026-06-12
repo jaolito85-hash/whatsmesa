@@ -1,7 +1,7 @@
 # Progresso — Klink
 
 > Diário de bordo do projeto, em linguagem simples. Atualizado a cada mudança.
-> Última atualização: **09/06/2026**
+> Última atualização: **11/06/2026**
 
 ---
 
@@ -46,6 +46,13 @@ o garçom acompanha pelo computador/celular.
 
 ## O que falta antes do primeiro cliente pagante
 
+- [ ] 🚨 **URGENTE — Desligar o KLINK_DEV_MODE no Coolify (12/06/2026).** O João
+  ligou o "dev mode" no Coolify tentando rodar o app no computador local (não
+  precisava — Coolify só vale pro servidor). Com ele ligado NO SERVIDOR, as rotas
+  de administração ficam abertas sem senha pra qualquer pessoa na internet.
+  No Coolify: apagar a variável `KLINK_DEV_MODE` (ou deixar `=0`) e garantir que
+  `KLINK_DASHBOARD_PASSWORD` tem uma senha forte. Pra teste no computador local,
+  o dev mode é ligado só na janela do PowerShell: `$env:KLINK_DEV_MODE = "1"`.
 - [x] ✅ **QR permanente — RESOLVIDO (31/05/2026).** Agora cada mesa tem um "endereço
   fixo" que nunca muda, então o **QR impresso e colado continua funcionando para sempre**
   (inclusive depois da conta fechar e a mesa reabrir). A proteção interna do link
@@ -66,6 +73,111 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 12/06/2026 — Termos de Uso e Política de Privacidade no ar (LGPD)
+Os botões "Termos" e "Privacidade" do rodapé deixaram de ser enfeite:
+- **Páginas novas** `/termos` e `/privacidade`, públicas, no mesmo visual da marca.
+- **Política de Privacidade conforme a LGPD**: quem é controlador e quem é operador
+  (detalhe importante: nos dados do cliente da mesa, o restaurante é o controlador
+  e o Klink é o operador), tabela do que é coletado de cada pessoa, finalidades,
+  áudio processado por IA só pra montar o pedido, com quem compartilha, prazos de
+  guarda, direitos do titular (art. 18) com canal de contato e menção à ANPD.
+- **Termos de Uso honestos**: o que o serviço é (e o que NÃO é), fase piloto,
+  preços por extenso (R$ 147 únicos + R$ 3,97 por mesa validada, sem mensalidade),
+  dependência do WhatsApp declarada, cancelamento sem multa, foro do domicílio
+  do estabelecimento (amigável ao pequeno).
+- 2 testes novos garantem que as páginas são públicas — **460 testes passando**.
+- ⚠️ Pendência anotada: quando o Klink tiver CNPJ/razão social, incluir nos dois
+  documentos. E antes de escalar pra muitos clientes, vale revisão de advogado.
+
+### 12/06/2026 — Hero com iPhone animado (mini-vídeo) no lugar do card de chat
+O card de conversa do topo virou um **iPhone realista desenhado na própria página**,
+com o WhatsApp do Klink aberto:
+- Foto de perfil = mascote real do Klink, nome "Klink" com **selo azul de verificado**,
+  status "online", barra de status com hora/sinal/bateria e a "ilhinha" do iPhone.
+- A conversa **se mexe sozinha em loop**, como um mini-vídeo: cliente manda **áudio**
+  (bolha com onda sonora animada) → "digitando..." → Klink entende ("🍺 3 Coronas ·
+  🍟 2 batatas. Confirma?") → cliente responde "1" → **"Pedido enviado! ✅ O Bar e a
+  Cozinha já receberam. Já já chega na sua mesa 😉"**.
+- Vantagens sobre vídeo de verdade: texto 100% nítido, não pesa nada no carregamento
+  e é grátis. O mascote grande continua no canto esquerdo, intocado.
+- Ajuste de copy a pedido do João: "Nada muda no seu salão" virou **"Nada muda na
+  sua operação. Você só vende mais."** — com a palavra "vende" em verde-dinheiro.
+- **Vistoria completa no celular** (telas de 360px e 390px): o teste automático achou
+  2 defeitos e os dois foram corrigidos na hora — (1) a página "vazava" 4 pixels pro
+  lado no Android por causa do quadro verde inclinado atrás do iPhone (agora qualquer
+  decoração que escape é cortada, sem rolagem lateral); (2) no celular, o logo
+  atropelava o link "Entrar no Painel" na barra do topo (o link agora só aparece em
+  tela grande — no celular fica logo + botão "Começar Agora" em uma linha).
+  Reverificado depois das correções: zero estouro, zero erro, as 9 seções na ordem
+  certa e nada cortado.
+- Também foi gerada **1 imagem no Higgsfield** (iPhone fotorrealista na mão, em mesa
+  de bar, com o mascote no perfil, tick azul e texto em português PERFEITO). O João
+  avaliou e decidiu: **o iPhone animado fica no topo do site**; a foto foi guardada em
+  `material-vendas/criativo-iphone-whatsapp.png` — é um criativo pronto pros anúncios
+  do plano de tráfego pago. Vídeo de IA fica pra depois, se precisar.
+
+### 11/06/2026 (tarde) — Landing page versão "vendedora": copy agressiva + calculadora
+Segunda rodada na página, agora com copy comercial de verdade (visual preservado):
+- **Título**: mantido "O seu WhatsApp agora atende as mesas." (escolha do João,
+  com a palavra "WhatsApp" em verde) — e a linha "Sem app. Sem login. Sem mudar
+  sua operação." logo abaixo do botão.
+- **Dor com nome e sobrenome**: "A venda não se perde no caixa. Ela se perde na
+  espera." + os 3 blocos (cliente já sabe o que quer / garçom não está em todas /
+  pedido que espera, esfria). Cita quiosque, praia e área externa.
+- **Como funciona virou 5 passos**, terminando em "Cai no setor certo" (Bar,
+  Cozinha, Caixa, Salão). Banido o "nossa IA entende" — agora é "o Klink entende".
+- **Seção nova de exemplos**: 6 cartões mostrando a mensagem do cliente virando
+  etiqueta de setor ("Me vê 3 Coronas e 2 batatas" → Bar + Cozinha; "fecha minha
+  conta" → Caixa; "pode limpar?" → Salão; inglês e espanhol → chegam em português;
+  áudio no meio do barulho).
+- **Calculadora interativa**: "Quanto vale um pedido extra por mesa?" — o dono
+  arrasta 4 controles (mesas/dia, pedidos extras/dia, valor médio, dias/mês) e vê
+  na hora: venda adicional, custo do Klink e a diferença que sobra. Com aviso
+  honesto de "simulação ilustrativa" — zero promessa de porcentagem inventada.
+- **Fechamento novo**: faixa escura no fim — "Seu cliente está com o celular na
+  mão agora" — com botão pro WhatsApp.
+- Botões agora dizem "Quero testar no meu restaurante".
+- **Conferido**: foto da página em tela de computador e de celular (tudo
+  empilha certinho no celular), calculadora testada ao vivo (conta bate) e os
+  **458 testes passando**.
+
+### 11/06/2026 — Landing page com nova abordagem de venda (visual intacto)
+O design (cores, fontes, estilo) ficou igual — só a conversa mudou, agora toda
+focada no dono de restaurante/bar e no "você não tem risco nenhum":
+- **Título novo**: "Mesa que não espera consome mais." — fala de dinheiro logo
+  na primeira frase.
+- **Zero mensalidade em todo lugar**: no topo, na seção de preços (agora o
+  R$ 0,00 aparece GRANDE e em verde antes dos outros valores) e nas dúvidas.
+  Mensagem: se nenhum cliente abrir mesa, a conta do mês é R$ 0,00.
+- **R$ 3,97 por mesa aberta** com a explicação que convence: a mesa gastou
+  R$ 100, R$ 300 ou R$ 500? Tanto faz, são os mesmos R$ 3,97.
+- **R$ 147 com o que vem dentro**: a gente fornece o número de WhatsApp,
+  instala todo o programa, cadastra o cardápio e entrega os QR Codes prontos.
+- **A cena da mão levantada**: cliente que já sabe que quer 3 cervejas não tem
+  por que ficar de braço erguido esperando o garçom olhar. Virou a seção escura
+  do "problema".
+- **A fala do garçom** entrou no "como funciona": "se você me chamar e eu
+  estiver em outra mesa, pede pelo QR que sai na hora" — deixando claro que
+  nada muda na operação e ninguém é substituído.
+- **Nova seção "Dúvidas de dono de bar"**: mata as 4 objeções (preciso mudar
+  algo? não tenho cardápio online; precisa baixar app? e se ninguém usar?).
+- **Honestidade**: removi os "+12 restaurantes pilotos" com fotos falsas de
+  banco de imagem — no lugar, o convite real: piloto aberto pra poucos
+  restaurantes.
+- Conferi a página inteira com captura de tela: nada quebrou no visual.
+
+### 10/06/2026 — Playbook de tráfego pago pronto (`TRAFEGO_PAGO.md`)
+Plano completo para anunciar o Klink e fazer donos de bar chamarem no WhatsApp:
+- **Estratégia**: anúncio em vídeo no Instagram/Facebook → clique cai no WhatsApp de
+  vendas → demo ao vivo em 2 minutos → piloto de R$ 147.
+- **Campanhas**: validação com R$ 30/dia (clique-para-WhatsApp, 2 públicos, 3 criativos),
+  remarketing na semana 3 e regras de escala.
+- **4 criativos roteirizados** (demo crua filmada no bar, fundador na câmera, imagem
+  "R$ 3,97 por mesa" e carrossel) + **3 copys prontas** com títulos e botão.
+- **Roteiro de atendimento do lead** (responder em 5 min, qualificar, demo ao vivo
+  pelo número demo, proposta e objeções) + metas honestas (3 a 8 pilotos no 1º mês).
+- 19 commits da auditoria também foram **enviados ao GitHub** hoje (deploy liberado).
 
 ### 09/06/2026 — Segunda leva: as 8 correções estruturais (todas prontas!)
 A continuação da auditoria, com as mudanças mais profundas:
