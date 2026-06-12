@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termos de Uso — Klink</title>
+    <meta name="description" content="Termos de Uso do Klink: como funciona o serviço, preços, responsabilidades e direitos do estabelecimento.">
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        :root { --lemon: #49b548; --ink: #151515; --paper: #fbfbf8; }
+        html, body { overflow-x: hidden; overflow-x: clip; }
+        h1, h2, h3, .brand-font { font-family: "Rockwell", "Georgia", serif; }
+        .bg-grid {
+            background-image:
+                linear-gradient(90deg, rgba(21, 21, 21, 0.035) 1px, transparent 1px),
+                linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+        .doc h2 { font-size: 1.35rem; font-weight: 800; margin: 2.2rem 0 0.7rem; }
+        .doc p, .doc li { color: #4b4f4a; line-height: 1.7; margin-bottom: 0.6rem; }
+        .doc ul { list-style: disc; padding-left: 1.4rem; margin-bottom: 0.8rem; }
+        .doc strong { color: #151515; }
+    </style>
+</head>
+<body class="bg-[#fbfbf8] bg-grid text-[#151515]">
+
+    <nav class="sticky top-0 z-50 bg-[#fbfbf8]/90 backdrop-blur-md border-b-2 border-[#151515] px-6 py-4">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="Klink" class="h-9 w-auto" width="36" height="36">
+                <span class="klink-logo" style="font-size:1.5rem" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+            </a>
+            <a href="/" class="font-bold text-sm hover:underline whitespace-nowrap">← Voltar ao site</a>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-6 py-14">
+        <div class="bg-white border-2 border-[#151515] rounded-3xl p-8 md:p-12 shadow-[8px_8px_0_rgba(21,21,21,0.1)]">
+            <h1 class="text-3xl md:text-4xl font-black mb-2">Termos de Uso</h1>
+            <p class="text-sm text-[#6d706c] font-medium mb-8">Última atualização: 12 de junho de 2026 · Contato: <a href="mailto:contato@klinkai.com.br" class="underline">contato@klinkai.com.br</a></p>
+
+            <div class="doc">
+                <p>Bem-vindo ao <strong>Klink</strong>. Estes Termos de Uso regulam a contratação e o uso do serviço pelo bar, restaurante ou estabelecimento similar (o "<strong>Estabelecimento</strong>"). Ao contratar ou usar o Klink, o Estabelecimento declara que leu, entendeu e concorda com estes Termos.</p>
+
+                <h2>1. O que é o Klink</h2>
+                <p>O Klink é uma ferramenta que permite que clientes sentados nas mesas do Estabelecimento façam pedidos pelo WhatsApp, por texto ou áudio, a partir do QR Code da mesa. O Klink interpreta o pedido e o organiza em um painel operacional, separado por setores (Bar, Cozinha, Caixa e Salão), para que a equipe do Estabelecimento prepare e entregue.</p>
+                <p>O Klink é uma ferramenta de apoio: <strong>não substitui a equipe do Estabelecimento</strong> e não prepara, entrega nem cobra os pedidos.</p>
+
+                <h2>2. Fase piloto</h2>
+                <p>O serviço encontra-se em <strong>fase piloto</strong>, com vagas limitadas e acompanhamento próximo. Nessa fase, funcionalidades podem ser ajustadas e aprimoradas continuamente. O Estabelecimento será comunicado sobre mudanças relevantes.</p>
+
+                <h2>3. Ativação e responsabilidades do Estabelecimento</h2>
+                <ul>
+                    <li>Fornecer informações corretas na contratação (dados de contato, cardápio e preços).</li>
+                    <li>Manter o cardápio atualizado e comunicar alterações.</li>
+                    <li>Apresentar o QR Code aos clientes e validar a abertura das mesas no painel.</li>
+                    <li>Preparar e entregar os pedidos recebidos, além de realizar a cobrança dos seus clientes.</li>
+                    <li>Guardar com segurança a senha de acesso ao painel e não compartilhá-la com terceiros não autorizados.</li>
+                </ul>
+
+                <h2>4. Preços e pagamento</h2>
+                <ul>
+                    <li><strong>Ativação (pagamento único):</strong> R$ 147,00 — inclui o fornecimento do número de WhatsApp, a instalação do sistema, o cadastro do cardápio e a entrega dos QR Codes.</li>
+                    <li><strong>Uso:</strong> R$ 3,97 por <strong>mesa aberta e validada</strong>, independentemente do valor consumido na mesa.</li>
+                    <li><strong>Sem mensalidade fixa:</strong> se nenhuma mesa for aberta pelo Klink no período, nada é cobrado além da ativação já paga.</li>
+                </ul>
+                <p>Eventuais reajustes de preço serão comunicados com antecedência mínima de 30 (trinta) dias. Em caso de inadimplência, o serviço poderá ser suspenso até a regularização.</p>
+
+                <h2>5. Relação com o cliente final</h2>
+                <p>A venda de produtos é realizada <strong>diretamente entre o Estabelecimento e seus clientes</strong>, aplicando-se a eles o Código de Defesa do Consumidor (Lei nº 8.078/1990). O Klink atua exclusivamente como ferramenta de transmissão e organização de pedidos, não integrando a cadeia de fornecimento de alimentos e bebidas.</p>
+
+                <h2>6. Disponibilidade do serviço</h2>
+                <p>O Klink depende de serviços de terceiros — como a plataforma WhatsApp, provedores de internet, de nuvem e de inteligência artificial — e, por isso, <strong>não garante funcionamento ininterrupto</strong>. Em caso de indisponibilidade, o painel exibe aviso visível e o Estabelecimento pode (e deve) continuar atendendo normalmente pelos seus meios tradicionais. Não há cobrança por mesas que não forem abertas.</p>
+
+                <h2>7. Uso aceitável</h2>
+                <ul>
+                    <li>É proibido usar o Klink para fins ilícitos, para envio de mensagens em massa não solicitadas (spam) ou de forma que viole as políticas da plataforma WhatsApp.</li>
+                    <li>É proibido tentar burlar, sobrecarregar ou comprometer a segurança do sistema.</li>
+                </ul>
+
+                <h2>8. Dados pessoais</h2>
+                <p>O tratamento de dados pessoais segue a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD) e está detalhado na nossa <a href="/privacidade" class="underline font-bold">Política de Privacidade</a>. Em resumo: nos dados dos clientes finais do Estabelecimento (telefone, mensagens e pedidos), o Estabelecimento atua como <strong>controlador</strong> e o Klink como <strong>operador</strong>, tratando os dados apenas para prestar o serviço.</p>
+
+                <h2>9. Propriedade intelectual</h2>
+                <p>A marca Klink, o software, o painel, os textos e os elementos visuais pertencem ao Klink e são protegidos pela legislação aplicável. A contratação concede ao Estabelecimento apenas uma licença de uso, pessoal e intransferível, pelo período contratado.</p>
+
+                <h2>10. Limitação de responsabilidade</h2>
+                <p>Na máxima extensão permitida pela lei, o Klink não responde por: (a) qualidade, preparo, entrega ou cobrança dos produtos vendidos pelo Estabelecimento; (b) indisponibilidades causadas por terceiros (WhatsApp, internet, energia, hospedagem); (c) lucros cessantes. Caso seja apurada responsabilidade do Klink, a indenização ficará limitada ao total efetivamente pago pelo Estabelecimento nos 3 (três) meses anteriores ao evento.</p>
+
+                <h2>11. Cancelamento</h2>
+                <p>Qualquer das partes pode encerrar o serviço a qualquer momento, mediante simples comunicação, sem multa. Permanecem devidos os valores das mesas abertas até a data do encerramento. O valor de ativação remunera serviços já prestados (instalação, número, cadastro do cardápio e QR Codes) e não é reembolsável após a conclusão da instalação.</p>
+
+                <h2>12. Alterações destes Termos</h2>
+                <p>Estes Termos podem ser atualizados. Mudanças relevantes serão comunicadas ao Estabelecimento com antecedência razoável. O uso do serviço após a vigência das alterações representa concordância.</p>
+
+                <h2>13. Lei aplicável e foro</h2>
+                <p>Aplica-se a legislação brasileira. Fica eleito o foro da comarca do domicílio do Estabelecimento para dirimir eventuais controvérsias.</p>
+
+                <h2>14. Contato</h2>
+                <p>Dúvidas sobre estes Termos: <a href="mailto:contato@klinkai.com.br" class="underline">contato@klinkai.com.br</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-[#151515] text-white py-10 px-6">
+        <div class="max-w-3xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
+            <div class="text-[#dee4e2]/50 font-medium">© 2026 Klink. Todos os direitos reservados.</div>
+            <div class="flex gap-6 font-bold">
+                <a href="/termos" class="hover:text-[#49b548]">Termos</a>
+                <a href="/privacidade" class="hover:text-[#49b548]">Privacidade</a>
+                <a href="mailto:contato@klinkai.com.br" class="hover:text-[#49b548]">Contato</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

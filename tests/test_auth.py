@@ -61,6 +61,16 @@ class DashboardAuthTest(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
 
+    def test_termos_is_public(self):
+        response = self.client.get("/termos")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Termos de Uso".encode("utf-8"), response.data)
+
+    def test_privacidade_is_public(self):
+        response = self.client.get("/privacidade")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Privacidade".encode("utf-8"), response.data)
+
     def test_dashboard_requires_auth(self):
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 401)

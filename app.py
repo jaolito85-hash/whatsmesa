@@ -117,7 +117,7 @@ def create_app() -> Flask:
     audio = AudioService(settings)
     qr = QRService(settings, table_sessions)
 
-    PUBLIC_PATHS = ("/", "/health", "/webhook", "/qr/", "/static/")
+    PUBLIC_PATHS = ("/", "/termos", "/privacidade", "/health", "/webhook", "/qr/", "/static/")
 
     def whatsapp_status() -> dict:
         """Situação REAL do WhatsApp, três estados honestos:
@@ -158,6 +158,14 @@ def create_app() -> Flask:
     @app.get("/")
     def landing():
         return render_template("landing.html")
+
+    @app.get("/termos")
+    def termos():
+        return render_template("termos.html")
+
+    @app.get("/privacidade")
+    def privacidade():
+        return render_template("privacidade.html")
 
     @app.get("/dashboard")
     def dashboard():

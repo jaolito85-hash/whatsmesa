@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade — Klink</title>
+    <meta name="description" content="Política de Privacidade do Klink: quais dados coletamos, para quê, com quem compartilhamos e os seus direitos pela LGPD.">
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='brand/favicon-32.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        :root { --lemon: #49b548; --ink: #151515; --paper: #fbfbf8; }
+        html, body { overflow-x: hidden; overflow-x: clip; }
+        h1, h2, h3, .brand-font { font-family: "Rockwell", "Georgia", serif; }
+        .bg-grid {
+            background-image:
+                linear-gradient(90deg, rgba(21, 21, 21, 0.035) 1px, transparent 1px),
+                linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+        .doc h2 { font-size: 1.35rem; font-weight: 800; margin: 2.2rem 0 0.7rem; }
+        .doc p, .doc li { color: #4b4f4a; line-height: 1.7; margin-bottom: 0.6rem; }
+        .doc ul { list-style: disc; padding-left: 1.4rem; margin-bottom: 0.8rem; }
+        .doc strong { color: #151515; }
+        .doc table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 1.2rem; font-size: 0.92rem; }
+        .doc th, .doc td { border: 2px solid #151515; padding: 0.6rem 0.8rem; text-align: left; vertical-align: top; color: #4b4f4a; }
+        .doc th { background: #fbfbf8; color: #151515; font-weight: 800; }
+    </style>
+</head>
+<body class="bg-[#fbfbf8] bg-grid text-[#151515]">
+
+    <nav class="sticky top-0 z-50 bg-[#fbfbf8]/90 backdrop-blur-md border-b-2 border-[#151515] px-6 py-4">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="Klink" class="h-9 w-auto" width="36" height="36">
+                <span class="klink-logo" style="font-size:1.5rem" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+            </a>
+            <a href="/" class="font-bold text-sm hover:underline whitespace-nowrap">← Voltar ao site</a>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-6 py-14">
+        <div class="bg-white border-2 border-[#151515] rounded-3xl p-8 md:p-12 shadow-[8px_8px_0_rgba(21,21,21,0.1)]">
+            <h1 class="text-3xl md:text-4xl font-black mb-2">Política de Privacidade</h1>
+            <p class="text-sm text-[#6d706c] font-medium mb-8">Última atualização: 12 de junho de 2026 · Contato: <a href="mailto:contato@klinkai.com.br" class="underline">contato@klinkai.com.br</a></p>
+
+            <div class="doc">
+                <p>Esta Política explica, em linguagem simples, como o <strong>Klink</strong> trata dados pessoais, em conformidade com a <strong>Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD)</strong> e com o Marco Civil da Internet (Lei nº 12.965/2014).</p>
+
+                <h2>1. Quem é quem (papéis da LGPD)</h2>
+                <ul>
+                    <li><strong>Dados dos estabelecimentos</strong> (donos e equipes de bares e restaurantes que contratam o Klink) e dos <strong>visitantes deste site</strong>: o Klink é o <strong>controlador</strong> — decide como e por que esses dados são usados.</li>
+                    <li><strong>Dados dos clientes finais</strong> (pessoas que pedem pelo WhatsApp na mesa do estabelecimento): o <strong>estabelecimento é o controlador</strong> e o Klink atua como <strong>operador</strong>, tratando esses dados somente para prestar o serviço de pedidos.</li>
+                </ul>
+
+                <h2>2. Quais dados coletamos</h2>
+                <table>
+                    <tr><th>De quem</th><th>Quais dados</th></tr>
+                    <tr><td><strong>Estabelecimento</strong></td><td>Nome do responsável, nome do estabelecimento, telefone/WhatsApp, e-mail, endereço, cardápio e preços, dados de acesso ao painel e registros de cobrança (mesas abertas).</td></tr>
+                    <tr><td><strong>Cliente final (na mesa)</strong></td><td>Número de WhatsApp, nome de perfil, mensagens de texto e de áudio enviadas ao número do estabelecimento, itens pedidos, número da mesa e horários.</td></tr>
+                    <tr><td><strong>Visitante do site</strong></td><td>Dados técnicos básicos de acesso (como endereço IP e tipo de navegador), registrados pela infraestrutura de hospedagem por segurança.</td></tr>
+                </table>
+
+                <h2>3. Para que usamos (finalidades)</h2>
+                <ul>
+                    <li><strong>Operar o serviço:</strong> receber a mensagem, transcrever o áudio, montar o pedido, confirmar com o cliente e exibir no painel do setor certo (base legal: execução de contrato).</li>
+                    <li><strong>Cobrança:</strong> contar mesas abertas e gerar a fatura do estabelecimento (execução de contrato).</li>
+                    <li><strong>Segurança e prevenção a abusos:</strong> limites anti-trote, registros de funcionamento e proteção do sistema (legítimo interesse).</li>
+                    <li><strong>Atendimento e suporte:</strong> responder solicitações pelos nossos canais (execução de contrato/legítimo interesse).</li>
+                    <li><strong>Obrigações legais:</strong> guarda de registros exigida por lei (cumprimento de obrigação legal).</li>
+                </ul>
+                <p><strong>Não vendemos dados pessoais</strong> e não usamos o conteúdo das conversas para publicidade.</p>
+
+                <h2>4. Áudio e inteligência artificial</h2>
+                <p>Quando o cliente envia um áudio, ele é processado por provedores de inteligência artificial para <strong>transcrição e interpretação do pedido</strong>. O conteúdo é usado exclusivamente para montar e confirmar o pedido — não para criar perfis nem para publicidade.</p>
+
+                <h2>5. Com quem compartilhamos</h2>
+                <ul>
+                    <li><strong>O próprio estabelecimento:</strong> o pedido, a mesa e o histórico da comanda aparecem no painel da equipe — é a essência do serviço.</li>
+                    <li><strong>Provedores de tecnologia:</strong> hospedagem/nuvem, plataforma WhatsApp (Meta) para envio e recebimento das mensagens e provedores de IA para transcrição/interpretação — todos atuando sob contratos e apenas no necessário.</li>
+                    <li><strong>Autoridades públicas:</strong> quando houver obrigação legal ou ordem judicial.</li>
+                </ul>
+
+                <h2>6. Por quanto tempo guardamos</h2>
+                <p>Pelo tempo necessário às finalidades desta Política: dados de pedidos e comandas compõem o histórico operacional e de cobrança do estabelecimento; registros de acesso seguem os prazos do Marco Civil da Internet; dados de cobrança seguem os prazos fiscais. Depois disso, os dados são excluídos ou anonimizados.</p>
+
+                <h2>7. Como protegemos</h2>
+                <p>Adotamos medidas técnicas e organizacionais razoáveis: acesso ao painel protegido por senha, comunicação criptografada (HTTPS), acesso restrito por necessidade e atualizações de segurança. Nenhum sistema é 100% infalível, mas incidentes relevantes serão comunicados conforme a LGPD.</p>
+
+                <h2>8. Seus direitos (art. 18 da LGPD)</h2>
+                <p>Qualquer titular de dados pode solicitar:</p>
+                <ul>
+                    <li>Confirmação de que tratamos seus dados e <strong>acesso</strong> a eles;</li>
+                    <li><strong>Correção</strong> de dados incompletos, inexatos ou desatualizados;</li>
+                    <li><strong>Anonimização, bloqueio ou eliminação</strong> de dados desnecessários ou tratados em desconformidade;</li>
+                    <li><strong>Portabilidade</strong> a outro fornecedor;</li>
+                    <li>Informação sobre <strong>compartilhamentos</strong> realizados;</li>
+                    <li><strong>Revogação do consentimento</strong>, quando essa for a base legal.</li>
+                </ul>
+                <p>Para exercer: escreva para <a href="mailto:contato@klinkai.com.br" class="underline">contato@klinkai.com.br</a>. Se o pedido envolver dados de pedidos feitos na mesa de um estabelecimento, poderemos encaminhá-lo ao estabelecimento (controlador) e ajudaremos no atendimento. Você também pode apresentar reclamação à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados).</p>
+
+                <h2>9. Cookies e tecnologias de terceiros</h2>
+                <p>Este site <strong>não usa cookies de publicidade nem de rastreamento</strong>. Recursos visuais carregados de terceiros (como fontes do Google) podem registrar dados técnicos, como o endereço IP, segundo as políticas desses provedores.</p>
+
+                <h2>10. Crianças e adolescentes</h2>
+                <p>O Klink é um serviço para estabelecimentos comerciais e não é direcionado a menores de 18 anos.</p>
+
+                <h2>11. Alterações desta Política</h2>
+                <p>Podemos atualizar esta Política para refletir melhorias do serviço ou mudanças legais. A data da última atualização aparece no topo. Mudanças relevantes serão comunicadas aos estabelecimentos.</p>
+
+                <h2>12. Encarregado e contato</h2>
+                <p>O canal do encarregado pelo tratamento de dados pessoais (DPO) do Klink é: <a href="mailto:contato@klinkai.com.br" class="underline">contato@klinkai.com.br</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-[#151515] text-white py-10 px-6">
+        <div class="max-w-3xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
+            <div class="text-[#dee4e2]/50 font-medium">© 2026 Klink. Todos os direitos reservados.</div>
+            <div class="flex gap-6 font-bold">
+                <a href="/termos" class="hover:text-[#49b548]">Termos</a>
+                <a href="/privacidade" class="hover:text-[#49b548]">Privacidade</a>
+                <a href="mailto:contato@klinkai.com.br" class="hover:text-[#49b548]">Contato</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
