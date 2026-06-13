@@ -74,6 +74,15 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 12/06/2026 — Número de WhatsApp real nos botões da landing
+- Os 4 botões de ação ("Começar Agora" no topo, "Quero testar no meu restaurante"
+  no hero, na seção de preços e no fechamento) agora apontam para o WhatsApp real:
+  **+55 44 3101-1918** (`wa.me/554431011918`), com mensagem pronta e abrindo em
+  nova aba. O número de mentira (5511999999999) saiu de vez.
+- ⚠️ Conferir: esse número parece ser **fixo** (prefixo 31xx). O link `wa.me` só
+  abre conversa se o número tiver **WhatsApp ativo** (Business funciona em fixo).
+  Vale o João mandar um "oi" pelo próprio link pra confirmar que abre a conversa.
+
 ### 12/06/2026 — Termos de Uso e Política de Privacidade no ar (LGPD)
 Os botões "Termos" e "Privacidade" do rodapé deixaram de ser enfeite:
 - **Páginas novas** `/termos` e `/privacidade`, públicas, no mesmo visual da marca.
