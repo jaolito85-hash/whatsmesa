@@ -1,7 +1,7 @@
 # Progresso — Klink
 
 > Diário de bordo do projeto, em linguagem simples. Atualizado a cada mudança.
-> Última atualização: **15/06/2026**
+> Última atualização: **16/06/2026**
 
 ---
 
@@ -73,6 +73,30 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 16/06/2026 — Agente vendedor de IA (SDR) para leads do tráfego pago
+- **O objetivo:** quem clica nos anúncios e chama no WhatsApp comercial (5544 3101-1918)
+  é atendido por um **agente de IA vendedor**, separado do garçom. Ele conduz a conversa,
+  explica o Klink, e quando o lead aceita o repasse, **você é avisado** pra fechar.
+- **Como o agente trabalha:** recebe a mensagem, entende se a pessoa tem bar/restaurante,
+  explica conforme as dúvidas, contorna objeções (preço, troca de sistema, etc.) — tudo
+  com o conteúdo do seu **Guia do Vendedor**. Em mensagens curtas, com a voz do Klink.
+- **O gatilho que você pediu:** quando o agente oferece *"posso passar teu contato pra
+  nossa equipe?"* e o lead aceita ("sim/pode/quero"), ele responde confirmando e te manda
+  um **aviso no seu WhatsApp** (5544 99154-6866) com o nome, o link clicável pra falar com
+  o lead na hora, e um resuminho de quem é.
+- **Onde roda:** dentro do mesmo sistema, numa **porta separada** (`/webhook/sdr`) ligada
+  à **Evolution Go** (instância `klink-sdr`). Mensagem de lead nunca cai no garçom e
+  vice-versa. Cada lead tem a conversa guardada (o agente lembra do papo).
+- **Blindagens:** ignora o eco das próprias mensagens, recibos e status; não avisa você
+  duas vezes do mesmo lead; e se a IA engasgar, manda uma resposta de segurança em vez de
+  deixar o lead no vácuo.
+- **Testado:** 3 testes novos (conversa, ignorar duplicata/eco, e o disparo do alerta uma
+  única vez). Tudo passa — **463 testes no total**.
+- **Falta pra ligar de verdade:** (1) pôr as variáveis do SDR no Coolify e dar um deploy;
+  (2) apontar o webhook da instância `klink-sdr` (no Evolution Go) pro `/webhook/sdr` do
+  app; (3) esquentar o número antes dos anúncios. Por enquanto o agente atende **texto**
+  (áudio do lead = ele pede pra mandar por texto).
 
 ### 15/06/2026 (noite) — Modo Painel: a tela de pedidos da cozinha/bar (tipo totem)
 - **A ideia:** os pedidos não devem chegar em conversa de WhatsApp pra equipe (vira

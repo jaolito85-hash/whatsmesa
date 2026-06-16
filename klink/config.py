@@ -56,10 +56,22 @@ class Settings:
     # ser usadas sem KLINK_ADMIN_TOKEN. Em producao deve ficar False (padrao),
     # para que falta de token signifique acesso negado, nao acesso liberado.
     dev_mode: bool = False
+    # --- Agente SDR (atende leads do tráfego pago no WhatsApp comercial) ---
+    # Roda numa Evolution Go SEPARADA (outro número/instância) do garçom.
+    sdr_evolution_url: str = ""  # ex.: http://72.60.13.166:32771
+    sdr_evolution_token: str = ""  # token da instância (apikey de envio)
+    sdr_instance: str = ""  # nome esperado da instância (ex.: klink-sdr); opcional
+    sdr_alert_number: str = ""  # WhatsApp do João p/ avisos de lead quente
+    sdr_webhook_secret: str = ""  # protege a rota /webhook/sdr; opcional
 
     @property
     def dashboard_auth_enabled(self) -> bool:
         return bool(self.dashboard_password)
+
+    @property
+    def sdr_enabled(self) -> bool:
+        # Liga o agente de leads só quando há para onde enviar (URL + token).
+        return bool(self.sdr_evolution_url and self.sdr_evolution_token)
 
     @property
     def vendedores_enabled(self) -> bool:
@@ -117,6 +129,11 @@ def get_settings() -> Settings:
         vendedor_password=os.getenv("KLINK_VENDEDOR_PASSWORD", ""),
         flask_secret_key=os.getenv("KLINK_SECRET_KEY", ""),
         webhook_secret=os.getenv("KLINK_WEBHOOK_SECRET", ""),
+        sdr_evolution_url=os.getenv("KLINK_SDR_EVOLUTION_URL", "").rstrip("/"),
+        sdr_evolution_token=os.getenv("KLINK_SDR_EVOLUTION_TOKEN", ""),
+        sdr_instance=os.getenv("KLINK_SDR_INSTANCE", ""),
+        sdr_alert_number=os.getenv("KLINK_SDR_ALERT_NUMBER", ""),
+        sdr_webhook_secret=os.getenv("KLINK_SDR_WEBHOOK_SECRET", ""),
         evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
         openai_timeout_seconds=_int_env("KLINK_OPENAI_TIMEOUT", 10),
         openai_transcription_timeout_seconds=_int_env("KLINK_OPENAI_TRANSCRIPTION_TIMEOUT", 20),

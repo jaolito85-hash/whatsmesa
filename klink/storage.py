@@ -229,6 +229,28 @@ create table if not exists whatsapp_send_log (
 );
 
 create index if not exists whatsapp_send_log_criado_idx on whatsapp_send_log(criado_em);
+
+-- Leads do agente vendedor (SDR): quem chega pelo tráfego pago no WhatsApp
+-- comercial. Uma linha por número de WhatsApp; o histórico fica em sdr_mensagens.
+create table if not exists sdr_leads (
+  remote_jid text primary key,
+  nome text,
+  status text not null default 'conversando',
+  resumo text,
+  notificado_em text,
+  criado_em text not null,
+  atualizado_em text not null
+);
+
+create table if not exists sdr_mensagens (
+  id text primary key,
+  remote_jid text not null,
+  autor text not null,            -- 'lead' ou 'agente'
+  texto text not null,
+  criado_em text not null
+);
+
+create index if not exists sdr_mensagens_lead_idx on sdr_mensagens(remote_jid, criado_em);
 """
 
 
@@ -624,6 +646,76 @@ class Database:
 
     def get_estado(self, chave: str) -> dict[str, Any] | None:
         return self.fetchone("select * from app_estado where chave = ?", (chave,))
+
+    # ----- Agente SDR (leads do tráfego pago) -----
+
+    def sdr_get_lead(self, remote_jid: str) -> dict[str, Any] | None:
+        return self.fetchone("select * from sdr_leads where remote_jid = ?", (remote_jid,))
+
+    def sdr_ensure_lead(self, remote_jid: str, nome: str | None = None) -> dict[str, Any]:
+        """Garante que o lead existe (cria na primeira mensagem) e devolve a linha."""
+        existing = self.sdr_get_lead(remote_jid)
+        if existing:
+            # Preenche o nome se ainda não tínhamos e agora chegou (ex.: pushName).
+            if nome and not existing.get("nome"):
+                self.execute(
+                    "update sdr_leads set nome = ?, atualizado_em = ? where remote_jid = ?",
+                    (nome, utc_now(), remote_jid),
+                )
+                existing["nome"] = nome
+            return existing
+        now = utc_now()
+        self.execute(
+            """
+            insert into sdr_leads (remote_jid, nome, status, criado_em, atualizado_em)
+            values (?, ?, 'conversando', ?, ?)
+            """,
+            (remote_jid, nome, now, now),
+        )
+        return self.sdr_get_lead(remote_jid)  # type: ignore[return-value]
+
+    def sdr_add_message(self, remote_jid: str, autor: str, texto: str) -> None:
+        """Guarda uma mensagem da conversa. autor = 'lead' ou 'agente'."""
+        self.execute(
+            "insert into sdr_mensagens (id, remote_jid, autor, texto, criado_em) values (?, ?, ?, ?, ?)",
+            (new_id(), remote_jid, autor, texto, utc_now()),
+        )
+        self.execute(
+            "update sdr_leads set atualizado_em = ? where remote_jid = ?",
+            (utc_now(), remote_jid),
+        )
+
+    def sdr_history(self, remote_jid: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Últimas mensagens da conversa, em ordem cronológica (mais antiga primeiro)."""
+        rows = self.fetchall(
+            """
+            select autor, texto, criado_em from sdr_mensagens
+            where remote_jid = ?
+            order by criado_em desc
+            limit ?
+            """,
+            (remote_jid, limit),
+        )
+        return list(reversed(rows))
+
+    def sdr_mark_notified(self, remote_jid: str, resumo: str | None = None) -> None:
+        """Marca que o João já foi avisado deste lead (evita avisar de novo)."""
+        now = utc_now()
+        self.execute(
+            """
+            update sdr_leads
+            set status = 'qualificado', notificado_em = ?, resumo = coalesce(?, resumo),
+                atualizado_em = ?
+            where remote_jid = ?
+            """,
+            (now, resumo, now, remote_jid),
+        )
+
+    def sdr_update_nome(self, remote_jid: str, nome: str) -> None:
+        self.execute(
+            "update sdr_leads set nome = ?, atualizado_em = ? where remote_jid = ?",
+            (nome, utc_now(), remote_jid),
+        )
 
     def last_inbound_message_at(self) -> str | None:
         row = self.fetchone(

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import base64
 import hmac
+import json
 import os
 import re
+import urllib.request
 from datetime import timedelta
 from pathlib import Path
 
@@ -30,6 +32,7 @@ from klink.qr_service import QRService
 from klink.restaurant_agent import RestaurantAgent
 from klink.storage import DEMO_SLUG, Database
 from klink.table_session_service import TableSessionService
+from klink.sdr_agent import SDRAgent
 from klink.whatsapp_adapter import WhatsAppAdapter
 
 
@@ -143,6 +146,7 @@ def create_app() -> Flask:
         billing=billing,
     )
     whatsapp = WhatsAppAdapter(settings)
+    sdr_agent = SDRAgent(settings)
     audio = AudioService(settings)
     qr = QRService(settings, table_sessions)
 
@@ -157,6 +161,7 @@ def create_app() -> Flask:
         "/qr/",
         "/static/",
         "/vendedores",
+        "/webhook/sdr",
     )
 
     def whatsapp_status() -> dict:
@@ -845,6 +850,143 @@ def create_app() -> Flask:
                 )
                 app.logger.exception("Falha ao enviar resposta WhatsApp: %s", exc)
         return jsonify({"ok": True, "action": result.get("action")})
+
+    # ----------------------------------------------------------------------
+    # Agente SDR: webhook do Evolution Go (instância dos leads, ex.: klink-sdr).
+    # É uma porta SEPARADA do garçom — mensagem que cai aqui é tratada como lead
+    # do tráfego pago, nunca como cliente de mesa.
+    # ----------------------------------------------------------------------
+    def sdr_send_text(number: str, text: str) -> dict:
+        """Envia uma mensagem pela Evolution Go (POST /send/text, apikey=token)."""
+        if not settings.sdr_enabled:
+            return {"sent": False, "dry_run": True, "number": number, "text": text}
+        url = f"{settings.sdr_evolution_url}/send/text"
+        body = json.dumps({"number": number, "text": text}, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "apikey": settings.sdr_evolution_token,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return {"sent": True, "response": resp.read().decode("utf-8")}
+
+    def _sdr_authorized(token_from_path: str | None) -> bool:
+        secret = settings.sdr_webhook_secret
+        if not secret:
+            return True
+        provided = (
+            token_from_path
+            or request.args.get("token")
+            or request.headers.get("X-Webhook-Token")
+            or ""
+        )
+        return bool(provided) and hmac.compare_digest(provided, secret)
+
+    @app.post("/webhook/sdr")
+    @app.post("/webhook/sdr/<sdr_token>")
+    def webhook_sdr(sdr_token: str | None = None):
+        if not _sdr_authorized(sdr_token):
+            abort(403)
+        if not settings.sdr_enabled:
+            # Agente desligado: aceita o webhook (200) mas não faz nada.
+            return jsonify({"ok": True, "action": "sdr_disabled"})
+        payload = request.get_json(force=True, silent=True) or {}
+        inbound = whatsapp.normalize_evolution_payload(payload)
+        action = process_sdr_inbound(inbound)
+        return jsonify({"ok": True, "action": action})
+
+    def process_sdr_inbound(inbound) -> str:
+        # Eco do próprio número (fromMe): ignora, senão o agente responde a si mesmo.
+        if inbound.from_me:
+            return "from_me_ignored"
+        # Só mensagem recebida (event MESSAGE). Recibo de leitura, presença, status
+        # de conexão e o eco dos próprios envios (SEND_MESSAGE) não são lead.
+        if inbound.event and inbound.event != "message":
+            return "event_ignored"
+        jid = inbound.remote_jid or ""
+        # Grupos/listas/status não são lead.
+        if not jid or jid.endswith(("@g.us", "@broadcast", "@newsletter")) or jid.startswith("status@"):
+            return "ignored"
+        # Anti-duplicata: o Evolution Go reenvia até 5x se não receber 200 na hora.
+        # record_message é atômico (insert or ignore) e devolve False se já veio.
+        if inbound.message_id and not db.record_message(
+            message_id=inbound.message_id,
+            remote_jid=jid,
+            tipo=inbound.tipo,
+            texto=inbound.text,
+            audio_url=inbound.audio_url,
+            payload=inbound.payload,
+            processada=True,
+        ):
+            return "duplicate_ignored"
+
+        numero = jid.split("@", 1)[0]
+        nome = (
+            (inbound.payload.get("data") or {}).get("pushName")
+            or inbound.payload.get("pushName")
+            or None
+        )
+        texto = (inbound.text or "").strip()
+
+        # Por enquanto o agente atende texto. Áudio/mídia: pede gentilmente o texto.
+        if not texto:
+            db.sdr_ensure_lead(jid, nome)
+            reply = "Opa! Consegue me mandar por *texto* rapidinho? Assim te respondo certinho. 🙂"
+            db.sdr_add_message(jid, "agente", reply)
+            _sdr_try_send(numero, reply, jid)
+            return "sdr_no_text"
+
+        lead = db.sdr_ensure_lead(jid, nome)
+        history = db.sdr_history(jid, limit=20)
+        db.sdr_add_message(jid, "lead", texto)
+
+        result = sdr_agent.responder(history=history, mensagem=texto, nome=lead.get("nome"))
+        reply = result.get("resposta") or ""
+        if result.get("nome_lead"):
+            db.sdr_update_nome(jid, result["nome_lead"])
+        if reply:
+            db.sdr_add_message(jid, "agente", reply)
+            _sdr_try_send(numero, reply, jid)
+
+        # Lead aceitou o repasse e ainda não avisamos o João: dispara o alerta.
+        ja_avisado = bool((db.sdr_get_lead(jid) or {}).get("notificado_em"))
+        if result.get("lead_aceitou_contato") and not ja_avisado:
+            _sdr_notify_owner(jid, numero, result.get("resumo_lead") or "", result.get("nome_lead") or "")
+            db.sdr_mark_notified(jid, result.get("resumo_lead") or None)
+            return "sdr_lead_qualificado"
+        return "sdr_respondido"
+
+    def _sdr_try_send(numero: str, texto: str, jid: str) -> None:
+        try:
+            send = sdr_send_text(numero, texto)
+            db.record_whatsapp_send(remote_jid=jid, sucesso=bool(send.get("sent")))
+        except Exception as exc:
+            db.record_whatsapp_send(remote_jid=jid, sucesso=False, erro=str(exc))
+            app.logger.exception("Falha ao enviar resposta SDR: %s", exc)
+
+    def _sdr_notify_owner(jid: str, numero: str, resumo: str, nome: str) -> None:
+        destino = settings.sdr_alert_number
+        if not destino:
+            app.logger.warning("Lead quente sem KLINK_SDR_ALERT_NUMBER configurado: %s", jid)
+            return
+        nome_txt = f" ({nome})" if nome else ""
+        linhas = [
+            "🔥 *Lead quente no Klink!*",
+            f"O lead{nome_txt} topou que a equipe entre em contato.",
+            "",
+            f"📱 WhatsApp: +{numero}",
+            f"💬 Falar agora: https://wa.me/{numero}",
+        ]
+        if resumo:
+            linhas += ["", f"📝 Resumo: {resumo}"]
+        try:
+            sdr_send_text(destino, "\n".join(linhas))
+        except Exception as exc:
+            app.logger.exception("Falha ao avisar o João do lead quente: %s", exc)
 
     def process_inbound(inbound):
         # Mensagem enviada pelo próprio bot ecoada de volta pela Evolution: descartar
