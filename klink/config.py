@@ -36,6 +36,12 @@ class Settings:
     admin_token: str
     dashboard_user: str
     dashboard_password: str
+    # Senha da Área do Vendedor (/vendedores). É SEPARADA da senha do painel:
+    # o vendedor externo só vê o material de vendas, nunca o dashboard/cobrança.
+    vendedor_password: str = ""
+    # Chave usada para assinar o cookie de login do vendedor. Sem ela, caímos
+    # na senha do painel como semente (estável entre reinícios e secreta).
+    flask_secret_key: str = ""
     webhook_secret: str = ""
     max_audio_seconds: int = 35
     evolution_daily_limit: int = 200
@@ -54,6 +60,10 @@ class Settings:
     @property
     def dashboard_auth_enabled(self) -> bool:
         return bool(self.dashboard_password)
+
+    @property
+    def vendedores_enabled(self) -> bool:
+        return bool(self.vendedor_password)
 
     @property
     def has_evolution(self) -> bool:
@@ -104,6 +114,8 @@ def get_settings() -> Settings:
         admin_token=os.getenv("KLINK_ADMIN_TOKEN", ""),
         dashboard_user=os.getenv("KLINK_DASHBOARD_USER", "admin"),
         dashboard_password=os.getenv("KLINK_DASHBOARD_PASSWORD", ""),
+        vendedor_password=os.getenv("KLINK_VENDEDOR_PASSWORD", ""),
+        flask_secret_key=os.getenv("KLINK_SECRET_KEY", ""),
         webhook_secret=os.getenv("KLINK_WEBHOOK_SECRET", ""),
         evolution_daily_limit=_int_env("EVOLUTION_DAILY_LIMIT", 200),
         openai_timeout_seconds=_int_env("KLINK_OPENAI_TIMEOUT", 10),

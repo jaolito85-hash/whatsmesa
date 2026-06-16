@@ -23,6 +23,7 @@ COPY klink ./klink
 COPY templates ./templates
 COPY static ./static
 COPY supabase ./supabase
+COPY material-vendas ./material-vendas
 
 RUN mkdir -p /data \
     && groupadd --system klink \

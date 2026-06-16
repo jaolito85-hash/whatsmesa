@@ -1,7 +1,7 @@
 # Progresso — Klink
 
 > Diário de bordo do projeto, em linguagem simples. Atualizado a cada mudança.
-> Última atualização: **11/06/2026**
+> Última atualização: **15/06/2026**
 
 ---
 
@@ -27,7 +27,7 @@ o garçom acompanha pelo computador/celular.
 | Servidor | Coolify, na sua VPS |
 | URL do app | `https://g7yafnc904l4nk0rkfibx6fa.72.60.13.166.sslip.io` |
 | WhatsApp (Evolution) | URL configurada, falta API Key + número |
-| Testes automáticos | 329/329 passando ✅ |
+| Testes automáticos | 460/460 passando ✅ |
 | Cliente do piloto | Ainda não definido |
 | Nome final do produto | A decidir (favorito: **Klink**) |
 | Domínio | `klink.bar` comprado por US$ 2,80/ano |
@@ -73,6 +73,37 @@ o garçom acompanha pelo computador/celular.
 ---
 
 ## Histórico — o que foi feito (mais recente primeiro)
+
+### 15/06/2026 — Área do Vendedor protegida por senha (`klinkai.com.br/vendedores`)
+- **O que pediu:** uma página na web, com login e senha, pra mandar pros vendedores
+  que vão nos bares vender o Klink.
+- **O que fiz:** o Kit de Vendas (apresentação + guia) agora fica no ar dentro do seu
+  próprio site, atrás de uma tela de login. O vendedor abre **`klinkai.com.br/vendedores`**
+  no celular, digita a senha da equipe **uma vez**, e o material abre. Fica logado por
+  30 dias, então não precisa digitar senha toda hora na rua.
+- **Segurança (o ponto mais importante):** essa senha é **separada** da sua senha de
+  dono. Quem tem a senha do vendedor vê **só** o material de vendas — nunca o painel,
+  a cobrança nem as configurações. Testei: a senha do vendedor é barrada no painel.
+- **Como você define a senha:** no Coolify, crie a variável `KLINK_VENDEDOR_PASSWORD`
+  com a senha que quiser (ex: `copa2026`). Pra trocar (quando alguém sai da equipe),
+  é só mudar essa variável. Sem ela preenchida, a área fica desligada.
+- **Pra ficar mais seguro ainda:** defina também `KLINK_SECRET_KEY` com um texto longo
+  e aleatório (assina o "crachá" de login). Sem ela, o sistema usa a senha do painel
+  como base — funciona, mas o ideal é ter a própria.
+- **Falta só:** subir pro Coolify (deploy) e criar a variável da senha. Aí o link
+  funciona. Todos os 460 testes continuam passando.
+
+### 12/06/2026 — Apresentação de vendas em arquivo único (imagens não quebram mais)
+- Problema: ao enviar `material-vendas/apresentacao.html` sozinho, as imagens não
+  abriam (ficavam na pasta `img/` que não ia junto).
+- Solução: script `scripts/empacotar_apresentacao.py` que gera
+  **`material-vendas/Klink-Apresentacao.html`** — um arquivo único (1,6 MB) com o
+  CSS e as imagens embutidos (data URI). Abre perfeito em qualquer celular/computador,
+  até sem internet, sem precisar de pasta nenhuma junto.
+- O botão "Quero testar no meu bar" agora leva ao WhatsApp oficial
+  (`wa.me/554431011918`). Se um dia quiser número por vendedor, é só ajustar o script.
+- Testado de verdade: copiei o arquivo sozinho pra uma pasta vazia e abri — as 3
+  imagens carregaram, zero requisição externa, mobile sem estouro.
 
 ### 12/06/2026 — Número de WhatsApp real nos botões da landing
 - Os 4 botões de ação ("Começar Agora" no topo, "Quero testar no meu restaurante"

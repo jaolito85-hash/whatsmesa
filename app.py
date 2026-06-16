@@ -4,8 +4,21 @@ import base64
 import hmac
 import os
 import re
+from datetime import timedelta
+from pathlib import Path
 
-from flask import Flask, Response, abort, jsonify, redirect, render_template, request
+from flask import (
+    Flask,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
 
 from klink.audio_service import AudioService
 from klink.billing_service import BillingService
@@ -68,6 +81,22 @@ def team_message_for(result: dict) -> str | None:
 def create_app() -> Flask:
     app = Flask(__name__)
     settings = get_settings()
+    # Cookie de login da Área do Vendedor é assinado com esta chave. Em produção
+    # use KLINK_SECRET_KEY; sem ela, a senha do painel serve de semente (secreta e
+    # estável). O fallback de dev só vale fora de produção.
+    app.secret_key = (
+        settings.flask_secret_key or settings.dashboard_password or "klink-dev-secret"
+    )
+    # Cookie só viaja em HTTPS e fica invisível ao JavaScript (defesa básica).
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=not settings.dev_mode,
+        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+    )
+    # Pasta com o Kit de Vendas (hub, apresentação, guia, imagens). Servida só
+    # para vendedores autenticados, sob /vendedores/.
+    material_vendas_dir = Path(__file__).resolve().parent / "material-vendas"
     if not settings.dev_mode and not settings.dashboard_password:
         # Sem senha de painel e fora de dev = painel aberto a qualquer um. Em produção
         # abortamos o boot (à prova de esquecimento); sob testes (pytest) apenas avisamos.
@@ -117,7 +146,18 @@ def create_app() -> Flask:
     audio = AudioService(settings)
     qr = QRService(settings, table_sessions)
 
-    PUBLIC_PATHS = ("/", "/termos", "/privacidade", "/health", "/webhook", "/qr/", "/static/")
+    # /vendedores tem login PRÓPRIO (senha do vendedor, não a do painel): por isso
+    # escapa do Basic Auth de admin aqui e se protege sozinho lá embaixo.
+    PUBLIC_PATHS = (
+        "/",
+        "/termos",
+        "/privacidade",
+        "/health",
+        "/webhook",
+        "/qr/",
+        "/static/",
+        "/vendedores",
+    )
 
     def whatsapp_status() -> dict:
         """Situação REAL do WhatsApp, três estados honestos:
@@ -166,6 +206,51 @@ def create_app() -> Flask:
     @app.get("/privacidade")
     def privacidade():
         return render_template("privacidade.html")
+
+    # ----------------------------------------------------------------------
+    # Área do Vendedor: o Kit de Vendas (apresentação + guia) atrás de uma
+    # senha SÓ dos vendedores. Eles abrem klinkai.com.br/vendedores no celular,
+    # digitam a senha uma vez e ganham acesso ao material — e a nada mais.
+    # ----------------------------------------------------------------------
+    def _vendedor_logado() -> bool:
+        return bool(session.get("vendedor_ok"))
+
+    @app.route("/vendedores", methods=["GET", "POST"])
+    def vendedores_login():
+        if not settings.vendedores_enabled:
+            return Response(
+                "Área do vendedor ainda não configurada.",
+                status=503,
+                mimetype="text/plain; charset=utf-8",
+            )
+        if request.method == "POST":
+            senha = (request.form.get("senha") or "").strip()
+            if hmac.compare_digest(senha, settings.vendedor_password):
+                session.permanent = True
+                session["vendedor_ok"] = True
+                return redirect(url_for("vendedores_hub"))
+            return render_template("vendedores_login.html", erro=True), 401
+        if _vendedor_logado():
+            return redirect(url_for("vendedores_hub"))
+        return render_template("vendedores_login.html", erro=False)
+
+    @app.get("/vendedores/sair")
+    def vendedores_sair():
+        session.pop("vendedor_ok", None)
+        return redirect(url_for("vendedores_login"))
+
+    @app.get("/vendedores/")
+    def vendedores_hub():
+        if not settings.vendedores_enabled or not _vendedor_logado():
+            return redirect(url_for("vendedores_login"))
+        return send_from_directory(material_vendas_dir, "index.html")
+
+    @app.get("/vendedores/<path:arquivo>")
+    def vendedores_arquivo(arquivo: str):
+        if not settings.vendedores_enabled or not _vendedor_logado():
+            return redirect(url_for("vendedores_login"))
+        # send_from_directory bloqueia path traversal (../) por conta própria.
+        return send_from_directory(material_vendas_dir, arquivo)
 
     @app.get("/dashboard")
     def dashboard():

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Área do Vendedor · Klink 🛎️</title>
+    <link rel="icon" href="/vendedores/img/favicon-64.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --green: #49b548;
+        --green-deep: #2e7d32;
+        --green-soft: #eaf6ea;
+        --ink: #20242c;
+        --ink-soft: #4a5160;
+        --paper: #fbfbf8;
+        --gold: #f5c518;
+        --erro: #d64545;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(120% 70% at 50% 0%, rgba(73, 181, 72, 0.16), transparent 60%),
+          var(--paper);
+      }
+      .card {
+        width: 100%;
+        max-width: 380px;
+        background: #fff;
+        border: 2px solid var(--ink);
+        border-radius: 22px;
+        box-shadow: 7px 7px 0 var(--ink);
+        padding: 34px 28px 30px;
+        text-align: center;
+      }
+      .bell { font-size: 2.6rem; line-height: 1; margin-bottom: 6px; }
+      .logo {
+        font-family: "Fredoka", sans-serif;
+        font-weight: 700;
+        font-size: 2.2rem;
+        letter-spacing: -0.01em;
+      }
+      .logo .kdot { color: var(--green); }
+      .sub {
+        font-family: "Fredoka", sans-serif;
+        font-weight: 600;
+        color: var(--green-deep);
+        margin: 2px 0 4px;
+        font-size: 1.05rem;
+      }
+      p.lead {
+        color: var(--ink-soft);
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin: 0 0 22px;
+      }
+      label {
+        display: block;
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 7px;
+        color: var(--ink);
+      }
+      input[type="password"] {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 1.05rem;
+        font-family: inherit;
+        border: 2px solid var(--ink);
+        border-radius: 13px;
+        background: #fff;
+        outline: none;
+        transition: box-shadow 0.12s ease;
+      }
+      input[type="password"]:focus {
+        box-shadow: 4px 4px 0 var(--green);
+      }
+      button {
+        width: 100%;
+        margin-top: 16px;
+        padding: 15px 16px;
+        font-family: "Fredoka", sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #fff;
+        background: var(--green);
+        border: 2px solid var(--ink);
+        border-radius: 13px;
+        box-shadow: 5px 5px 0 var(--ink);
+        cursor: pointer;
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
+      }
+      button:active {
+        transform: translate(3px, 3px);
+        box-shadow: 2px 2px 0 var(--ink);
+      }
+      .erro {
+        background: #fdecec;
+        border: 2px solid var(--erro);
+        color: var(--erro);
+        font-weight: 700;
+        font-size: 0.9rem;
+        border-radius: 11px;
+        padding: 11px 14px;
+        margin-bottom: 18px;
+      }
+      footer {
+        margin-top: 22px;
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="bell">🛎️</div>
+      <div class="logo">kl<span class="kdot">ı</span>nk</div>
+      <div class="sub">Área do Vendedor</div>
+      <p class="lead">Digite a senha da equipe para abrir o Kit de Vendas.</p>
+
+      {% if erro %}
+      <div class="erro">Senha incorreta. Confira com o João e tente de novo.</div>
+      {% endif %}
+
+      <form method="post" action="/vendedores" autocomplete="off">
+        <label for="senha">Senha da equipe</label>
+        <input
+          id="senha"
+          name="senha"
+          type="password"
+          placeholder="••••••••"
+          autofocus
+          required
+        />
+        <button type="submit">Entrar →</button>
+      </form>
+
+      <footer>O Garçom Invisível · klinkai.com.br</footer>
+    </main>
+  </body>
+</html>
