@@ -83,7 +83,7 @@ o garçom acompanha pelo computador/celular.
   com o conteúdo do seu **Guia do Vendedor**. Em mensagens curtas, com a voz do Klink.
 - **O gatilho que você pediu:** quando o agente oferece *"posso passar teu contato pra
   nossa equipe?"* e o lead aceita ("sim/pode/quero"), ele responde confirmando e te manda
-  um **aviso no seu WhatsApp** (5544 99154-6866) com o nome, o link clicável pra falar com
+  um **aviso no seu WhatsApp pessoal** com o nome, o link clicável pra falar com
   o lead na hora, e um resuminho de quem é.
 - **Onde roda:** dentro do mesmo sistema, numa **porta separada** (`/webhook/sdr`) ligada
   à **Evolution Go** (instância `klink-sdr`). Mensagem de lead nunca cai no garçom e
@@ -93,10 +93,21 @@ o garçom acompanha pelo computador/celular.
   deixar o lead no vácuo.
 - **Testado:** 3 testes novos (conversa, ignorar duplicata/eco, e o disparo do alerta uma
   única vez). Tudo passa — **463 testes no total**.
-- **Falta pra ligar de verdade:** (1) pôr as variáveis do SDR no Coolify e dar um deploy;
-  (2) apontar o webhook da instância `klink-sdr` (no Evolution Go) pro `/webhook/sdr` do
-  app; (3) esquentar o número antes dos anúncios. Por enquanto o agente atende **texto**
-  (áudio do lead = ele pede pra mandar por texto).
+- **Por enquanto o agente atende texto** (áudio do lead = ele pede pra mandar por texto).
+
+**📍 ONDE PARAMOS (16/06, noite) — continuar amanhã:**
+- ✅ Variáveis do SDR postas no Coolify e **deploy feito** — confirmado por teste: um lead
+  simulado bateu no app e o agente respondeu (a resposta chegou no WhatsApp). App 100%.
+- ✅ Instância `klink-sdr` **conectada** (status open, número certo). Webhook preenchido no
+  painel do Evolution Go: URL `https://klinkai.com.br/webhook/sdr/...`, evento **MESSAGE**,
+  "Ignore Groups" e "Ignore Status" ligados.
+- ⏳ **Falta o teste ao vivo:** o João não tinha um 2º número à mão; vai testar amanhã com o
+  número da filha. Mandar "oi" pro 5544 3101-1918 e ver o agente responder; levar até o
+  "sim, pode passar meu contato" e conferir se o alerta pinga no WhatsApp pessoal dele.
+- ⚠️ **Se não responder:** garantir que clicou em **"Salvar Webhook"** (e "Salvar Avançadas"),
+  e usar o botão **Reconectar** da instância (o webhook costuma valer só após reconectar).
+  Plano B: registrar o webhook por API (`POST /instance/connect` com `webhookUrl` + `subscribe:["MESSAGE"]`).
+- ⏳ Depois: esquentar o número antes de ligar os anúncios.
 
 ### 15/06/2026 (noite) — Modo Painel: a tela de pedidos da cozinha/bar (tipo totem)
 - **A ideia:** os pedidos não devem chegar em conversa de WhatsApp pra equipe (vira
