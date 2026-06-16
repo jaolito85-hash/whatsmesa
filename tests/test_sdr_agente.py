@@ -95,6 +95,27 @@ class SDRAgenteTest(unittest.TestCase):
             },
         }
 
+    def _inbound_go(self, texto, *, chat="5544988887777@s.whatsapp.net", mid="GO1", from_me=False, nome="Carlos"):
+        """Formato REAL do Evolution Go (whatsmeow): event 'Message', data.Info.*
+        em PascalCase, JID como string, texto em data.Message.conversation."""
+        return {
+            "event": "Message",
+            "instance": "klink-sdr",
+            "data": {
+                "Info": {
+                    "Chat": chat,
+                    "Sender": chat,
+                    "IsFromMe": from_me,
+                    "IsGroup": False,
+                    "ID": mid,
+                    "Type": "text",
+                    "PushName": nome,
+                    "Timestamp": "2026-06-17T12:00:00Z",
+                },
+                "Message": {"conversation": texto},
+            },
+        }
+
     def _sends_to(self, numero):
         return [s for s in self.sent if json.loads(s["body"]).get("number") == numero]
 
@@ -114,6 +135,27 @@ class SDRAgenteTest(unittest.TestCase):
         self.assertEqual(autores, ["lead", "agente"])
         # Respondeu ao próprio lead (e não ao número de alerta).
         self.assertTrue(self._sends_to("5544988887777"))
+
+    def test_formato_evolution_go_responde(self):
+        # Regressão do bug "não responde": o Evolution Go manda data.Info.Chat
+        # (não data.key.remoteJid). Tem que reconhecer o lead e responder.
+        r = self.client.post("/webhook/sdr", json=self._inbound_go("oi, vi o anúncio"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["action"], "sdr_respondido")
+        self.assertTrue(self._sends_to("5544988887777"))
+
+    def test_formato_go_fromme_ignorado_e_numero_sem_aparelho(self):
+        # Eco do próprio número (IsFromMe) é ignorado.
+        eco = self.client.post("/webhook/sdr", json=self._inbound_go("eco", from_me=True, mid="GOE1"))
+        self.assertEqual(eco.get_json()["action"], "from_me_ignored")
+
+        # JID com ":aparelho" (ex.: 554431...:3) deve responder ao número limpo.
+        r = self.client.post(
+            "/webhook/sdr",
+            json=self._inbound_go("oi", chat="5544988887777:3@s.whatsapp.net", mid="GODEV"),
+        )
+        self.assertEqual(r.get_json()["action"], "sdr_respondido")
+        self.assertTrue(self._sends_to("5544988887777"))  # sem o ":3"
 
     def test_from_me_e_duplicata_sao_ignorados(self):
         eco = self.client.post("/webhook/sdr", json=self._inbound("eco", from_me=True, mid="E1"))

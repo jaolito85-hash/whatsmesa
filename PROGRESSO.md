@@ -95,18 +95,25 @@ o garçom acompanha pelo computador/celular.
   única vez). Tudo passa — **463 testes no total**.
 - **Por enquanto o agente atende texto** (áudio do lead = ele pede pra mandar por texto).
 
-**📍 ONDE PARAMOS (16/06, noite) — continuar amanhã:**
-- ✅ Variáveis do SDR postas no Coolify e **deploy feito** — confirmado por teste: um lead
-  simulado bateu no app e o agente respondeu (a resposta chegou no WhatsApp). App 100%.
-- ✅ Instância `klink-sdr` **conectada** (status open, número certo). Webhook preenchido no
-  painel do Evolution Go: URL `https://klinkai.com.br/webhook/sdr/...`, evento **MESSAGE**,
-  "Ignore Groups" e "Ignore Status" ligados.
-- ⏳ **Falta o teste ao vivo:** o João não tinha um 2º número à mão; vai testar amanhã com o
-  número da filha. Mandar "oi" pro 5544 3101-1918 e ver o agente responder; levar até o
-  "sim, pode passar meu contato" e conferir se o alerta pinga no WhatsApp pessoal dele.
-- ⚠️ **Se não responder:** garantir que clicou em **"Salvar Webhook"** (e "Salvar Avançadas"),
-  e usar o botão **Reconectar** da instância (o webhook costuma valer só após reconectar).
-  Plano B: registrar o webhook por API (`POST /instance/connect` com `webhookUrl` + `subscribe:["MESSAGE"]`).
+**🔧 CORREÇÃO (17/06) — o agente não respondia mensagens reais; eram DOIS problemas:**
+- **Sintoma:** João mandou mensagem de outro celular e o agente não respondeu (mas o teste
+  pelo app, na véspera, tinha funcionado).
+- **Problema 1 — o aviso (webhook) não disparava.** No Evolution **Go** o webhook não tem
+  rota própria; ele é amarrado no `connect`. Só preencher no painel não basta. Corrigido com
+  `POST /instance/connect {immediate:true, subscribe:["MESSAGE"], webhookUrl:".../sdr/<token>"}`
+  → `success`, conexão seguiu de pé (sem QR).
+- **Problema 2 (o principal) — o formato do payload é OUTRO.** Depois do passo 1, os logs do
+  Coolify mostraram o aviso chegando (`POST /webhook/sdr/... 200`), mas o app respondia
+  `ignored` (31 bytes) — ou seja, **não achava quem mandou**. Motivo: o Evolution Go roda em
+  *whatsmeow* e manda `data.Info.Chat` (string "num@servidor"), `data.Info.IsFromMe`,
+  `data.Message.conversation` — em PascalCase — e **não** o `data.key.remoteJid` do Evolution
+  clássico (a doc do Go está errada nisso). Nosso normalizador só entendia o clássico.
+- **O que mudei no código (`klink/whatsapp_adapter.py` + `app.py`):** `normalize_evolution_payload`
+  agora entende os DOIS dialetos (clássico do garçom + whatsmeow do SDR), com `pushName` e
+  número de quem manda (tira o `:aparelho`). +2 testes de regressão. **465 testes passam.**
+- ⏳ **FALTA:** subir pra produção (deploy Coolify) e o teste ao vivo do João — mandar "oi" pro
+  5544 3101-1918 de outro número, ver o agente responder, levar até "pode passar meu contato"
+  e conferir o alerta no WhatsApp pessoal dele.
 - ⏳ Depois: esquentar o número antes de ligar os anúncios.
 
 ### 15/06/2026 (noite) — Modo Painel: a tela de pedidos da cozinha/bar (tipo totem)

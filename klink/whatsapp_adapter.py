@@ -25,9 +25,29 @@ class InboundMessage:
     # e o bot responde a si mesmo em loop infinito — rajada de mensagens que o
     # WhatsApp pune com banimento do número.
     from_me: bool = False
-    # Nome do evento Evolution normalizado (ex.: "messages.upsert"). Vazio quando
-    # o payload não traz o campo (simulador/testes).
+    # Nome do evento Evolution normalizado (ex.: "messages.upsert" no clássico,
+    # "message" no Evolution Go). Vazio quando o payload não traz o campo.
     event: str = ""
+    # Nome de quem mandou (WhatsApp pushName). Centralizado aqui porque cada
+    # dialeto guarda em lugar diferente (data.pushName x data.Info.PushName).
+    push_name: str = ""
+
+
+def _jid_to_str(value: Any) -> str:
+    """Converte um JID para a string 'user@server'.
+
+    O Evolution Go (whatsmeow) já serializa o JID como string graças ao
+    MarshalText. Mas, por segurança contra versões que serializem o struct,
+    também aceitamos o objeto {User, Server}.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        user = value.get("User") or value.get("user") or ""
+        server = value.get("Server") or value.get("server") or ""
+        if user and server:
+            return f"{user}@{server}"
+    return ""
 
 
 class WhatsAppAdapter:
@@ -36,8 +56,14 @@ class WhatsAppAdapter:
 
     def normalize_evolution_payload(self, payload: dict[str, Any]) -> InboundMessage:
         data = payload.get("data") or payload
+        # Dois dialetos no MESMO método:
+        #  - Evolution clássico (Baileys): data.key.remoteJid, data.message.*, data.pushName
+        #  - Evolution Go (whatsmeow): data.Info.Chat (string "user@server"),
+        #    data.Message.*, data.Info.PushName — tudo em PascalCase. (O garçom usa o
+        #    clássico, o agente SDR usa o Go; por isso os dois convivem aqui.)
         key = data.get("key") or {}
-        message = data.get("message") or {}
+        info = data.get("Info") or data.get("info") or {}
+        message = data.get("message") or data.get("Message") or {}
 
         text = (
             message.get("conversation")
@@ -69,9 +95,43 @@ class WhatsAppAdapter:
         except (TypeError, ValueError):
             duration_seconds = None
 
+        remote_jid = (
+            key.get("remoteJid")
+            or _jid_to_str(info.get("Chat") or info.get("chat"))
+            or _jid_to_str(info.get("Sender") or info.get("sender"))
+            or data.get("remote_jid")
+            or payload.get("remote_jid")
+            or ""
+        )
+
+        # fromMe: no clássico fica em key.fromMe; no Go em data.Info.IsFromMe.
+        if "fromMe" in key:
+            from_me = bool(key.get("fromMe"))
+        elif "IsFromMe" in info:
+            from_me = bool(info.get("IsFromMe"))
+        else:
+            from_me = bool(info.get("isFromMe"))
+
+        message_id = (
+            key.get("id")
+            or info.get("ID")
+            or info.get("id")
+            or data.get("message_id")
+            or payload.get("message_id")
+            or uuid4().hex
+        )
+
+        push_name = (
+            data.get("pushName")
+            or info.get("PushName")
+            or info.get("pushName")
+            or payload.get("pushName")
+            or ""
+        )
+
         return InboundMessage(
-            message_id=key.get("id") or data.get("message_id") or payload.get("message_id") or uuid4().hex,
-            remote_jid=key.get("remoteJid") or data.get("remote_jid") or payload.get("remote_jid") or "",
+            message_id=message_id,
+            remote_jid=remote_jid,
             text=text,
             tipo=tipo,
             audio_url=audio_url,
@@ -79,8 +139,9 @@ class WhatsAppAdapter:
             audio_mimetype=audio_mimetype,
             duration_seconds=duration_seconds,
             payload=payload,
-            from_me=bool(key.get("fromMe")),
+            from_me=from_me,
             event=event,
+            push_name=push_name,
         )
 
     def send_message(self, remote_jid: str, text: str) -> dict[str, Any]:

@@ -910,6 +910,14 @@ def create_app() -> Flask:
         jid = inbound.remote_jid or ""
         # Grupos/listas/status não são lead.
         if not jid or jid.endswith(("@g.us", "@broadcast", "@newsletter")) or jid.startswith("status@"):
+            # Sem remetente quase sempre = formato de payload inesperado. Loga as
+            # chaves (não o conteúdo, p/ não vazar conversa) p/ diagnosticar sem redeploy.
+            if not jid:
+                data_keys = list((inbound.payload.get("data") or {}).keys())
+                app.logger.warning(
+                    "SDR webhook sem remetente (event=%r). Chaves de data=%s",
+                    inbound.event, data_keys,
+                )
             return "ignored"
         # Anti-duplicata: o Evolution Go reenvia até 5x se não receber 200 na hora.
         # record_message é atômico (insert or ignore) e devolve False se já veio.
@@ -924,12 +932,10 @@ def create_app() -> Flask:
         ):
             return "duplicate_ignored"
 
-        numero = jid.split("@", 1)[0]
-        nome = (
-            (inbound.payload.get("data") or {}).get("pushName")
-            or inbound.payload.get("pushName")
-            or None
-        )
+        # Tira "@servidor" e também o ":aparelho" (ex.: 554431011918:1) — o
+        # /send/text quer só o número.
+        numero = jid.split("@", 1)[0].split(":", 1)[0]
+        nome = inbound.push_name or None
         texto = (inbound.text or "").strip()
 
         # Por enquanto o agente atende texto. Áudio/mídia: pede gentilmente o texto.
