@@ -1,0 +1,281 @@
+/* Modo Painel (KDS) — pensado para tablet/TV na cozinha e no bar.
+   Fundo escuro, letras grandes, cores fortes de urgência. */
+:root {
+  --bg: #101418;
+  --panel: #1a2027;
+  --panel-2: #222b34;
+  --line: #303b46;
+  --ink: #f4f7fa;
+  --ink-soft: #9fb0c0;
+  --green: #49b548;
+  --green-deep: #2e7d32;
+  --gold: #f5c518;
+  --tomato: #e7513b;
+  --fresh: #49b548;
+  --warn: #f5c518;
+  --late: #e7513b;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.klink-logo {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.klink-logo .kdot { color: var(--green); }
+
+/* ---- Cabeçalho ---- */
+.painel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 18px;
+  background: var(--panel);
+  border-bottom: 2px solid var(--line);
+  flex-wrap: wrap;
+}
+.painel-id { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.painel-setor {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.4rem, 3.4vw, 2.1rem);
+  line-height: 1;
+}
+.painel-rest {
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.painel-tools { display: flex; align-items: center; gap: 10px; }
+.painel-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--ink-soft);
+}
+.painel-count {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--green-deep);
+  color: #fff;
+}
+.painel-btn {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.painel-btn:active { transform: translateY(1px); }
+
+/* ---- Tarjas ---- */
+.banner {
+  padding: 10px 18px;
+  font-weight: 800;
+  text-align: center;
+}
+.banner--off { background: var(--tomato); color: #fff; }
+.banner--hint { background: var(--gold); color: #1a1a1a; }
+
+/* ---- Quadro de pedidos ---- */
+.board {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  padding: 16px;
+  align-content: start;
+  overflow-y: auto;
+}
+.board-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50vh;
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-align: center;
+}
+.board-empty span { font-size: 3rem; }
+
+/* ---- Comanda (ticket) ---- */
+.tk {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-left: 10px solid var(--fresh);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.tk[data-elapsed="warn"] { border-left-color: var(--warn); }
+.tk[data-elapsed="late"] { border-left-color: var(--late); }
+.tk[data-elapsed="late"] .tk-time { color: var(--late); }
+
+.tk-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--panel-2);
+  border-bottom: 2px solid var(--line);
+}
+.tk-mesa {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.tk-time {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.tk-body { padding: 12px 14px 6px; flex: 1; }
+.tk-item {
+  font-weight: 800;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  line-height: 1.15;
+}
+.tk-qtd {
+  display: inline-block;
+  background: var(--green);
+  color: #06210a;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 0 8px;
+  margin-right: 6px;
+}
+.tk-obs {
+  margin: 8px 0 0;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+.tk-status {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tk-actions { display: flex; gap: 8px; padding: 10px 14px 14px; }
+.tk-go {
+  flex: 1;
+  min-height: 56px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #06210a;
+  background: var(--green);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.tk-go:active { transform: translateY(1px); }
+.tk-go[data-done="1"] { background: var(--panel-2); color: var(--ink-soft); }
+.tk-x {
+  width: 56px;
+  min-height: 56px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* ---- Tela de escolha do setor ---- */
+.picker {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 9, 12, 0.96);
+}
+.picker[hidden] { display: none; }
+.picker-card {
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+}
+.picker-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.picker-brand .klink-logo { font-size: 2rem; }
+.picker-card h1 {
+  margin: 0 0 6px;
+  font-family: "Fredoka", sans-serif;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+.picker-card p { margin: 0 0 22px; color: var(--ink-soft); font-weight: 700; }
+.picker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.picker-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 110px;
+  justify-content: center;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--ink);
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+}
+.picker-opt span { font-size: 2.2rem; line-height: 1; }
+.picker-opt:active { transform: translateY(1px); }
+.picker-opt--all { grid-column: 1 / -1; }
+.picker-opt--all span { font-size: 1.8rem; }
+
+@media (max-width: 420px) {
+  .board { grid-template-columns: 1fr; }
+}

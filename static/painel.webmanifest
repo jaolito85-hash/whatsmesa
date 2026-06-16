@@ -1,0 +1,31 @@
+{
+  "name": "Klink — Painel de Pedidos",
+  "short_name": "Klink Painel",
+  "description": "Tela de pedidos da cozinha e do bar. Os pedidos chegam aqui sozinhos, em tempo real.",
+  "lang": "pt-BR",
+  "start_url": "/painel/",
+  "scope": "/painel/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#101418",
+  "theme_color": "#101418",
+  "icons": [
+    {
+      "src": "/static/brand/favicon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/brand/klink-mascote.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -264,6 +264,35 @@ def create_app() -> Flask:
             public_base_url=settings.public_base_url,
         )
 
+    # ----------------------------------------------------------------------
+    # Modo Painel (KDS): a mesma fila de pedidos do /dashboard, porém em tela
+    # cheia, letras grandes e um setor por vez — pensada pra rodar num tablet
+    # ou TV na cozinha/bar, como um totem. Reusa a API /api/dashboard.
+    # ----------------------------------------------------------------------
+    @app.get("/painel")
+    def painel_redirect():
+        # Canônico é /painel/ (o escopo do PWA e do service worker termina em /).
+        return redirect("/painel/")
+
+    @app.get("/painel/")
+    def painel():
+        restaurant = table_sessions.restaurant()
+        return render_template(
+            "painel.html",
+            restaurant=restaurant,
+            is_demo=restaurant.get("slug") == DEMO_SLUG,
+        )
+
+    @app.get("/painel/sw.js")
+    def painel_service_worker():
+        # O service worker precisa ser servido de dentro de /painel/ para poder
+        # controlar essa área (o escopo de um SW é a pasta de onde ele vem).
+        resp = send_from_directory(app.static_folder, "painel-sw.js")
+        resp.headers["Content-Type"] = "application/javascript"
+        resp.headers["Service-Worker-Allowed"] = "/painel/"
+        resp.headers["Cache-Control"] = "no-cache"
+        return resp
+
     @app.get("/config")
     def config_page():
         restaurant = table_sessions.restaurant()

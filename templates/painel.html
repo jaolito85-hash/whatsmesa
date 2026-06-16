@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Painel de Pedidos · Klink</title>
+
+    <!-- PWA: deixa instalar como app em tela cheia no tablet -->
+    <link rel="manifest" href="{{ url_for('static', filename='painel.webmanifest') }}" />
+    <meta name="theme-color" content="#101418" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Klink Painel" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}" />
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon-64.png') }}" sizes="any" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='painel.css') }}" />
+  </head>
+  <body data-restaurant="{{ restaurant.nome }}">
+    <!-- Tela de escolha do setor (aparece na primeira vez e quando troca) -->
+    <div id="setor-picker" class="picker" hidden>
+      <div class="picker-card">
+        <div class="picker-brand">
+          <img src="{{ url_for('static', filename='brand/klink-mascote.png') }}" alt="" width="56" height="56" />
+          <span class="klink-logo" aria-label="Klink">kl<span class="kdot">ı</span>nk</span>
+        </div>
+        <h1>Qual tela é esta?</h1>
+        <p>Escolha o setor que vai aparecer aqui. Dá pra trocar depois.</p>
+        <div class="picker-grid">
+          <button class="picker-opt" data-pick="cozinha"><span>🍳</span>Cozinha</button>
+          <button class="picker-opt" data-pick="bar"><span>🍺</span>Bar</button>
+          <button class="picker-opt" data-pick="salao"><span>🙋</span>Salão</button>
+          <button class="picker-opt" data-pick="caixa"><span>💰</span>Caixa</button>
+          <button class="picker-opt picker-opt--all" data-pick="todos"><span>📋</span>Tudo junto</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cabeçalho do painel -->
+    <header class="painel-head">
+      <div class="painel-id">
+        <span class="painel-setor" id="setor-nome">—</span>
+        <span class="painel-rest">{{ restaurant.nome }}</span>
+      </div>
+      <div class="painel-tools">
+        <span class="painel-clock" id="clock">--:--</span>
+        <span class="painel-count" id="ticket-count">0</span>
+        <button type="button" id="btn-trocar" class="painel-btn">Trocar setor</button>
+        <button type="button" id="btn-tela" class="painel-btn" title="Tela cheia">⛶</button>
+      </div>
+    </header>
+
+    <!-- Tarjas de aviso -->
+    <div id="offline-banner" class="banner banner--off" hidden>
+      Sem conexão — a tela pode estar desatualizada. Tentando reconectar…
+    </div>
+    <div id="sound-hint" class="banner banner--hint" hidden>
+      🔔 Toque na tela uma vez para ligar o som de pedido novo.
+    </div>
+
+    <!-- Fila de pedidos -->
+    <main id="board" class="board" aria-live="polite"></main>
+
+    <script src="{{ url_for('static', filename='painel.js') }}"></script>
+  </body>
+</html>

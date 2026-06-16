@@ -74,6 +74,31 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 15/06/2026 (noite) — Modo Painel: a tela de pedidos da cozinha/bar (tipo totem)
+- **A ideia:** os pedidos não devem chegar em conversa de WhatsApp pra equipe (vira
+  bagunça). Precisava de uma tela dedicada na cozinha/bar, atualizando sozinha, tipo
+  um totem de praça de alimentação.
+- **A descoberta:** o painel que já existe (`/dashboard`) já tinha tudo por dentro —
+  separa por setor, atualiza a cada 4 segundos e apita quando chega pedido. Faltava só
+  uma "casca" feita pra tela de cozinha. Aproveitei 100% disso.
+- **O que criei — o "Modo Painel" (`/painel`):** uma tela cheia, fundo escuro, letras
+  grandes pra ler de longe. Ao abrir, ela pergunta **"Qual tela é esta?"** e você escolhe
+  o setor (Cozinha, Bar, Salão, Caixa ou Tudo junto). Daí mostra só os pedidos daquele
+  setor, em comandas grandes, com um botão gigante (ex.: "Começar 👨‍🍳" → "Pronto ✓").
+  O aparelho **lembra** o setor escolhido. Apita a cada pedido novo. Mostra tarja
+  vermelha se a internet cair. Tem relógio e contador de pedidos.
+- **Vira "app" no tablet (PWA):** dá pra **instalar** no tablet/celular como se fosse um
+  aplicativo (ícone na tela, abre em tela cheia, sem a barra do navegador). No iPad é só
+  "Adicionar à Tela de Início"; no Android, "Instalar app". Importante: a tela **nunca**
+  mostra pedido velho de cache — pedido é sempre puxado ao vivo.
+- **Onde achar:** tem um atalho **"Modo Painel 🖥️"** no topo do painel normal. Ou abrir
+  direto `klinkai.com.br/painel` num tablet na cozinha.
+- **Segurança:** é tela interna, exige o login do painel (o mesmo seu). Confirmado por teste.
+- **Testado de verdade:** subi o sistema, simulei um pedido caindo e tirei foto das telas —
+  a comanda apareceu certinha na Cozinha, e o Bar mostrou "nenhum pedido". 460 testes OK.
+- **Próximo passo possível (quando quiser):** impressora térmica pra quem prefere a comanda
+  de papel na cozinha. Deixei anotado, mas começamos pela tela porque é custo zero.
+
 ### 15/06/2026 (noite) — Correção: dava pra colocar apelido na mesa, mas não tirar
 - **O bug:** na tela de QR codes, ao usar "renomear" e digitar um apelido (ex.: "Varanda 3"),
   o nome ficava preso — se você apagasse o texto e clicasse OK, não acontecia nada. Não
