@@ -74,6 +74,21 @@ o garçom acompanha pelo computador/celular.
 
 ## Histórico — o que foi feito (mais recente primeiro)
 
+### 15/06/2026 (noite) — Correção: dava pra colocar apelido na mesa, mas não tirar
+- **O bug:** na tela de QR codes, ao usar "renomear" e digitar um apelido (ex.: "Varanda 3"),
+  o nome ficava preso — se você apagasse o texto e clicasse OK, não acontecia nada. Não
+  tinha como voltar a mesa pro nome simples "Mesa 3".
+- **Por que acontecia:** tanto o navegador quanto o servidor rejeitavam nome em branco.
+- **Correção:** agora, deixar o campo em branco e clicar **OK apaga o apelido** e a mesa
+  volta a ser só "Mesa 3". Clicar em **Cancelar** continua não mexendo em nada. A janelinha
+  de renomear agora já vem com o apelido atual (vazio se a mesa não tiver apelido) e explica
+  que apagar volta ao padrão.
+- **Detalhe que confunde, mas é proposital:** o "MESA 3" não some quando você põe um apelido.
+  O número é o que o cliente usa pra abrir a mesa no WhatsApp ("Mesa 3"); o apelido
+  ("Varanda 3") aparece junto, só pra equipe se localizar no salão.
+- Testado de ponta a ponta. 460 testes passando (atualizei o teste antigo que esperava o
+  comportamento errado).
+
 ### 15/06/2026 — Área do Vendedor protegida por senha (`klinkai.com.br/vendedores`)
 - **O que pediu:** uma página na web, com login e senha, pra mandar pros vendedores
   que vão nos bares vender o Klink.

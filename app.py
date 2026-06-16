@@ -554,12 +554,13 @@ def create_app() -> Flask:
             return jsonify({"ok": False, "reason": "nao_encontrada"}), 404
         payload = request.get_json(silent=True) or {}
         nome = str(payload.get("nome") or "").strip()
+        # Nome em branco = apagar o apelido e voltar ao padrão "Mesa N". Antes
+        # isso era rejeitado (nome_obrigatorio), então um apelido digitado por
+        # engano ("Varanda 3") ficava preso para sempre, sem como remover.
         if not nome:
-            return jsonify(
-                {"ok": False, "reason": "nome_obrigatorio", "message": "Informe o nome da mesa."}
-            ), 400
+            nome = f"Mesa {table['numero']}"
         db.rename_table(mesa_id, nome)
-        return jsonify({"ok": True})
+        return jsonify({"ok": True, "nome": nome})
 
     @app.post("/api/tables/<mesa_id>/deactivate")
     def api_deactivate_table(mesa_id: str):

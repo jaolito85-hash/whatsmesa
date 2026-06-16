@@ -376,7 +376,7 @@
           <p class="qr-nome">{{ t.nome }}</p>
           {% endif %}
           <div class="qr-card-tools no-print">
-            <button type="button" data-rename-mesa="{{ t.id }}" data-nome="{{ t.nome }}">renomear</button>
+            <button type="button" data-rename-mesa="{{ t.id }}" data-numero="{{ t.numero }}" data-nome="{% if t.nome and t.nome != 'Mesa ' ~ t.numero %}{{ t.nome }}{% endif %}">renomear</button>
             <button type="button" data-remove-mesa="{{ t.id }}" data-numero="{{ t.numero }}">remover</button>
           </div>
           <div class="qr-box" data-qr="{{ t.qr_url }}" aria-label="QR code da mesa {{ t.numero }}"></div>
@@ -457,8 +457,16 @@
         document.addEventListener("click", async function (event) {
           const rename = event.target.closest("[data-rename-mesa]");
           if (rename) {
-            const nome = prompt("Novo nome da mesa (ex.: Varanda 3):", rename.dataset.nome || "");
-            if (!nome) return;
+            const numero = rename.dataset.numero || "";
+            const nome = prompt(
+              'Apelido da mesa (ex.: Varanda 3).\nDeixe em branco e clique OK para usar só "Mesa ' +
+                numero +
+                '".',
+              rename.dataset.nome || "",
+            );
+            // prompt() devolve null só quando o usuário clica em Cancelar; aí não
+            // mexemos em nada. Texto vazio ("") é uma escolha válida: apaga o apelido.
+            if (nome === null) return;
             try {
               await postJson("/api/tables/" + rename.dataset.renameMesa + "/rename", { nome: nome });
               location.reload();

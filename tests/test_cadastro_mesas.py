@@ -89,10 +89,15 @@ class CadastroMesasTest(unittest.TestCase):
         renamed = next(t for t in self._tables() if t["id"] == mesa["id"])
         self.assertEqual(renamed["nome"], "Varanda 3")
 
-    def test_renomear_sem_nome_rejeita(self):
-        mesa = self._tables()[0]
+    def test_renomear_sem_nome_volta_ao_padrao(self):
+        # Apelido em branco apaga o nome customizado e volta ao padrão "Mesa N".
+        # É como o dono remove um apelido digitado por engano.
+        mesa = next(t for t in self._tables() if t["numero"] == 12)
+        self.client.post(f"/api/tables/{mesa['id']}/rename", json={"nome": "Varanda 3"})
         r = self.client.post(f"/api/tables/{mesa['id']}/rename", json={"nome": "  "})
-        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.status_code, 200)
+        renamed = next(t for t in self._tables() if t["id"] == mesa["id"])
+        self.assertEqual(renamed["nome"], "Mesa 12")
 
     # ---- remover (desativar) ----
     def test_remover_mesa_some_da_lista_e_do_qr(self):
